@@ -17,7 +17,6 @@ public class GestureManager : MonoBehaviour
 
     private static string version = "1.0.0";
     private static string versionUrl = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.version";
-    private static string gitUrl = "https://github.com/BlackStartx/VRC-Gesture-Manager";
 
     public GameObject avatar;
     public int right, left, emote;
@@ -234,7 +233,9 @@ public class GestureManager : MonoBehaviour
             currentlyCheckingForUpdates = false;
         }, (response) =>
         {
-            string lastVersion = response.downloadHandler.text.Trim();
+            string[] infos = response.downloadHandler.text.Trim().Split('\n');
+            string lastVersion = infos[0];
+            string download = infos[1];
             if (GetCurrentVersion().Equals(lastVersion))
             {
                 EditorUtility.DisplayDialog("Gesture Manager Updater", "You have the latest version of the manager. (" + lastVersion + ")", "Okay");
@@ -243,7 +244,7 @@ public class GestureManager : MonoBehaviour
             {
                 if(EditorUtility.DisplayDialog("Gesture Manager Updater", "Newer version aviable! (" + lastVersion + ")", "Download", "Cancel"))
                 {
-                    Application.OpenURL(gitUrl);
+                    Application.OpenURL(download);
                 }
             }
             currentlyCheckingForUpdates = false;
