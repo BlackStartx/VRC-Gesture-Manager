@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 using VRCSDK2;
@@ -16,6 +17,7 @@ public class GestureManager : MonoBehaviour
 
     private static string version = "1.0.0";
     private static string versionUrl = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.version";
+    private static string gitUrl = "https://github.com/BlackStartx/VRC-Gesture-Manager";
 
     public GameObject avatar;
     public int right, left, emote;
@@ -220,17 +222,21 @@ public class GestureManager : MonoBehaviour
         currentlyCheckingForUpdates = true;
         StartCoroutine(GetRequest(versionUrl, (error) =>
         {
-            Debug.Log("Error");
+            EditorUtility.DisplayDialog("Gesture Manager Updater", "Error :c (" + error.responseCode + ")", "Okay");
             currentlyCheckingForUpdates = false;
         }, (response) =>
         {
-            if (version.Equals(response))
+            string lastVersion = response.downloadHandler.text;
+            if (version.Equals(lastVersion))
             {
-                Debug.Log("Same");
+                EditorUtility.DisplayDialog("Gesture Manager Updater", "You have the latest version of the manager. (" + lastVersion + ")", "Okay");
             }
             else
             {
-                Debug.Log("Different");
+                if(EditorUtility.DisplayDialog("Gesture Manager Updater", "Newer version aviable: " + lastVersion, "Download", "Cancel"))
+                {
+                    Application.OpenURL(gitUrl);
+                }
             }
             currentlyCheckingForUpdates = false;
         }));
@@ -522,9 +528,9 @@ public class GestureManager : MonoBehaviour
      * Async
      */
 
-    public delegate void OnNetworkResponseError(String error);
+    public delegate void OnNetworkResponseError(UnityWebRequest error);
 
-    public delegate void OnNetworkResponse(String response);
+    public delegate void OnNetworkResponse(UnityWebRequest response);
 
     IEnumerator GetRequest(string uri, OnNetworkResponseError onNetworkResponseError, OnNetworkResponse onNetworkResponse)
     {
@@ -535,11 +541,11 @@ public class GestureManager : MonoBehaviour
 
             if (webRequest.isNetworkError)
             {
-                onNetworkResponseError(webRequest.error);
+                onNetworkResponseError(webRequest);
             }
             else
             {
-                onNetworkResponseError(webRequest.downloadHandler.text);
+                onNetworkResponse(webRequest);
             }
         }
     }
