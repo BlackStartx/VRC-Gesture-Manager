@@ -215,6 +215,11 @@ public class GestureManager : MonoBehaviour
         avatarDescriptor = null;
     }
 
+    public string GetCurrentVersion()
+    {
+        return version;
+    }
+
     public void CheckForUpdates()
     {
         if(currentlyCheckingForUpdates)
@@ -227,7 +232,7 @@ public class GestureManager : MonoBehaviour
         }, (response) =>
         {
             string lastVersion = response.downloadHandler.text;
-            if (version.Equals(lastVersion))
+            if (GetCurrentVersion().Equals(lastVersion))
             {
                 EditorUtility.DisplayDialog("Gesture Manager Updater", "You have the latest version of the manager. (" + lastVersion + ")", "Okay");
             }
