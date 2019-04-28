@@ -141,10 +141,27 @@ public class GestureManagerEditor : Editor
                     GetManager().CheckForUpdates();
                 }
                 GUILayout.Space(20);
+                if (GUILayout.Button("My Discord Name", GUILayout.Width(130)))
+                {
+                    string me = "BlackStartx#6593";
+                    if (EditorUtility.DisplayDialog("It's me!", me, "Copy To Clipboard!", "Ok!"))
+                    {
+                        CopyToClipboard(me);
+                    }
+                }
+
+
+                /**
+                 * Dunno if i will insert a donation button directly on the script... 
+                 *
+                GUILayout.Space(20);
                 if (GUILayout.Button("Donate", GUILayout.Width(130)))
                 {
                     Application.OpenURL("https://www.paypal.me/blackstartx");
                 }
+                */
+
+
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
             }
@@ -246,5 +263,17 @@ public class GestureManagerEditor : Editor
         if (manager == null)
             manager = (GestureManager) target;
         return manager;
+    }
+
+    /**
+     * Utils
+     */
+
+    public static void CopyToClipboard(string toClipboard)
+    {
+        TextEditor textEditor = new TextEditor();
+        textEditor.text = toClipboard;
+        textEditor.SelectAll();
+        textEditor.Copy();
     }
 }
