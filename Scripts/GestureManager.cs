@@ -234,14 +234,14 @@ public class GestureManager : MonoBehaviour
             currentlyCheckingForUpdates = false;
         }, (response) =>
         {
-            string lastVersion = response.downloadHandler.text;
+            string lastVersion = response.downloadHandler.text.Trim();
             if (GetCurrentVersion().Equals(lastVersion))
             {
                 EditorUtility.DisplayDialog("Gesture Manager Updater", "You have the latest version of the manager. (" + lastVersion + ")", "Okay");
             }
             else
             {
-                if(EditorUtility.DisplayDialog("Gesture Manager Updater", "Newer version aviable: " + lastVersion, "Download", "Cancel"))
+                if(EditorUtility.DisplayDialog("Gesture Manager Updater", "Newer version aviable! (" + lastVersion + ")", "Download", "Cancel"))
                 {
                     Application.OpenURL(gitUrl);
                 }
