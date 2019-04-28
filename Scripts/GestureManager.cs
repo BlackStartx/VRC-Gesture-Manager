@@ -13,6 +13,8 @@ public class GestureManager : MonoBehaviour
         SEATED
     };
 
+    private static string version = "1.0.0";
+
     public GameObject avatar;
     public int right, left, emote;
     public bool onCustomAnimation;
