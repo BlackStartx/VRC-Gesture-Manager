@@ -1,1 +1,1 @@
-# VRC-Gesture-Manager
+# VRC Gesture Manager
