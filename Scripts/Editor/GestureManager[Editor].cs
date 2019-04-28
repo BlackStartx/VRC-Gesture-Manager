@@ -35,7 +35,7 @@ public class GestureManagerEditor : Editor
 
             GUILayout.BeginHorizontal();
 
-            GUILayout.Label("Using Override: " + GetManager().getOverrideController().name + " [" + usingType.ToString() + "]");
+            GUILayout.Label("Using Override: " + GetManager().GetOverrideController().name + " [" + usingType.ToString() + "]");
             if (GUILayout.Button("Switch to " + notUsingType.ToString().ToLower() + "!"))
             {
                 GetManager().SwitchType();

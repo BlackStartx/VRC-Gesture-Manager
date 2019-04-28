@@ -204,7 +204,7 @@ public class GestureManager : MonoBehaviour
         {
             VRCSDK2.VRC_AvatarDescriptor validDescriptor = GetValidDescriptor();
             if (validDescriptor != null)
-                initForAvatar(validDescriptor);
+                InitForAvatar(validDescriptor);
         }
     }
 
@@ -282,7 +282,7 @@ public class GestureManager : MonoBehaviour
         return null;
     }
 
-    void fetchRuntimeOverrideAnimationNames()
+    void FetchRuntimeOverrideAnimationNames()
     {
         if (runtimeOverrideController != null)
         {
@@ -302,7 +302,7 @@ public class GestureManager : MonoBehaviour
         }
     }
 
-    public AnimatorOverrideController getOverrideController()
+    public AnimatorOverrideController GetOverrideController()
     {
         return overrideController;
     }
@@ -330,7 +330,7 @@ public class GestureManager : MonoBehaviour
         return gestureClips[gestureIndex].name;
     }
 
-    void initForAvatar(VRCSDK2.VRC_AvatarDescriptor descriptor)
+    void InitForAvatar(VRCSDK2.VRC_AvatarDescriptor descriptor)
     {
         avatar = descriptor.gameObject;
         avatarDescriptor = descriptor;
@@ -385,7 +385,7 @@ public class GestureManager : MonoBehaviour
             }
         }
 
-        fetchRuntimeOverrideAnimationNames();
+        FetchRuntimeOverrideAnimationNames();
 
         List<KeyValuePair<AnimationClip, AnimationClip>> finalOverride = new List<KeyValuePair<AnimationClip, AnimationClip>>();
 
