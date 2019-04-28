@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Networking;
 using VRCSDK2;
 
 public class GestureManager : MonoBehaviour
@@ -14,10 +15,13 @@ public class GestureManager : MonoBehaviour
     };
 
     private static string version = "1.0.0";
+    private static string versionUrl = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.version";
 
     public GameObject avatar;
     public int right, left, emote;
     public bool onCustomAnimation;
+
+    public bool currentlyCheckingForUpdates;
 
     public AnimationClip customAnim;
     public AnimationClip currentCustomAnim;
@@ -207,6 +211,29 @@ public class GestureManager : MonoBehaviour
         ResetCurrentAvatarController();
         avatar = null;
         avatarDescriptor = null;
+    }
+
+    public void CheckForUpdates()
+    {
+        if(currentlyCheckingForUpdates)
+            return;
+        currentlyCheckingForUpdates = true;
+        StartCoroutine(GetRequest(versionUrl, (error) =>
+        {
+            Debug.Log("Error");
+            currentlyCheckingForUpdates = false;
+        }, (response) =>
+        {
+            if (version.Equals(response))
+            {
+                Debug.Log("Same");
+            }
+            else
+            {
+                Debug.Log("Different");
+            }
+            currentlyCheckingForUpdates = false;
+        }));
     }
 
     VRCSDK2.VRC_AvatarDescriptor GetValidDescriptor()
@@ -489,6 +516,32 @@ public class GestureManager : MonoBehaviour
     {
         SaveCurrentStartEmotePosition();
         this.onCustomAnimation = true;
+    }
+
+    /**
+     * Async
+     */
+
+    public delegate void OnNetworkResponseError(String error);
+
+    public delegate void OnNetworkResponse(String response);
+
+    IEnumerator GetRequest(string uri, OnNetworkResponseError onNetworkResponseError, OnNetworkResponse onNetworkResponse)
+    {
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
+        {
+            // Request and wait for the desired page.
+            yield return webRequest.SendWebRequest();
+
+            if (webRequest.isNetworkError)
+            {
+                onNetworkResponseError(webRequest.error);
+            }
+            else
+            {
+                onNetworkResponseError(webRequest.downloadHandler.text);
+            }
+        }
     }
 
     /**

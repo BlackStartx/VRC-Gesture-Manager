@@ -1,6 +1,7 @@
-﻿using System.Collections;
+﻿using UnityEngine;
+using UnityEngine.Networking;
+using System.Collections;
 using UnityEditor;
-using UnityEngine;
 
 [CustomEditor(typeof(GestureManager))]
 public class GestureManagerEditor : Editor
@@ -137,7 +138,7 @@ public class GestureManagerEditor : Editor
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("Check For Updates", GUILayout.Width(130)))
                 {
-                    Application.OpenURL("https://www.paypal.me/blackstartx");
+                    GetManager().CheckForUpdates();
                 }
                 GUILayout.Space(20);
                 if (GUILayout.Button("Donate", GUILayout.Width(130)))
