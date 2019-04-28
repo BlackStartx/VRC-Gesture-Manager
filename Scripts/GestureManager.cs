@@ -23,7 +23,7 @@ public class GestureManager : MonoBehaviour
     public int right, left, emote;
     public bool onCustomAnimation;
 
-    public bool currentlyCheckingForUpdates;
+    public bool currentlyCheckingForUpdates = false;
 
     public AnimationClip customAnim;
     public AnimationClip currentCustomAnim;
@@ -222,8 +222,11 @@ public class GestureManager : MonoBehaviour
 
     public void CheckForUpdates()
     {
-        if(currentlyCheckingForUpdates)
+        if (currentlyCheckingForUpdates)
+        {
+            Debug.Log("Gesture Manager: Already looking for updates...");
             return;
+        }
         currentlyCheckingForUpdates = true;
         StartCoroutine(GetRequest(versionUrl, (error) =>
         {
