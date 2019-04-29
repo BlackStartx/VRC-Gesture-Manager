@@ -503,6 +503,7 @@ public class GestureManager : MonoBehaviour
         this.emote = 0;
         this.avatarAnimator.applyRootMotion = false;
         RevertoToEmotePosition();
+        SetCustomAnimation(null);
     }
 
     public void OnEmoteStart(int emote)
