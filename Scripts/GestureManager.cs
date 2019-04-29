@@ -464,15 +464,6 @@ public class GestureManager : MonoBehaviour
         avatarAnimator.runtimeAnimatorController = runtimeOverrideController;
     }
 
-    private void ResetAvatarTransform()
-    {
-        if (this.avatar == null)
-            return;
-        this.avatar.transform.position = beforeEmoteAvatarPosition;
-        this.avatar.transform.rotation = beforeEmoteAvatarRotation;
-        this.avatar.transform.localScale = beforeEmoteAvatarScale;
-    }
-
     public void SaveCurrentStartEmotePosition()
     {
         this.beforeEmoteAvatarPosition = avatar.transform.position;
@@ -480,7 +471,19 @@ public class GestureManager : MonoBehaviour
         this.beforeEmoteAvatarScale = avatar.transform.localScale;
     }
 
+    public void RevertoToEmotePosition()
+    {
+        avatar.transform.position = this.beforeEmoteAvatarPosition;
+        avatar.transform.rotation = this.beforeEmoteAvatarRotation;
+        avatar.transform.localScale = this.beforeEmoteAvatarScale;
+    }
 
+    public void RevertoToOriginPosition()
+    {
+        avatar.transform.position = new Vector3(0, 0, 0);
+        avatar.transform.rotation = new Quaternion(0, 0, 0, 0);
+        avatar.transform.localScale = this.beforeEmoteAvatarScale;
+    }
 
     public void SetCustomAnimation(AnimationClip clip)
     {
@@ -498,21 +501,29 @@ public class GestureManager : MonoBehaviour
     public void OnEmoteStop()
     {
         this.emote = 0;
+        this.avatarAnimator.applyRootMotion = false;
+        RevertoToEmotePosition();
     }
 
     public void OnEmoteStart(int emote)
     {
         this.emote = emote;
+        this.avatarAnimator.applyRootMotion = true;
         SetCustomAnimation(emoteClips[emote - 1]);
+        SaveCurrentStartEmotePosition();
     }
 
     public void OnCustomEmoteStop()
     {
         this.onCustomAnimation = false;
+        this.avatarAnimator.applyRootMotion = false;
+        SetCustomAnimation(null);
+        RevertoToEmotePosition();
     }
 
     public void OnCustomEmoteStart()
     {
+        this.avatarAnimator.applyRootMotion = true;
         SaveCurrentStartEmotePosition();
         this.onCustomAnimation = true;
     }
