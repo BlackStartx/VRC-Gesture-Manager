@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 using VRCSDK2;
@@ -219,7 +216,7 @@ public class GestureManager : MonoBehaviour
         return version;
     }
 
-    public void CheckForUpdates()
+    public void CheckForUpdates(OnNetworkResponseError onNetworkResponseError, OnNetworkResponse onNetworkResponse)
     {
         if (currentlyCheckingForUpdates)
         {
@@ -229,24 +226,11 @@ public class GestureManager : MonoBehaviour
         currentlyCheckingForUpdates = true;
         StartCoroutine(GetRequest(versionUrl, (error) =>
         {
-            EditorUtility.DisplayDialog("Gesture Manager Updater", "Error :c (" + error.responseCode + ")", "Okay");
+            onNetworkResponseError(error);
             currentlyCheckingForUpdates = false;
         }, (response) =>
         {
-            string[] infos = response.downloadHandler.text.Trim().Split('\n');
-            string lastVersion = infos[0];
-            string download = infos[1];
-            if (GetCurrentVersion().Equals(lastVersion))
-            {
-                EditorUtility.DisplayDialog("Gesture Manager Updater", "You have the latest version of the manager. (" + lastVersion + ")", "Okay");
-            }
-            else
-            {
-                if(EditorUtility.DisplayDialog("Gesture Manager Updater", "Newer version aviable! (" + lastVersion + ")", "Download", "Cancel"))
-                {
-                    Application.OpenURL(download);
-                }
-            }
+            onNetworkResponse(response);
             currentlyCheckingForUpdates = false;
         }));
     }

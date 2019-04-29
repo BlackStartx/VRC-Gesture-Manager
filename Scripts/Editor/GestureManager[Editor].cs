@@ -1,6 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.Networking;
-using System.Collections;
 using UnityEditor;
 
 [CustomEditor(typeof(GestureManager))]
@@ -138,7 +136,26 @@ public class GestureManagerEditor : Editor
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("Check For Updates", GUILayout.Width(130)))
                 {
-                    GetManager().CheckForUpdates();
+                    GetManager().CheckForUpdates((error) =>
+                    {
+                        EditorUtility.DisplayDialog("Gesture Manager Updater", "Error :c (" + error.responseCode + ")", "Okay");
+                    }, response =>
+                    {
+                        string[] infos = response.downloadHandler.text.Trim().Split('\n');
+                        string lastVersion = infos[0];
+                        string download = infos[1];
+                        if (GetManager().GetCurrentVersion().Equals(lastVersion))
+                        {
+                            EditorUtility.DisplayDialog("Gesture Manager Updater", "You have the latest version of the manager. (" + lastVersion + ")", "Okay");
+                        }
+                        else
+                        {
+                            if (EditorUtility.DisplayDialog("Gesture Manager Updater", "Newer version aviable! (" + lastVersion + ")", "Download", "Cancel"))
+                            {
+                                Application.OpenURL(download);
+                            }
+                        }
+                    });
                 }
                 GUILayout.Space(20);
                 if (GUILayout.Button("My Discord Name", GUILayout.Width(130)))
