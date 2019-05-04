@@ -1,10 +1,10 @@
 # VRC Gesture Manager
 
 A simple script that will help you testing you animation before uploading your avatar to VRChat.  
-Just download and import in your project the unitypackage that you can download here:  
+Just download and import in your project the unitypackage that you can find here:  
 https://vrcmods.com/user/BlackStartx (WIP)
 
-In your Asset folder you will find one named "GestureManager", there you will find the prefab you need to drop in the scene.
+Once the package is imported you will find a folder inside the Asset one named "GestureManager", there you will find the prefab you need to drop into the scene.
 
 ![alt text](https://cdn.discordapp.com/attachments/561337898864082996/574264846250541059/Project.png)
 
