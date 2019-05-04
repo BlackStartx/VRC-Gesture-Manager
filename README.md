@@ -5,5 +5,5 @@ Just download and import in your project the unitypackage that you can download 
 
 In your Asset folder you will find one named "GestureManager" and there you will find the prefab.
 
-https://cdn.discordapp.com/attachments/561337898864082996/574264846250541059/Project.png
+![alt text](https://cdn.discordapp.com/attachments/561337898864082996/574264846250541059/Project.png)
 
