@@ -14,3 +14,9 @@ Drop the prefab in to your scene and whenever you will enter in PlayMode the scr
 
 Your avatar should now enter into the "Animation pose" (Like the one on the image above).  
 Now you can select the gesture to play directly in Unity, each gesture has the name of the animation file its releated.  
+
+Whit this script you can easly test your combination of gesture in Unity ;D  
+For any feedback fell free to contact me on Discord: BlackStartx#6593
+
+Thanks for using my script <3
+- BlackStartx
