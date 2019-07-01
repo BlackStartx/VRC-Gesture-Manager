@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using VRCSDK2;
 
 [CustomEditor(typeof(GestureManager))]
 public class GestureManagerEditor : Editor
@@ -8,6 +9,7 @@ public class GestureManagerEditor : Editor
     private GUIStyle middleStyle;
     private GUIStyle bottomStyle;
     private GUIStyle guiGreenButton;
+    private GUIStyle guiHandTitle;
     private GUIStyle emoteError;
 
     private AnimationClip selectingCustomAnim;
@@ -29,19 +31,29 @@ public class GestureManagerEditor : Editor
             GestureManager.ControllerType usingType = GetManager().GetUsedType();
             GestureManager.ControllerType notUsingType = GetManager().GetNotUsedType();
 
-            GUILayout.Label("Current Avatar: " + GetManager().avatar.name);
+            MyLayoutHelper.ObjectField("Controlling Avatar: ", GetManager().avatar, newObject =>
+            {
+                GetManager().UnlinkFromAvatar();
+                if (newObject != null && newObject.GetComponent<VRC_AvatarDescriptor>() != null)
+                    GetManager().InitForAvatar(newObject.GetComponent<VRC_AvatarDescriptor>());
+            });
 
             GUILayout.BeginHorizontal();
 
             GUILayout.Label("Using Override: " + GetManager().GetOverrideController().name + " [" + usingType.ToString() + "]");
+            GUI.enabled = GetManager().CanSwitchController();
             if (GUILayout.Button("Switch to " + notUsingType.ToString().ToLower() + "!"))
             {
                 GetManager().SwitchType();
             }
 
+            GUI.enabled = true;
+
             GUILayout.EndHorizontal();
 
-            tab = GUILayout.Toolbar(tab, new string[] { "Gestures", "Emotes", "Test animation" });
+            GUILayout.Space(15);
+
+            tab = GUILayout.Toolbar(tab, new string[] { "Gestures", "Emotes", "Idles", "Test animation" });
             switch (tab)
             {
                 case 0:
@@ -60,12 +72,12 @@ public class GestureManagerEditor : Editor
                     GUILayout.BeginHorizontal();
                     
                     GUILayout.BeginVertical();
-                    GUILayout.Label("Left Hand");
+                    GUILayout.Label("Left Hand", guiHandTitle);
                     GetManager().left = OnCheckBoxGUIHand(GetManager().left, position => { return 0; });
                     GUILayout.EndVertical();
 
                     GUILayout.BeginVertical();
-                    GUILayout.Label("Right Hand");
+                    GUILayout.Label("Right Hand", guiHandTitle);
                     GetManager().right = OnCheckBoxGUIHand(GetManager().right, position => { return 0; });
                     GUILayout.EndVertical();
                     
@@ -90,13 +102,21 @@ public class GestureManagerEditor : Editor
                 }
                 case 2:
                 {
+                    GUILayout.Label("Avatar Idles.");
+
+                    
+
+                    break;
+                }
+                case 3:
+                {
                     GUILayout.Label("Force animation.");
 
                     GUILayout.BeginHorizontal();
                     AnimationClip lastAnim = selectingCustomAnim;
-                    selectingCustomAnim = (AnimationClip) EditorGUILayout.ObjectField("Animation: ", selectingCustomAnim, typeof(AnimationClip), true, null);
+                    selectingCustomAnim = (AnimationClip)EditorGUILayout.ObjectField("Animation: ", selectingCustomAnim, typeof(AnimationClip), true, null);
                     if (selectingCustomAnim != lastAnim)
-                    { 
+                    {
                         GetManager().SetCustomAnimation(selectingCustomAnim);
                     }
                     if (manager.onCustomAnimation)
@@ -117,7 +137,7 @@ public class GestureManagerEditor : Editor
                     }
                     GUILayout.EndHorizontal();
 
-                        break;
+                    break;
                 }
                 default:
                 {
@@ -193,6 +213,12 @@ public class GestureManagerEditor : Editor
         titleStyle.fontStyle = FontStyle.Bold;
         titleStyle.alignment = TextAnchor.UpperCenter;
         titleStyle.padding = new RectOffset(10, 10, 10, 10);
+
+        guiHandTitle = new GUIStyle(GUI.skin.label);
+        guiHandTitle.fontSize = 12;
+        guiHandTitle.fontStyle = FontStyle.Bold;
+        guiHandTitle.alignment = TextAnchor.UpperCenter;
+        guiHandTitle.padding = new RectOffset(10, 10, 10, 10);
         
         bottomStyle = new GUIStyle(GUI.skin.label);
         bottomStyle.fontSize = 11;
@@ -293,4 +319,39 @@ public class GestureManagerEditor : Editor
         textEditor.SelectAll();
         textEditor.Copy();
     }
+
+    static class MyLayoutHelper
+    {
+        public static T ObjectField<T>(string label, T unityObject) where T : UnityEngine.Object
+        {
+            return (T)EditorGUILayout.ObjectField(label, unityObject, typeof(T), true, null);
+        }
+
+        public static T ObjectField<T>(string label, T unityObject, OnObjectSet<T> onObjectSet) where T : UnityEngine.Object
+        {
+            return ObjectField(label, unityObject, onObjectSet, (oldObject, newObject) => { onObjectSet(newObject); }, oldObject => { onObjectSet(null); });
+        }
+
+        public static T ObjectField<T>(string label, T unityObject, OnObjectSet<T> onObjectSet, OnObjectChange<T> onObjectChange, OnObjectRemove<T> onObjectRemove) where T : UnityEngine.Object
+        {
+            T oldObject = unityObject;
+
+            unityObject = (T)EditorGUILayout.ObjectField(label, unityObject, typeof(T), true, null);
+            if (oldObject != unityObject)
+            {
+                if (oldObject == null)
+                    onObjectSet(unityObject);
+                else if (unityObject == null)
+                    onObjectRemove(oldObject);
+                else
+                    onObjectChange(oldObject, unityObject);
+            }
+            return unityObject;
+        }
+
+        public delegate void OnObjectSet<T>(T newObject);
+        public delegate void OnObjectRemove<T>(T oldObject);
+        public delegate void OnObjectChange<T>(T oldObject, T newObject);
+    }
+
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -184,8 +185,7 @@ public class GestureManager : MonoBehaviour
             }
         }
     }
-
-    // Update is called once per frame
+    
     void Update()
     {
         if (avatar != null)
@@ -205,6 +205,11 @@ public class GestureManager : MonoBehaviour
     }
 
     void OnDisable()
+    {
+        UnlinkFromAvatar();
+    }
+
+    public void UnlinkFromAvatar()
     {
         ResetCurrentAvatarController();
         avatar = null;
@@ -233,6 +238,13 @@ public class GestureManager : MonoBehaviour
             onNetworkResponse(response);
             currentlyCheckingForUpdates = false;
         }));
+    }
+
+    public bool CanSwitchController()
+    {
+        if (this.notUsedType == ControllerType.SEATED)
+            return this.avatarDescriptor.CustomSittingAnims != null;
+        return this.avatarDescriptor.CustomStandingAnims != null;
     }
 
     VRCSDK2.VRC_AvatarDescriptor GetValidDescriptor()
@@ -315,7 +327,7 @@ public class GestureManager : MonoBehaviour
         return gestureClips[gestureIndex].name;
     }
 
-    void InitForAvatar(VRCSDK2.VRC_AvatarDescriptor descriptor)
+    public void InitForAvatar(VRCSDK2.VRC_AvatarDescriptor descriptor)
     {
         avatar = descriptor.gameObject;
         avatarDescriptor = descriptor;
@@ -324,7 +336,16 @@ public class GestureManager : MonoBehaviour
         if (avatarAnimator == null)
             avatarAnimator = avatar.AddComponent<Animator>();
 
-        SetupOverride(ControllerType.STANDING);
+        if (avatarDescriptor.CustomStandingAnims != null)
+            SetupOverride(ControllerType.STANDING, true);
+        else if (avatarDescriptor.CustomSittingAnims != null)
+            SetupOverride(ControllerType.SEATED, true);
+        else
+        {
+            avatar = null;
+            avatarDescriptor = null;
+            avatarAnimator = null;
+        }
     }
 
     RuntimeAnimatorController GetStandingRuntimeOverrideControllerPreset()
@@ -341,7 +362,7 @@ public class GestureManager : MonoBehaviour
         return seatedRuntimeOverrideControllerPreset;
     }
 
-    void SetupOverride(ControllerType controllerType)
+    void SetupOverride(ControllerType controllerType, bool saveController)
     {
         string controllerName = null;
         switch (controllerType)
@@ -410,7 +431,8 @@ public class GestureManager : MonoBehaviour
 
         runtimeOverrideController.ApplyOverrides(finalOverride);
 
-        avatarWasUsing = avatarAnimator.runtimeAnimatorController;
+        if(saveController)
+            avatarWasUsing = avatarAnimator.runtimeAnimatorController;
 
         avatarAnimator.runtimeAnimatorController = runtimeOverrideController;
         avatarAnimator.runtimeAnimatorController.name = controllerName;
@@ -441,7 +463,7 @@ public class GestureManager : MonoBehaviour
 
     public void SwitchType()
     {
-        this.SetupOverride(notUsedType);
+        this.SetupOverride(notUsedType, false);
     }
 
     public ControllerType GetUsedType()
@@ -489,7 +511,7 @@ public class GestureManager : MonoBehaviour
     {
         this.customAnim = clip;
 
-        SetupOverride(this.GetUsedType());
+        SetupOverride(this.GetUsedType(), false);
     }
 
     /**
