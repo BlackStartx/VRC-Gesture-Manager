@@ -33,9 +33,15 @@ public class GestureManagerEditor : Editor
 
             MyLayoutHelper.ObjectField("Controlling Avatar: ", GetManager().avatar, newObject =>
             {
-                GetManager().UnlinkFromAvatar();
-                if (newObject != null && newObject.GetComponent<VRC_AvatarDescriptor>() != null)
-                    GetManager().InitForAvatar(newObject.GetComponent<VRC_AvatarDescriptor>());
+                if (newObject != null)
+                {
+                    VRC_AvatarDescriptor descriptor = newObject.GetComponent<VRC_AvatarDescriptor>();
+                    if (GetManager().IsValidDesc(descriptor))
+                    {
+                        GetManager().UnlinkFromAvatar();
+                        GetManager().InitForAvatar(newObject.GetComponent<VRC_AvatarDescriptor>());
+                    }
+                }
             });
 
             GUILayout.BeginHorizontal();

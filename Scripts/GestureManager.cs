@@ -250,33 +250,29 @@ public class GestureManager : MonoBehaviour
     VRCSDK2.VRC_AvatarDescriptor GetValidDescriptor()
     {
         foreach (VRC_AvatarDescriptor descriptor in VRC.Tools.FindSceneObjectsOfTypeAll<VRCSDK2.VRC_AvatarDescriptor>())
-        {
-            if (descriptor.gameObject.activeInHierarchy)
-            {
-                Animator animator = descriptor.gameObject.GetComponent<Animator>();
-                if (animator == null)
-                {
-                    return descriptor;
-                }
-                else
-                {
-                    RuntimeAnimatorController runtimeAnimatorController = animator.runtimeAnimatorController;
-                    if (runtimeAnimatorController == null)
-                    {
-                        return descriptor;
-                    }
-                    else
-                    {
-                        if (!runtimeAnimatorController.name.Equals(GetStandingRuntimeOverrideControllerPreset().name) && !runtimeAnimatorController.name.Equals(GetSeatedRuntimeOverrideControllerPreset().name))
-                        {
-                            return descriptor;
-                        }
-                    }
-                }
-            }
-        }
+            if (IsValidDesc(descriptor))
+                return descriptor;
 
         return null;
+    }
+
+    public bool IsValidDesc(VRCSDK2.VRC_AvatarDescriptor descriptor)
+    {
+        if (descriptor.gameObject.activeInHierarchy)
+        {
+            Animator animator = descriptor.gameObject.GetComponent<Animator>();
+            if (animator == null)
+                return true;
+            else
+            {
+                RuntimeAnimatorController runtimeAnimatorController = animator.runtimeAnimatorController;
+                if (runtimeAnimatorController == null)
+                    return true;
+                else if(!runtimeAnimatorController.name.Equals(GetStandingRuntimeOverrideControllerPreset().name) && !runtimeAnimatorController.name.Equals(GetSeatedRuntimeOverrideControllerPreset().name))
+                    return true;
+            }
+        }
+        return false;
     }
 
     void FetchRuntimeOverrideAnimationNames()
