@@ -40,6 +40,8 @@ public class GestureManager : MonoBehaviour
     private ControllerType usingType;
     private ControllerType notUsedType;
 
+    private VRC_AvatarDescriptor[] lastCheckedActiveDescriptors;
+
     /**
      * An array that contains the final Emote clips.
      */
@@ -249,27 +251,47 @@ public class GestureManager : MonoBehaviour
 
     VRCSDK2.VRC_AvatarDescriptor GetValidDescriptor()
     {
-        foreach (VRC_AvatarDescriptor descriptor in VRC.Tools.FindSceneObjectsOfTypeAll<VRCSDK2.VRC_AvatarDescriptor>())
+        CheckActiveDescriptors();
+        foreach (VRC_AvatarDescriptor descriptor in lastCheckedActiveDescriptors)
             if (IsValidDesc(descriptor))
                 return descriptor;
 
         return null;
     }
 
+    public VRC_AvatarDescriptor[] GetLastCheckedActiveDescriptors()
+    {
+        return this.lastCheckedActiveDescriptors;
+    }
+
+    public void CheckActiveDescriptors()
+    {
+        lastCheckedActiveDescriptors = VRC.Tools.FindSceneObjectsOfTypeAll<VRCSDK2.VRC_AvatarDescriptor>();
+    }
+
     public bool IsValidDesc(VRCSDK2.VRC_AvatarDescriptor descriptor)
     {
-        if (descriptor.gameObject.activeInHierarchy)
+        if (descriptor != null)
         {
-            Animator animator = descriptor.gameObject.GetComponent<Animator>();
-            if (animator == null)
-                return true;
-            else
+            if (descriptor.gameObject.activeInHierarchy)
             {
-                RuntimeAnimatorController runtimeAnimatorController = animator.runtimeAnimatorController;
-                if (runtimeAnimatorController == null)
-                    return true;
-                else if(!runtimeAnimatorController.name.Equals(GetStandingRuntimeOverrideControllerPreset().name) && !runtimeAnimatorController.name.Equals(GetSeatedRuntimeOverrideControllerPreset().name))
-                    return true;
+                Animator animator = descriptor.gameObject.GetComponent<Animator>();
+                if (animator != null)
+                {
+                    if (animator.isHuman)
+                    {
+                        if (descriptor.CustomSittingAnims != null || descriptor.CustomStandingAnims != null)
+                        {
+                            RuntimeAnimatorController runtimeAnimatorController = animator.runtimeAnimatorController;
+                            if (runtimeAnimatorController == null)
+                                return true;
+                            else if (!runtimeAnimatorController.name.Equals(GetStandingRuntimeOverrideControllerPreset()
+                                         .name) && !runtimeAnimatorController.name.Equals(
+                                         GetSeatedRuntimeOverrideControllerPreset().name))
+                                return true;
+                        }
+                    }
+                }
             }
         }
         return false;

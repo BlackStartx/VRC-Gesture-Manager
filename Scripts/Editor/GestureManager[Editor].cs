@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using NUnit.Framework;
+using UnityEngine;
 using UnityEditor;
 using VRCSDK2;
 
@@ -11,6 +13,8 @@ public class GestureManagerEditor : Editor
     private GUIStyle guiGreenButton;
     private GUIStyle guiHandTitle;
     private GUIStyle emoteError;
+    private GUIStyle textError;
+    private GUIStyle subHeader;
 
     private AnimationClip selectingCustomAnim;
 
@@ -28,6 +32,11 @@ public class GestureManagerEditor : Editor
         if (GetManager().avatar != null)
         {
 
+            if (!GetManager().avatar.activeInHierarchy)
+            {
+                GetManager().UnlinkFromAvatar();
+            }
+
             GestureManager.ControllerType usingType = GetManager().GetUsedType();
             GestureManager.ControllerType notUsingType = GetManager().GetNotUsedType();
 
@@ -36,13 +45,20 @@ public class GestureManagerEditor : Editor
                 if (newObject != null)
                 {
                     VRC_AvatarDescriptor descriptor = newObject.GetComponent<VRC_AvatarDescriptor>();
-                    if (GetManager().IsValidDesc(descriptor))
+                    if (GetManager().IsValidDesc(descriptor)) 
                     {
                         GetManager().UnlinkFromAvatar();
                         GetManager().InitForAvatar(newObject.GetComponent<VRC_AvatarDescriptor>());
                     }
                 }
+                else
+                {
+                    GetManager().UnlinkFromAvatar();
+                }
             });
+
+            if(GetManager().avatar == null)
+                return;
 
             GUILayout.BeginHorizontal();
 
@@ -153,8 +169,80 @@ public class GestureManagerEditor : Editor
         }
         else
         {
-            if(EditorApplication.isPlaying)
-                GUILayout.Label("No avatars.");
+            if (EditorApplication.isPlaying)
+            {
+                if (this.GetManager().gameObject.activeInHierarchy)
+                {
+                    if (GetManager().GetLastCheckedActiveDescriptors().Length == 0)
+                    {
+                        GUILayout.Label("There are no VRC_AvatarDescriptor on your scene. \nPlease consider adding one to your avatar before entering in PlayMode.", textError);
+
+                        if (GUILayout.Button("Check Again"))
+                        {
+                            GetManager().CheckActiveDescriptors();
+                        }
+
+                    }
+                    else
+                    {
+                        List<VRC_AvatarDescriptor> elegible = new List<VRC_AvatarDescriptor>();
+                        List<VRC_AvatarDescriptor> unelegible = new List<VRC_AvatarDescriptor>();
+
+                        foreach (VRC_AvatarDescriptor descriptor in GetManager().GetLastCheckedActiveDescriptors())
+                        {
+                            if(GetManager().IsValidDesc(descriptor))
+                                elegible.Add(descriptor);
+                            else
+                                unelegible.Add(descriptor);
+                        }
+
+                        if(elegible.Count == 0)
+                            GUILayout.Label("No one of your VRC_AvatarDescriptor are elegible.", subHeader);
+                        else
+                            GUILayout.Label("Elegible VRC_AvatarDescriptors:", subHeader); 
+
+                        foreach (VRC_AvatarDescriptor descriptor in elegible)
+                        {
+                            GUILayout.BeginHorizontal();
+                            GUILayout.Label(descriptor.gameObject.name + ":"); 
+
+                            if (GUILayout.Button("Set As Avatar", GUILayout.Width(200)))
+                            {
+                                GetManager().InitForAvatar(descriptor);
+                            }
+
+                            GUILayout.EndHorizontal();
+                        }
+
+                        if (elegible.Count != 0 && unelegible.Count != 0)
+                            GUILayout.Label("Non-Elegible VRC_AvatarDescriptors:", subHeader);
+
+                        foreach (VRC_AvatarDescriptor descriptor in unelegible)
+                        {
+                            if (descriptor != null)
+                            {
+                                GUILayout.Label(descriptor.gameObject.name + ":");
+                                GUILayout.BeginVertical(emoteError);
+
+                                if (!descriptor.gameObject.activeInHierarchy)
+                                    GUILayout.Label("The GameObject is disabled!", textError);
+                                if (descriptor.CustomSittingAnims == null && descriptor.CustomStandingAnims == null)
+                                    GUILayout.Label("The Descriptor doesn't have any kind of controller!", textError);
+                                if (descriptor.gameObject.GetComponent<Animator>() == null)
+                                    GUILayout.Label("The model doesn't have any animator!", textError);
+                                else if (!descriptor.gameObject.GetComponent<Animator>().isHuman)
+                                    GUILayout.Label("The avatar is not imported as a humanoid rig!", textError);
+
+                                GUILayout.EndVertical();
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    GUILayout.Label("I'm disabled!", textError);
+                }
+            }
             else
             {
                 GUILayout.Label("I'm an useless script if you aren't on play mode :D", middleStyle);
@@ -242,8 +330,17 @@ public class GestureManagerEditor : Editor
         emoteError.padding = new RectOffset(5, 5, 5, 5);
         emoteError.margin = new RectOffset(5, 5, 5, 5);
 
+        textError = new GUIStyle(GUI.skin.label);
+        textError.active.textColor = Color.red;
+        textError.normal.textColor = Color.red;
+        textError.fontSize = 13;
+        textError.alignment = TextAnchor.MiddleCenter;
+
         guiGreenButton = new GUIStyle(GUI.skin.button);
         guiGreenButton.normal.textColor = Color.green;
+
+        subHeader = new GUIStyle(GUI.skin.label);
+        subHeader.alignment = TextAnchor.MiddleCenter;
 
         guiGreenButton.fixedWidth = 100;
     }
