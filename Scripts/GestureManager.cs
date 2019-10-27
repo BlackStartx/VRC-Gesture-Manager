@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using GestureManager.Scripts.Core;
 using UnityEngine;
 using UnityEngine.Networking;
 using VRCSDK2;
@@ -11,7 +12,7 @@ namespace GestureManager.Scripts
     public class GestureManager : MonoBehaviour
     {
         private const string VersionUrl = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.version";
-        
+
         public GameObject avatar;
         public int right, left, emote;
         public bool onCustomAnimation;
@@ -29,28 +30,20 @@ namespace GestureManager.Scripts
 
         private VRC_AvatarDescriptor avatarDescriptor;
 
-        private readonly string[] gestureBaseNames = {"...", "FIST", "HANDOPEN", "FINGERPOINT", "VICTORY", "ROCKNROLL", "HANDGUN", "THUMBSUP"};
-        private readonly string[] emoteBaseNames = {"EMOTE1", "EMOTE2", "EMOTE3", "EMOTE4", "EMOTE5", "EMOTE6", "EMOTE7", "EMOTE8"};
-
         private ControllerType usingType;
         private ControllerType notUsedType;
 
         private VRC_AvatarDescriptor[] lastCheckedActiveDescriptors;
 
-        private readonly AnimationClip[] emoteClips = new AnimationClip[8];
-        private readonly AnimationClip[] gestureClips = new AnimationClip[8];
-
-        private readonly string[] emoteNames = new string[8];
-        private readonly string[] gestureNames = new string[8];
-        private string customAnimName;
-
         private Animator avatarAnimator;
-        private AnimatorOverrideController overrideController;
-        private AnimatorOverrideController runtimeOverrideController;
+
+        private AnimatorOverrideController originalUsingOverrideController;
+        private AnimatorOverrideController myRuntimeOverrideController;
 
         private RuntimeAnimatorController avatarWasUsing;
 
         [SerializeField] private int instanceId;
+
         private static readonly int HandGestureLeft = Animator.StringToHash("HandGestureLeft");
         private static readonly int HandGestureRight = Animator.StringToHash("HandGestureRight");
         private static readonly int Emote = Animator.StringToHash("Emote");
@@ -64,7 +57,7 @@ namespace GestureManager.Scripts
                 else
                 {
                     instanceId = GetInstanceID();
-                    if (instanceId < 0) 
+                    if (instanceId < 0)
                         avatar = null;
                 }
             }
@@ -72,7 +65,8 @@ namespace GestureManager.Scripts
 
         private void Update()
         {
-            if (avatar != null) SetValues();
+            if (avatar != null)
+                SetValues();
         }
 
         private void OnEnable()
@@ -177,29 +171,9 @@ namespace GestureManager.Scripts
             return false;
         }
 
-        private void FetchRuntimeOverrideAnimationNames()
-        {
-            if (runtimeOverrideController != null)
-            {
-                for (var i = 0; i < 8; i++)
-                    emoteNames[i] = runtimeOverrideController.animationClips[i].name;
-
-                customAnimName = runtimeOverrideController.animationClips[25].name;
-
-                gestureNames[0] = runtimeOverrideController.animationClips[24].name; // Idle        V
-                gestureNames[1] = runtimeOverrideController.animationClips[17].name; // Close       V
-                gestureNames[2] = runtimeOverrideController.animationClips[20].name; // Open        V
-                gestureNames[3] = runtimeOverrideController.animationClips[18].name; // Finger      V
-                gestureNames[4] = runtimeOverrideController.animationClips[22].name; // Victory     V
-                gestureNames[5] = runtimeOverrideController.animationClips[19].name; // Rock&Roll   V
-                gestureNames[6] = runtimeOverrideController.animationClips[23].name; // HandGun     V
-                gestureNames[7] = runtimeOverrideController.animationClips[21].name; // ThumbsUp    V
-            }
-        }
-
         public AnimatorOverrideController GetOverrideController()
         {
-            return overrideController;
+            return originalUsingOverrideController;
         }
 
         private void ResetCurrentAvatarController()
@@ -217,12 +191,12 @@ namespace GestureManager.Scripts
 
         public string GetEmoteName(int emoteIndex)
         {
-            return emoteClips[emoteIndex].name;
+            return GetEmoteByIndex(emoteIndex).name;
         }
 
-        public string GetGestureName(int gestureIndex)
+        public string GetFinalGestureName(int gestureIndex)
         {
-            return gestureClips[gestureIndex].name;
+            return GetFinalGestureByIndex(gestureIndex).name;
         }
 
         public void InitForAvatar(VRC_AvatarDescriptor descriptor)
@@ -270,8 +244,8 @@ namespace GestureManager.Scripts
                     usingType = ControllerType.Standing;
                     notUsedType = ControllerType.Seated;
 
-                    overrideController = avatarDescriptor.CustomStandingAnims;
-                    runtimeOverrideController = new AnimatorOverrideController(GetStandingRuntimeOverrideControllerPreset());
+                    originalUsingOverrideController = avatarDescriptor.CustomStandingAnims;
+                    myRuntimeOverrideController = new AnimatorOverrideController(GetStandingRuntimeOverrideControllerPreset());
                     controllerName = GetStandingRuntimeOverrideControllerPreset().name;
 
                     break;
@@ -281,8 +255,8 @@ namespace GestureManager.Scripts
                     usingType = ControllerType.Seated;
                     notUsedType = ControllerType.Standing;
 
-                    overrideController = avatarDescriptor.CustomSittingAnims;
-                    runtimeOverrideController = new AnimatorOverrideController(GetSeatedRuntimeOverrideControllerPreset());
+                    originalUsingOverrideController = avatarDescriptor.CustomSittingAnims;
+                    myRuntimeOverrideController = new AnimatorOverrideController(GetSeatedRuntimeOverrideControllerPreset());
                     controllerName = GetSeatedRuntimeOverrideControllerPreset().name;
 
                     break;
@@ -291,52 +265,19 @@ namespace GestureManager.Scripts
                     throw new ArgumentOutOfRangeException("controllerType", controllerType, null);
             }
 
-            FetchRuntimeOverrideAnimationNames();
-
             var finalOverride = new List<KeyValuePair<AnimationClip, AnimationClip>>
             {
-                new KeyValuePair<AnimationClip, AnimationClip>(runtimeOverrideController[customAnimName], customAnim)
+                new KeyValuePair<AnimationClip, AnimationClip>(myRuntimeOverrideController["[EXTRA] CustomAnimation"], customAnim)
             };
 
+            finalOverride.AddRange(MyAnimatorControllerHelper.GetOverrides(originalUsingOverrideController).Where(keyValuePair => keyValuePair.Value != null).Select(controllerOverride => new KeyValuePair<AnimationClip, AnimationClip>(myRuntimeOverrideController[MyTranslate(controllerOverride.Key.name)], controllerOverride.Value)));
 
-            /**
-             * Gestures...
-             */
-
-            var gestureIndex = new[] {0, 39, 42, 40, 44, 41, 45, 43};
-
-            for (var index = 0; index < 8; index++)
-            {
-                var overrideClip = runtimeOverrideController[gestureNames[index]];
-                var clip = overrideController.animationClips[gestureIndex[index]];
-                if (!clip.name.Equals(gestureBaseNames[index]))
-                    overrideClip = clip;
-                finalOverride.Add(new KeyValuePair<AnimationClip, AnimationClip>(runtimeOverrideController[gestureNames[index]], overrideClip));
-                gestureClips[index] = overrideClip;
-            }
-
-            /**
-             * Emotes...
-             */
-
-            var emoteIndex = new[] {2, 3, 4, 5, 6, 7, 8, 9, 10};
-
-            for (var index = 0; index < 8; index++)
-            {
-                var overrideClip = runtimeOverrideController[emoteNames[index]];
-                var clip = overrideController.animationClips[emoteIndex[index]];
-                if (!clip.name.Equals(emoteBaseNames[index]))
-                    overrideClip = clip;
-                finalOverride.Add(new KeyValuePair<AnimationClip, AnimationClip>(runtimeOverrideController[emoteNames[index]], overrideClip));
-                emoteClips[index] = overrideClip;
-            }
-
-            runtimeOverrideController.ApplyOverrides(finalOverride);
+            myRuntimeOverrideController.ApplyOverrides(finalOverride);
 
             if (saveController)
                 avatarWasUsing = avatarAnimator.runtimeAnimatorController;
 
-            avatarAnimator.runtimeAnimatorController = runtimeOverrideController;
+            avatarAnimator.runtimeAnimatorController = myRuntimeOverrideController;
             avatarAnimator.runtimeAnimatorController.name = controllerName;
         }
 
@@ -416,7 +357,7 @@ namespace GestureManager.Scripts
         {
             emote = emoteIndex;
             avatarAnimator.applyRootMotion = true;
-            SetCustomAnimation(emoteClips[emoteIndex - 1]);
+            SetCustomAnimation(GetEmoteByIndex(emoteIndex - 1));
             SaveCurrentStartEmotePosition();
         }
 
@@ -454,6 +395,98 @@ namespace GestureManager.Scripts
                     onNetworkResponse(webRequest);
                 }
             }
+        }
+
+        /**
+         *     STUPID DICTIONARY!!! >.<
+         */
+
+        private string MyTranslate(string keyName)
+        {
+            switch (keyName)
+            {
+                case "F2":
+                case "FIST":
+                {
+                    return "[GESTURE] Fist";
+                }
+                case "F3":
+                case "HAND" + "OPEN":
+                {
+                    return "[GESTURE] Open";
+                }
+                case "F4":
+                case "FINGER" + "POINT":
+                {
+                    return "[GESTURE] FingerPoint";
+                }
+                case "F5":
+                case "HANDGUN":
+                {
+                    return "[GESTURE] Gun";
+                }
+                case "F6":
+                case "THUMBS" + "UP":
+                {
+                    return "[GESTURE] ThumbsUp";
+                }
+                case "F7":
+                case "VICTORY":
+                {
+                    return "[GESTURE] Victory";
+                }
+                case "F8":
+                case "ROCK" + "N" + "ROLL":
+                {
+                    return "[GESTURE] Rock&Roll";
+                }
+                case "EMOTE1":
+                {
+                    return usingType == ControllerType.Standing ? "[P - EMOTE 1] Wave" : "[S - EMOTE 1] Laugh";
+                }
+                case "EMOTE2":
+                {
+                    return usingType == ControllerType.Standing ? "[P - EMOTE 2] Clap" : "[S - EMOTE 2] Point";
+                }
+                case "EMOTE3":
+                {
+                    return usingType == ControllerType.Standing ? "[P - EMOTE 3] Point" : "[S - EMOTE 3] Raise Hand";
+                }
+                case "EMOTE4":
+                {
+                    return usingType == ControllerType.Standing ? "[P - EMOTE 4] Cheer" : "[S - EMOTE 4] Drum";
+                }
+                case "EMOTE5":
+                {
+                    return usingType == ControllerType.Standing ? "[P - EMOTE 5] Dance" : "[S - EMOTE 5] Clap";
+                }
+                case "EMOTE6":
+                {
+                    return usingType == ControllerType.Standing ? "[P - EMOTE 6] BackFlip" : "[S - EMOTE 6] Angry Fist";
+                }
+                case "EMOTE7":
+                {
+                    return usingType == ControllerType.Standing ? "[P - EMOTE 7] Die" : "[S - EMOTE 7] Disbelief";
+                }
+                case "EMOTE8":
+                {
+                    return usingType == ControllerType.Standing ? "[P - EMOTE 8] Sad" : "[S - EMOTE 8] Disapprove";
+                }
+                default:
+                {
+                    return null;
+                }
+            }
+        }
+
+        private AnimationClip GetEmoteByIndex(int emoteIndex)
+        {
+            return myRuntimeOverrideController[MyTranslate("EMOTE" + (emoteIndex + 1))];
+        }
+
+        private AnimationClip GetFinalGestureByIndex(int gestureIndex)
+        {
+            return myRuntimeOverrideController[MyTranslate("F" + (gestureIndex + 1))];
         }
     }
 

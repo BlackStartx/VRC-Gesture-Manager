@@ -348,13 +348,13 @@ namespace GestureManager.Scripts.Editor
 
             gesture[position] = true;
 
-            gesture[1] = EditorGUILayout.Toggle(manager.GetGestureName(1), gesture[1]);
-            gesture[2] = EditorGUILayout.Toggle(manager.GetGestureName(2), gesture[2]);
-            gesture[3] = EditorGUILayout.Toggle(manager.GetGestureName(3), gesture[3]);
-            gesture[4] = EditorGUILayout.Toggle(manager.GetGestureName(4), gesture[4]);
-            gesture[5] = EditorGUILayout.Toggle(manager.GetGestureName(5), gesture[5]);
-            gesture[6] = EditorGUILayout.Toggle(manager.GetGestureName(6), gesture[6]);
-            gesture[7] = EditorGUILayout.Toggle(manager.GetGestureName(7), gesture[7]);
+            gesture[1] = EditorGUILayout.Toggle(manager.GetFinalGestureName(1), gesture[1]);
+            gesture[2] = EditorGUILayout.Toggle(manager.GetFinalGestureName(2), gesture[2]);
+            gesture[3] = EditorGUILayout.Toggle(manager.GetFinalGestureName(3), gesture[3]);
+            gesture[4] = EditorGUILayout.Toggle(manager.GetFinalGestureName(4), gesture[4]);
+            gesture[5] = EditorGUILayout.Toggle(manager.GetFinalGestureName(5), gesture[5]);
+            gesture[6] = EditorGUILayout.Toggle(manager.GetFinalGestureName(6), gesture[6]);
+            gesture[7] = EditorGUILayout.Toggle(manager.GetFinalGestureName(7), gesture[7]);
 
             for (var i = 0; i < gesture.Length; i++)
             {
