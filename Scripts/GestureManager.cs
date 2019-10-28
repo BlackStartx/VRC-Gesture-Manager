@@ -13,7 +13,16 @@ namespace GestureManager.Scripts
     {
         private const string VersionUrl = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.version";
 
-        public GameObject avatar;
+        private GameObject avatar;
+        public GameObject Avatar
+        {
+            get { return avatar; }
+            set
+            {
+                isControllingAnAvatar = value != null;
+                avatar = value;
+            }
+        }
         public int right, left, emote;
         public bool onCustomAnimation;
 
@@ -47,36 +56,36 @@ namespace GestureManager.Scripts
         private static readonly int HandGestureLeft = Animator.StringToHash("HandGestureLeft");
         private static readonly int HandGestureRight = Animator.StringToHash("HandGestureRight");
         private static readonly int Emote = Animator.StringToHash("Emote");
+        private bool isControllingAnAvatar;
 
         private void Awake()
         {
-            if (instanceId != GetInstanceID())
+            if (instanceId == GetInstanceID()) return;
+            
+            if (instanceId == 0)
+                instanceId = GetInstanceID();
+            else
             {
-                if (instanceId == 0)
-                    instanceId = GetInstanceID();
-                else
-                {
-                    instanceId = GetInstanceID();
-                    if (instanceId < 0)
-                        avatar = null;
-                }
+                instanceId = GetInstanceID();
+                if (instanceId >= 0) return;
+
+                Avatar = null;
             }
         }
 
         private void Update()
         {
-            if (avatar != null)
+            if (isControllingAnAvatar)
                 SetValues();
         }
 
         private void OnEnable()
         {
-            if (avatar == null)
-            {
-                var validDescriptor = GetValidDescriptor();
-                if (validDescriptor != null)
-                    InitForAvatar(validDescriptor);
-            }
+            if (Avatar != null) return;
+            
+            var validDescriptor = GetValidDescriptor();
+            if (validDescriptor != null)
+                InitForAvatar(validDescriptor);
         }
 
         private void OnDisable()
@@ -96,7 +105,7 @@ namespace GestureManager.Scripts
         public void UnlinkFromAvatar()
         {
             ResetCurrentAvatarController();
-            avatar = null;
+            Avatar = null;
             avatarDescriptor = null;
         }
 
@@ -145,30 +154,19 @@ namespace GestureManager.Scripts
 
         public bool IsValidDesc(VRC_AvatarDescriptor descriptor)
         {
-            if (descriptor != null)
-            {
-                if (descriptor.gameObject.activeInHierarchy)
-                {
-                    var animator = descriptor.gameObject.GetComponent<Animator>();
-                    if (animator != null)
-                    {
-                        if (animator.isHuman)
-                        {
-                            if (descriptor.CustomSittingAnims != null || descriptor.CustomStandingAnims != null)
-                            {
-                                var runtimeAnimatorController = animator.runtimeAnimatorController;
-                                if (runtimeAnimatorController == null)
-                                    return true;
-                                if (!runtimeAnimatorController.name.Equals(GetStandingRuntimeOverrideControllerPreset().name) &&
-                                    !runtimeAnimatorController.name.Equals(GetSeatedRuntimeOverrideControllerPreset().name))
-                                    return true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return false;
+            if (descriptor == null) return false;
+            if (!descriptor.gameObject.activeInHierarchy) return false;
+            
+            var animator = descriptor.gameObject.GetComponent<Animator>();
+            
+            if (animator == null) return false;
+            if (!animator.isHuman) return false;
+            if (descriptor.CustomSittingAnims == null && descriptor.CustomStandingAnims == null) return false;
+            
+            var runtimeAnimatorController = animator.runtimeAnimatorController;
+            
+            return runtimeAnimatorController == null || !runtimeAnimatorController.name.Equals(GetStandingRuntimeOverrideControllerPreset().name) &&
+                   !runtimeAnimatorController.name.Equals(GetSeatedRuntimeOverrideControllerPreset().name);
         }
 
         public AnimatorOverrideController GetOverrideController()
@@ -178,15 +176,13 @@ namespace GestureManager.Scripts
 
         private void ResetCurrentAvatarController()
         {
-            if (avatar != null)
-            {
-                var animator = avatar.GetComponent<Animator>();
-                if (animator != null)
-                {
-                    animator.runtimeAnimatorController = avatarWasUsing;
-                    avatarWasUsing = null;
-                }
-            }
+            if (Avatar == null) return;
+            
+            var animator = Avatar.GetComponent<Animator>();
+            if (animator == null) return;
+            
+            animator.runtimeAnimatorController = avatarWasUsing;
+            avatarWasUsing = null;
         }
 
         public string GetEmoteName(int emoteIndex)
@@ -201,12 +197,12 @@ namespace GestureManager.Scripts
 
         public void InitForAvatar(VRC_AvatarDescriptor descriptor)
         {
-            avatar = descriptor.gameObject;
+            Avatar = descriptor.gameObject;
             avatarDescriptor = descriptor;
 
-            avatarAnimator = avatar.GetComponent<Animator>();
+            avatarAnimator = Avatar.GetComponent<Animator>();
             if (avatarAnimator == null)
-                avatarAnimator = avatar.AddComponent<Animator>();
+                avatarAnimator = Avatar.AddComponent<Animator>();
 
             if (avatarDescriptor.CustomStandingAnims != null)
                 SetupOverride(ControllerType.Standing, true);
@@ -214,7 +210,7 @@ namespace GestureManager.Scripts
                 SetupOverride(ControllerType.Seated, true);
             else
             {
-                avatar = null;
+                Avatar = null;
                 avatarDescriptor = null;
                 avatarAnimator = null;
             }
@@ -320,16 +316,16 @@ namespace GestureManager.Scripts
 
         private void SaveCurrentStartEmotePosition()
         {
-            beforeEmoteAvatarPosition = avatar.transform.position;
-            beforeEmoteAvatarRotation = avatar.transform.rotation;
-            beforeEmoteAvatarScale = avatar.transform.localScale;
+            beforeEmoteAvatarPosition = Avatar.transform.position;
+            beforeEmoteAvatarRotation = Avatar.transform.rotation;
+            beforeEmoteAvatarScale = Avatar.transform.localScale;
         }
 
         private void RevertToEmotePosition()
         {
-            avatar.transform.position = beforeEmoteAvatarPosition;
-            avatar.transform.rotation = beforeEmoteAvatarRotation;
-            avatar.transform.localScale = beforeEmoteAvatarScale;
+            Avatar.transform.position = beforeEmoteAvatarPosition;
+            Avatar.transform.rotation = beforeEmoteAvatarRotation;
+            Avatar.transform.localScale = beforeEmoteAvatarScale;
         }
 
         public void SetCustomAnimation(AnimationClip clip)

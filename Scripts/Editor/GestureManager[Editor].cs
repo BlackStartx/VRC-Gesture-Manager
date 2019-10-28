@@ -33,9 +33,9 @@ namespace GestureManager.Scripts.Editor
 
             GUILayout.Label("Gesture Manager", titleStyle);
 
-            if (GetManager().avatar != null)
+            if (GetManager().Avatar != null)
             {
-                if (!GetManager().avatar.activeInHierarchy)
+                if (!GetManager().Avatar.activeInHierarchy)
                 {
                     GetManager().UnlinkFromAvatar();
                 }
@@ -43,16 +43,15 @@ namespace GestureManager.Scripts.Editor
                 var usingType = GetManager().GetUsedType();
                 var notUsingType = GetManager().GetNotUsedType();
 
-                GetManager().avatar = MyLayoutHelper.ObjectField("Controlling Avatar: ", GetManager().avatar, newObject =>
+                GetManager().Avatar = MyLayoutHelper.ObjectField("Controlling Avatar: ", GetManager().Avatar, newObject =>
                 {
                     if (newObject != null)
                     {
                         var descriptor = newObject.GetComponent<VRC_AvatarDescriptor>();
-                        if (GetManager().IsValidDesc(descriptor))
-                        {
-                            GetManager().UnlinkFromAvatar();
-                            GetManager().InitForAvatar(newObject.GetComponent<VRC_AvatarDescriptor>());
-                        }
+                        if (!GetManager().IsValidDesc(descriptor)) return;
+                        
+                        GetManager().UnlinkFromAvatar();
+                        GetManager().InitForAvatar(newObject.GetComponent<VRC_AvatarDescriptor>());
                     }
                     else
                     {
@@ -60,7 +59,7 @@ namespace GestureManager.Scripts.Editor
                     }
                 });
 
-                if (GetManager().avatar == null)
+                if (GetManager().Avatar == null)
                     return;
 
                 GUILayout.BeginHorizontal();
@@ -185,9 +184,11 @@ namespace GestureManager.Scripts.Editor
                             foreach (var descriptor in eligible)
                             {
                                 GUILayout.BeginHorizontal();
-                                GUILayout.Label(descriptor.gameObject.name + ":");
+                                GUILayout.Label(descriptor.gameObject.name + ":", GUILayout.MaxWidth(200));
+                                
+                                GUILayout.Label(" ", GUILayout.ExpandWidth(true));
 
-                                if (GUILayout.Button("Set As Avatar", GUILayout.Width(200)))
+                                if (GUILayout.Button("Set As Avatar", GUILayout.Width(100)))
                                 {
                                     GetManager().InitForAvatar(descriptor);
                                 }
