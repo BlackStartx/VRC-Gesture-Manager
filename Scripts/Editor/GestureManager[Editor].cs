@@ -43,7 +43,7 @@ namespace GestureManager.Scripts.Editor
                 var usingType = GetManager().GetUsedType();
                 var notUsingType = GetManager().GetNotUsedType();
 
-                GetManager().Avatar = MyLayoutHelper.ObjectField("Controlling Avatar: ", GetManager().Avatar, newObject =>
+                MyLayoutHelper.ObjectField("Controlling Avatar: ", GetManager().Avatar, newObject =>
                 {
                     if (newObject != null)
                     {
@@ -183,15 +183,10 @@ namespace GestureManager.Scripts.Editor
 
                             foreach (var descriptor in eligible)
                             {
-                                GUILayout.BeginHorizontal();
-                                GUILayout.Label(descriptor.gameObject.name + ":", GUILayout.MaxWidth(200));
-                                
-                                GUILayout.Label(" ", GUILayout.ExpandWidth(true));
+                                EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.box));
 
-                                if (GUILayout.Button("Set As Avatar", GUILayout.Width(100)))
-                                {
-                                    GetManager().InitForAvatar(descriptor);
-                                }
+                                GUILayout.Label(descriptor.gameObject.name + ":", GUILayout.Width(Screen.width - 131));
+                                if (GUILayout.Button("Set As Avatar", GUILayout.Width(100))) GetManager().InitForAvatar(descriptor);
 
                                 GUILayout.EndHorizontal();
                             }
@@ -201,8 +196,8 @@ namespace GestureManager.Scripts.Editor
 
                             foreach (var descriptor in nonEligible.Where(descriptor => descriptor != null))
                             {
-                                GUILayout.Label(descriptor.gameObject.name + ":");
                                 GUILayout.BeginVertical(emoteError);
+                                GUILayout.Label(descriptor.gameObject.name + ":");
 
                                 if (!descriptor.gameObject.activeInHierarchy)
                                     GUILayout.Label("The GameObject is disabled!", textError);

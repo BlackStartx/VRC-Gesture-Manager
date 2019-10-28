@@ -16,12 +16,12 @@ namespace GestureManager.Scripts.Core
 	 */
 	public static class MyLayoutHelper
 	{
-		public static T ObjectField<T>(string label, T unityObject, Action<T> onObjectSet) where T : Object
+		public static void ObjectField<T>(string label, T unityObject, Action<T> onObjectSet) where T : Object
 		{
-			return ObjectField(label, unityObject, onObjectSet, (oldObject, newObject) => { onObjectSet(newObject); }, oldObject => { onObjectSet(null); });
+			ObjectField(label, unityObject, onObjectSet, (oldObject, newObject) => { onObjectSet(newObject); }, oldObject => { onObjectSet(null); });
 		}
 
-		private static T ObjectField<T>(string label, T unityObject, Action<T> onObjectSet, Action<T, T> onObjectChange, Action<T> onObjectRemove) where T : Object
+		private static void ObjectField<T>(string label, T unityObject, Action<T> onObjectSet, Action<T, T> onObjectChange, Action<T> onObjectRemove) where T : Object
 		{
 			var oldObject = unityObject;
 
@@ -35,8 +35,6 @@ namespace GestureManager.Scripts.Core
 				else
 					onObjectChange(oldObject, unityObject);
 			}
-
-			return unityObject;
 		}
 		
 		/**

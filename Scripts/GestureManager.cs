@@ -417,24 +417,24 @@ namespace GestureManager.Scripts
                     return "[GESTURE] FingerPoint";
                 }
                 case "F5":
-                case "HANDGUN":
-                {
-                    return "[GESTURE] Gun";
-                }
-                case "F6":
-                case "THUMBS" + "UP":
-                {
-                    return "[GESTURE] ThumbsUp";
-                }
-                case "F7":
                 case "VICTORY":
                 {
                     return "[GESTURE] Victory";
                 }
-                case "F8":
+                case "F6":
                 case "ROCK" + "N" + "ROLL":
                 {
                     return "[GESTURE] Rock&Roll";
+                }
+                case "F7":
+                case "HANDGUN":
+                {
+                    return "[GESTURE] Gun";
+                }
+                case "F8":
+                case "THUMBS" + "UP":
+                {
+                    return "[GESTURE] ThumbsUp";
                 }
                 case "EMOTE1":
                 {
