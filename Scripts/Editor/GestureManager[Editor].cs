@@ -20,6 +20,9 @@ namespace GestureManager.Scripts.Editor
         private GUIStyle emoteError;
         private GUIStyle textError;
         private GUIStyle subHeader;
+        private GUIStyle plusButton;
+        
+        private Texture plusTexture;
 
         private AnimationClip selectingCustomAnim;
 
@@ -49,7 +52,7 @@ namespace GestureManager.Scripts.Editor
                     {
                         var descriptor = newObject.GetComponent<VRC_AvatarDescriptor>();
                         if (!GetManager().IsValidDesc(descriptor)) return;
-                        
+
                         GetManager().UnlinkFromAvatar();
                         GetManager().InitForAvatar(newObject.GetComponent<VRC_AvatarDescriptor>());
                     }
@@ -109,7 +112,7 @@ namespace GestureManager.Scripts.Editor
                     }),
                     new MyLayoutHelper.MyToolbarRow("Emotes", () =>
                     {
-                        GUILayout.Label("Emotes");
+                        GUILayout.Label("Emotes", guiHandTitle);
 
                         OnEmoteButton(1);
                         OnEmoteButton(2);
@@ -120,10 +123,17 @@ namespace GestureManager.Scripts.Editor
                         OnEmoteButton(7);
                         OnEmoteButton(8);
                     }),
-                    new MyLayoutHelper.MyToolbarRow("Idles", () => { GUILayout.Label("Avatar Idles."); }),
+                    new MyLayoutHelper.MyToolbarRow("Idles", () =>
+                    {
+                        GUILayout.Label("Avatar Idles.", guiHandTitle);
+                        GUILayout.Label("Work In Progress...", new GUIStyle()
+                        {
+                            alignment = TextAnchor.MiddleCenter
+                        }, GUILayout.Height(100));
+                    }),
                     new MyLayoutHelper.MyToolbarRow("Test Animation", () =>
                     {
-                        GUILayout.Label("Force animation.");
+                        GUILayout.Label("Force animation.", guiHandTitle);
 
                         GUILayout.BeginHorizontal();
                         var lastAnim = selectingCustomAnim;
@@ -327,15 +337,22 @@ namespace GestureManager.Scripts.Editor
 
             guiGreenButton = new GUIStyle(GUI.skin.button)
             {
-                normal = {textColor = Color.green}
+                normal = {textColor = Color.green}, 
+                fixedWidth = 100
             };
+
 
             subHeader = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter
             };
 
-            guiGreenButton.fixedWidth = 100;
+            plusButton = new GUIStyle()
+            {
+                margin = new RectOffset(0, 20, 3, 3)
+            };
+
+            plusTexture = Resources.Load<Texture>("BSX_GM_PlusSign");
         }
 
         private int OnCheckBoxGuiHand(int position, OnNoneSelected onNone)
@@ -344,13 +361,15 @@ namespace GestureManager.Scripts.Editor
 
             gesture[position] = true;
 
-            gesture[1] = EditorGUILayout.Toggle(manager.GetFinalGestureName(1), gesture[1]);
-            gesture[2] = EditorGUILayout.Toggle(manager.GetFinalGestureName(2), gesture[2]);
-            gesture[3] = EditorGUILayout.Toggle(manager.GetFinalGestureName(3), gesture[3]);
-            gesture[4] = EditorGUILayout.Toggle(manager.GetFinalGestureName(4), gesture[4]);
-            gesture[5] = EditorGUILayout.Toggle(manager.GetFinalGestureName(5), gesture[5]);
-            gesture[6] = EditorGUILayout.Toggle(manager.GetFinalGestureName(6), gesture[6]);
-            gesture[7] = EditorGUILayout.Toggle(manager.GetFinalGestureName(7), gesture[7]);
+            for (var i = 1; i < 8; i++)
+            {
+                GUILayout.BeginHorizontal();
+                gesture[i] = EditorGUILayout.Toggle(manager.GetFinalGestureName(i), gesture[i]);
+                if(!manager.HasGestureBeenOverridden(i))
+                    if (GUILayout.Button(plusTexture, plusButton, GUILayout.Width(15), GUILayout.Height(15)))
+                        manager.RequestGestureDuplication(i);
+                GUILayout.EndHorizontal();
+            }
 
             for (var i = 0; i < gesture.Length; i++)
             {

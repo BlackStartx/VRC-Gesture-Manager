@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using GestureManager.Scripts.Core;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 using VRCSDK2;
@@ -14,15 +15,17 @@ namespace GestureManager.Scripts
         private const string VersionUrl = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.version";
 
         private GameObject avatar;
+
         public GameObject Avatar
         {
             get { return avatar; }
-            set
+            private set
             {
                 isControllingAnAvatar = value != null;
                 avatar = value;
             }
         }
+
         public int right, left, emote;
         public bool onCustomAnimation;
 
@@ -51,6 +54,12 @@ namespace GestureManager.Scripts
 
         private RuntimeAnimatorController avatarWasUsing;
 
+        /*
+         * Animation Info...
+         */
+
+        private Dictionary<string, bool> hasBeenOverridden;
+
         [SerializeField] private int instanceId;
 
         private static readonly int HandGestureLeft = Animator.StringToHash("HandGestureLeft");
@@ -61,7 +70,7 @@ namespace GestureManager.Scripts
         private void Awake()
         {
             if (instanceId == GetInstanceID()) return;
-            
+
             if (instanceId == 0)
                 instanceId = GetInstanceID();
             else
@@ -82,7 +91,7 @@ namespace GestureManager.Scripts
         private void OnEnable()
         {
             if (Avatar != null) return;
-            
+
             var validDescriptor = GetValidDescriptor();
             if (validDescriptor != null)
                 InitForAvatar(validDescriptor);
@@ -156,16 +165,17 @@ namespace GestureManager.Scripts
         {
             if (descriptor == null) return false;
             if (!descriptor.gameObject.activeInHierarchy) return false;
-            
+
             var animator = descriptor.gameObject.GetComponent<Animator>();
-            
+
             if (animator == null) return false;
             if (!animator.isHuman) return false;
             if (descriptor.CustomSittingAnims == null && descriptor.CustomStandingAnims == null) return false;
-            
+
             var runtimeAnimatorController = animator.runtimeAnimatorController;
-            
-            return runtimeAnimatorController == null || !runtimeAnimatorController.name.Equals(GetStandingRuntimeOverrideControllerPreset().name) &&
+
+            return runtimeAnimatorController == null ||
+                   !runtimeAnimatorController.name.Equals(GetStandingRuntimeOverrideControllerPreset().name) &&
                    !runtimeAnimatorController.name.Equals(GetSeatedRuntimeOverrideControllerPreset().name);
         }
 
@@ -177,10 +187,10 @@ namespace GestureManager.Scripts
         private void ResetCurrentAvatarController()
         {
             if (Avatar == null) return;
-            
+
             var animator = Avatar.GetComponent<Animator>();
             if (animator == null) return;
-            
+
             animator.runtimeAnimatorController = avatarWasUsing;
             avatarWasUsing = null;
         }
@@ -193,6 +203,27 @@ namespace GestureManager.Scripts
         public string GetFinalGestureName(int gestureIndex)
         {
             return GetFinalGestureByIndex(gestureIndex).name;
+        }
+
+        public bool HasGestureBeenOverridden(int gestureIndex)
+        {
+            return hasBeenOverridden.ContainsKey(MyTranslate("F" + (gestureIndex + 1)));
+        }
+
+        public void RequestGestureDuplication(int gestureIndex)
+        {
+            var gestureName = MyTranslate("F" + (gestureIndex + 1));
+            var newAnimation = MyAnimationHelper.CloneAnimationAsset(myRuntimeOverrideController[gestureName]);
+            var path = EditorUtility.SaveFilePanelInProject("Creating Gesture: " + gestureName, gestureName + ".anim", "anim", "Hi (?)");
+            
+            if (path.Length == 0)
+                return;
+
+            AssetDatabase.CreateAsset(newAnimation, path);
+            newAnimation = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+            originalUsingOverrideController[MyTranslate(gestureName)] = newAnimation;
+
+            SetupOverride(usingType, false);
         }
 
         public void InitForAvatar(VRC_AvatarDescriptor descriptor)
@@ -266,7 +297,19 @@ namespace GestureManager.Scripts
                 new KeyValuePair<AnimationClip, AnimationClip>(myRuntimeOverrideController["[EXTRA] CustomAnimation"], customAnim)
             };
 
-            finalOverride.AddRange(MyAnimatorControllerHelper.GetOverrides(originalUsingOverrideController).Where(keyValuePair => keyValuePair.Value != null).Select(controllerOverride => new KeyValuePair<AnimationClip, AnimationClip>(myRuntimeOverrideController[MyTranslate(controllerOverride.Key.name)], controllerOverride.Value)));
+            finalOverride.AddRange(
+                MyAnimatorControllerHelper.GetOverrides(
+                    originalUsingOverrideController).Where(keyValuePair => keyValuePair.Value != null).Select(
+                    controllerOverride => new KeyValuePair<AnimationClip, AnimationClip>(myRuntimeOverrideController[MyTranslate(controllerOverride.Key.name)], controllerOverride.Value
+                    )
+                )
+            );
+
+            hasBeenOverridden = new Dictionary<string, bool>();
+            foreach (var valuePair in finalOverride)
+            {
+                hasBeenOverridden[valuePair.Key.name] = true;
+            }
 
             myRuntimeOverrideController.ApplyOverrides(finalOverride);
 
@@ -406,35 +449,63 @@ namespace GestureManager.Scripts
                 {
                     return "[GESTURE] Fist";
                 }
+                case "[GESTURE] Fist":
+                {
+                    return "FIST";
+                }
                 case "F3":
                 case "HAND" + "OPEN":
                 {
                     return "[GESTURE] Open";
+                }
+                case "[GESTURE] Open":
+                {
+                    return "HAND" + "OPEN";
                 }
                 case "F4":
                 case "FINGER" + "POINT":
                 {
                     return "[GESTURE] FingerPoint";
                 }
+                case "[GESTURE] FingerPoint":
+                {
+                    return "FINGER" + "POINT";
+                }
                 case "F5":
                 case "VICTORY":
                 {
                     return "[GESTURE] Victory";
+                }
+                case "[GESTURE] Victory":
+                {
+                    return "VICTORY";
                 }
                 case "F6":
                 case "ROCK" + "N" + "ROLL":
                 {
                     return "[GESTURE] Rock&Roll";
                 }
+                case "[GESTURE] Rock&Roll":
+                {
+                    return "ROCK" + "N" + "ROLL";
+                }
                 case "F7":
                 case "HANDGUN":
                 {
                     return "[GESTURE] Gun";
                 }
+                case "[GESTURE] Gun":
+                {
+                    return "HANDGUN";
+                }
                 case "F8":
                 case "THUMBS" + "UP":
                 {
                     return "[GESTURE] ThumbsUp";
+                }
+                case "[GESTURE] ThumbsUp":
+                {
+                    return "THUMBS" + "UP";
                 }
                 case "EMOTE1":
                 {
