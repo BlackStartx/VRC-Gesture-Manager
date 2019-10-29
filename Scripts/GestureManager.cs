@@ -207,21 +207,22 @@ namespace GestureManager.Scripts
 
         public bool HasGestureBeenOverridden(int gestureIndex)
         {
-            return hasBeenOverridden.ContainsKey(MyTranslate("F" + (gestureIndex + 1)));
+            return hasBeenOverridden.ContainsKey(myTranslateDictionary["F" + (gestureIndex + 1)]);
         }
 
         public void RequestGestureDuplication(int gestureIndex)
         {
-            var gestureName = MyTranslate("F" + (gestureIndex + 1));
-            var newAnimation = MyAnimationHelper.CloneAnimationAsset(myRuntimeOverrideController[gestureName]);
-            var path = EditorUtility.SaveFilePanelInProject("Creating Gesture: " + gestureName, gestureName + ".anim", "anim", "Hi (?)");
-            
+            var fullGestureName = myTranslateDictionary["F" + (gestureIndex + 1)];
+            var gestureName = "[" + fullGestureName.Substring(fullGestureName.IndexOf("]", StringComparison.Ordinal) + 2) + "]";
+            var newAnimation = MyAnimationHelper.CloneAnimationAsset(myRuntimeOverrideController[fullGestureName]);
+            var path = EditorUtility.SaveFilePanelInProject("Creating Gesture: " + fullGestureName, gestureName + ".anim", "anim", "Hi (?)");
+
             if (path.Length == 0)
                 return;
 
             AssetDatabase.CreateAsset(newAnimation, path);
             newAnimation = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
-            originalUsingOverrideController[MyTranslate(gestureName)] = newAnimation;
+            originalUsingOverrideController[myTranslateDictionary[fullGestureName]] = newAnimation;
 
             SetupOverride(usingType, false);
         }
@@ -289,8 +290,10 @@ namespace GestureManager.Scripts
                     break;
                 }
                 default:
-                    throw new ArgumentOutOfRangeException("controllerType", controllerType, null);
+                    throw new Exception("Rider always suggest a 'default' catch .-.");
             }
+
+            GenerateDictionary();
 
             var finalOverride = new List<KeyValuePair<AnimationClip, AnimationClip>>
             {
@@ -300,16 +303,13 @@ namespace GestureManager.Scripts
             finalOverride.AddRange(
                 MyAnimatorControllerHelper.GetOverrides(
                     originalUsingOverrideController).Where(keyValuePair => keyValuePair.Value != null).Select(
-                    controllerOverride => new KeyValuePair<AnimationClip, AnimationClip>(myRuntimeOverrideController[MyTranslate(controllerOverride.Key.name)], controllerOverride.Value
+                    controllerOverride => new KeyValuePair<AnimationClip, AnimationClip>(myRuntimeOverrideController[myTranslateDictionary[controllerOverride.Key.name]], controllerOverride.Value
                     )
                 )
             );
 
             hasBeenOverridden = new Dictionary<string, bool>();
-            foreach (var valuePair in finalOverride)
-            {
-                hasBeenOverridden[valuePair.Key.name] = true;
-            }
+            foreach (var valuePair in finalOverride) hasBeenOverridden[valuePair.Key.name] = true;
 
             myRuntimeOverrideController.ApplyOverrides(finalOverride);
 
@@ -426,13 +426,9 @@ namespace GestureManager.Scripts
                 yield return webRequest.SendWebRequest();
 
                 if (webRequest.isNetworkError)
-                {
                     onNetworkResponseError(webRequest);
-                }
                 else
-                {
                     onNetworkResponse(webRequest);
-                }
             }
         }
 
@@ -440,120 +436,47 @@ namespace GestureManager.Scripts
          *     STUPID DICTIONARY!!! >.<
          */
 
-        private string MyTranslate(string keyName)
+        private Dictionary<string, string> myTranslateDictionary;
+
+        private void GenerateDictionary()
         {
-            switch (keyName)
+            myTranslateDictionary = new Dictionary<string, string>()
             {
-                case "F2":
-                case "FIST":
-                {
-                    return "[GESTURE] Fist";
-                }
-                case "[GESTURE] Fist":
-                {
-                    return "FIST";
-                }
-                case "F3":
-                case "HAND" + "OPEN":
-                {
-                    return "[GESTURE] Open";
-                }
-                case "[GESTURE] Open":
-                {
-                    return "HAND" + "OPEN";
-                }
-                case "F4":
-                case "FINGER" + "POINT":
-                {
-                    return "[GESTURE] FingerPoint";
-                }
-                case "[GESTURE] FingerPoint":
-                {
-                    return "FINGER" + "POINT";
-                }
-                case "F5":
-                case "VICTORY":
-                {
-                    return "[GESTURE] Victory";
-                }
-                case "[GESTURE] Victory":
-                {
-                    return "VICTORY";
-                }
-                case "F6":
-                case "ROCK" + "N" + "ROLL":
-                {
-                    return "[GESTURE] Rock&Roll";
-                }
-                case "[GESTURE] Rock&Roll":
-                {
-                    return "ROCK" + "N" + "ROLL";
-                }
-                case "F7":
-                case "HANDGUN":
-                {
-                    return "[GESTURE] Gun";
-                }
-                case "[GESTURE] Gun":
-                {
-                    return "HANDGUN";
-                }
-                case "F8":
-                case "THUMBS" + "UP":
-                {
-                    return "[GESTURE] ThumbsUp";
-                }
-                case "[GESTURE] ThumbsUp":
-                {
-                    return "THUMBS" + "UP";
-                }
-                case "EMOTE1":
-                {
-                    return usingType == ControllerType.Standing ? "[P - EMOTE 1] Wave" : "[S - EMOTE 1] Laugh";
-                }
-                case "EMOTE2":
-                {
-                    return usingType == ControllerType.Standing ? "[P - EMOTE 2] Clap" : "[S - EMOTE 2] Point";
-                }
-                case "EMOTE3":
-                {
-                    return usingType == ControllerType.Standing ? "[P - EMOTE 3] Point" : "[S - EMOTE 3] Raise Hand";
-                }
-                case "EMOTE4":
-                {
-                    return usingType == ControllerType.Standing ? "[P - EMOTE 4] Cheer" : "[S - EMOTE 4] Drum";
-                }
-                case "EMOTE5":
-                {
-                    return usingType == ControllerType.Standing ? "[P - EMOTE 5] Dance" : "[S - EMOTE 5] Clap";
-                }
-                case "EMOTE6":
-                {
-                    return usingType == ControllerType.Standing ? "[P - EMOTE 6] BackFlip" : "[S - EMOTE 6] Angry Fist";
-                }
-                case "EMOTE7":
-                {
-                    return usingType == ControllerType.Standing ? "[P - EMOTE 7] Die" : "[S - EMOTE 7] Disbelief";
-                }
-                case "EMOTE8":
-                {
-                    return usingType == ControllerType.Standing ? "[P - EMOTE 8] Sad" : "[S - EMOTE 8] Disapprove";
-                }
-                default:
-                {
-                    return null;
-                }
-            }
+                {"F2", "[GESTURE] Fist"},
+                {"F3", "[GESTURE] Open"},
+                {"F4", "[GESTURE] FingerPoint"},
+                {"F5", "[GESTURE] Victory"},
+                {"F6", "[GESTURE] Rock&Roll"},
+                {"F7", "[GESTURE] Gun"},
+                {"F8", "[GESTURE] ThumbsUp"},
+
+                {"FIST", "[GESTURE] Fist"},
+                {"HAND" + "OPEN", "[GESTURE] Open"},
+                {"FINGER" + "POINT", "[GESTURE] FingerPoint"},
+                {"VICTORY", "[GESTURE] Victory"},
+                {"ROCK" + "N" + "ROLL", "[GESTURE] Rock&Roll"},
+                {"HANDGUN", "[GESTURE] Gun"},
+                {"THUMBS" + "UP", "[GESTURE] ThumbsUp"},
+
+                {"EMOTE1", usingType == ControllerType.Standing ? "[P - EMOTE 1] Wave" : "[S - EMOTE 1] Laugh"},
+                {"EMOTE2", usingType == ControllerType.Standing ? "[P - EMOTE 2] Clap" : "[S - EMOTE 2] Point"},
+                {"EMOTE3", usingType == ControllerType.Standing ? "[P - EMOTE 3] Point" : "[S - EMOTE 3] Raise Hand"},
+                {"EMOTE4", usingType == ControllerType.Standing ? "[P - EMOTE 4] Cheer" : "[S - EMOTE 4] Drum"},
+                {"EMOTE5", usingType == ControllerType.Standing ? "[P - EMOTE 5] Dance" : "[S - EMOTE 5] Clap"},
+                {"EMOTE6", usingType == ControllerType.Standing ? "[P - EMOTE 6] BackFlip" : "[S - EMOTE 6] Angry Fist"},
+                {"EMOTE7", usingType == ControllerType.Standing ? "[P - EMOTE 7] Die" : "[S - EMOTE 7] Disbelief"},
+                {"EMOTE8", usingType == ControllerType.Standing ? "[P - EMOTE 8] Sad" : "[S - EMOTE 8] Disapprove"},
+            };
         }
 
         private AnimationClip GetEmoteByIndex(int emoteIndex)
         {
-            return myRuntimeOverrideController[MyTranslate("EMOTE" + (emoteIndex + 1))];
+            return myRuntimeOverrideController[myTranslateDictionary["EMOTE" + (emoteIndex + 1)]];
         }
 
         private AnimationClip GetFinalGestureByIndex(int gestureIndex)
         {
-            return myRuntimeOverrideController[MyTranslate("F" + (gestureIndex + 1))];
+            return myRuntimeOverrideController[myTranslateDictionary["F" + (gestureIndex + 1)]];
         }
     }
 
