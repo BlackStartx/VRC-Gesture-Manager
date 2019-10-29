@@ -458,6 +458,14 @@ namespace GestureManager.Scripts
                 {"HANDGUN", "[GESTURE] Gun"},
                 {"THUMBS" + "UP", "[GESTURE] ThumbsUp"},
 
+                {"[GESTURE] Fist", "FIST"},
+                {"[GESTURE] Open", "HAND" + "OPEN"},
+                {"[GESTURE] FingerPoint", "FINGER" + "POINT"},
+                {"[GESTURE] Victory", "VICTORY"},
+                {"[GESTURE] Rock&Roll", "ROCK" + "N" + "ROLL"},
+                {"[GESTURE] Gun", "HANDGUN"},
+                {"[GESTURE] ThumbsUp", "THUMBS" + "UP"},
+
                 {"EMOTE1", usingType == ControllerType.Standing ? "[P - EMOTE 1] Wave" : "[S - EMOTE 1] Laugh"},
                 {"EMOTE2", usingType == ControllerType.Standing ? "[P - EMOTE 2] Clap" : "[S - EMOTE 2] Point"},
                 {"EMOTE3", usingType == ControllerType.Standing ? "[P - EMOTE 3] Point" : "[S - EMOTE 3] Raise Hand"},
