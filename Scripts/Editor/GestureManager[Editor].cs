@@ -2,6 +2,7 @@
 using System.Linq;
 using GestureManager.Scripts.Core;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 using VRCSDK2;
 
@@ -21,7 +22,7 @@ namespace GestureManager.Scripts.Editor
         private GUIStyle textError;
         private GUIStyle subHeader;
         private GUIStyle plusButton;
-        
+
         private Texture plusTexture;
 
         private AnimationClip selectingCustomAnim;
@@ -126,10 +127,32 @@ namespace GestureManager.Scripts.Editor
                     new MyLayoutHelper.MyToolbarRow("Idles", () =>
                     {
                         GUILayout.Label("Avatar Idles.", guiHandTitle);
-                        GUILayout.Label("Work In Progress...", new GUIStyle()
+
+                        EditorGUILayout.Slider("X Speed: ", 0, -1, 1);
+                        EditorGUILayout.Slider("Y Speed: ", 0, -1, 1);
+
+                        GUILayout.BeginHorizontal();
+
+                        GUILayout.BeginVertical(new GUIStyle()
                         {
                             alignment = TextAnchor.MiddleCenter
-                        }, GUILayout.Height(100));
+                        });
+                        GUILayout.FlexibleSpace();
+                        GUILayout.Toggle(false, "Standing");
+                        GUILayout.FlexibleSpace();
+                        GUILayout.Toggle(false, "Crouch");
+                        GUILayout.FlexibleSpace();
+                        GUILayout.Toggle(false, "Prone");
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndVertical();
+                        
+                        GUILayout.BeginVertical();
+                        GUILayout.FlexibleSpace();
+                        GUILayout.Toggle(false, "Grounded");
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndVertical();
+                        
+                        GUILayout.EndHorizontal();
                     }),
                     new MyLayoutHelper.MyToolbarRow("Test Animation", () =>
                     {
@@ -239,23 +262,25 @@ namespace GestureManager.Scripts.Editor
                     GUILayout.FlexibleSpace();
                     if (GUILayout.Button("Check For Updates", GUILayout.Width(130)))
                     {
-                        GetManager().CheckForUpdates((error) => { EditorUtility.DisplayDialog("Gesture Manager Updater", "Error :c (" + error.responseCode + ")", "Okay"); }, response =>
-                        {
-                            var infos = response.downloadHandler.text.Trim().Split('\n');
-                            var lastVersion = infos[0];
-                            var download = infos[1];
-                            if (lastVersion.Equals(Version))
+                        GetManager().CheckForUpdates(
+                            error => { EditorUtility.DisplayDialog("Gesture Manager Updater", "Error :c (" + error.responseCode + ")", "Okay"); },
+                            response =>
                             {
-                                EditorUtility.DisplayDialog("Gesture Manager Updater", "You have the latest version of the manager. (" + lastVersion + ")", "Good!");
-                            }
-                            else
-                            {
-                                if (EditorUtility.DisplayDialog("Gesture Manager Updater", "Newer version available! (" + lastVersion + ")", "Download", "Cancel"))
+                                var infos = response.downloadHandler.text.Trim().Split('\n');
+                                var lastVersion = infos[0];
+                                var download = infos[1];
+                                if (lastVersion.Equals(Version))
                                 {
-                                    Application.OpenURL(download);
+                                    EditorUtility.DisplayDialog("Gesture Manager Updater", "You have the latest version of the manager. (" + lastVersion + ")", "Good!");
                                 }
-                            }
-                        });
+                                else
+                                {
+                                    if (EditorUtility.DisplayDialog("Gesture Manager Updater", "Newer version available! (" + lastVersion + ")", "Download", "Cancel"))
+                                    {
+                                        Application.OpenURL(download);
+                                    }
+                                }
+                            });
                     }
 
                     GUILayout.Space(20);
@@ -337,7 +362,7 @@ namespace GestureManager.Scripts.Editor
 
             guiGreenButton = new GUIStyle(GUI.skin.button)
             {
-                normal = {textColor = Color.green}, 
+                normal = {textColor = Color.green},
                 fixedWidth = 100
             };
 
@@ -365,7 +390,7 @@ namespace GestureManager.Scripts.Editor
             {
                 GUILayout.BeginHorizontal();
                 gesture[i] = EditorGUILayout.Toggle(manager.GetFinalGestureName(i), gesture[i]);
-                if(!manager.HasGestureBeenOverridden(i))
+                if (!manager.HasGestureBeenOverridden(i))
                     if (GUILayout.Button(plusTexture, plusButton, GUILayout.Width(15), GUILayout.Height(15)))
                         manager.RequestGestureDuplication(i);
                 GUILayout.EndHorizontal();
@@ -373,14 +398,13 @@ namespace GestureManager.Scripts.Editor
 
             for (var i = 0; i < gesture.Length; i++)
             {
-                if (gesture[i] && position != i)
+                if (!gesture[i] || position == i) continue;
+
+                for (var ix = 0; ix < gesture.Length; ix++)
                 {
-                    for (var ix = 0; ix < gesture.Length; ix++)
-                    {
-                        if (ix == i)
-                            continue;
-                        gesture[ix] = false;
-                    }
+                    if (ix == i)
+                        continue;
+                    gesture[ix] = false;
                 }
             }
 

@@ -54,6 +54,32 @@ namespace GestureManager.Scripts
 
         private RuntimeAnimatorController avatarWasUsing;
 
+        // ReSharper disable StringLiteralTypo
+        private readonly AnimationBind[] gestureBinds =
+        {
+            new AnimationBind(null, "[GESTURE] Idle"),
+            new AnimationBind("FIST", "[GESTURE] Fist"),
+            new AnimationBind("HANDOPEN", "[GESTURE] Open"),
+            new AnimationBind("FINGERPOINT", "[GESTURE] FingerPoint"),
+            new AnimationBind("VICTORY", "[GESTURE] Victory"),
+            new AnimationBind("ROCKNROLL", "[GESTURE] Rock&Roll"),
+            new AnimationBind("HANDGUN", "[GESTURE] Gun"),
+            new AnimationBind("THUMBSUP", "[GESTURE] ThumbsUp"),
+        };
+        // ReSharper restore StringLiteralTypo
+
+        private readonly AnimationBind[] emoteBinds =
+        {
+            new AnimationBind("EMOTE1", "[EMOTE 1] Wave", "[EMOTE 1] Laugh"),
+            new AnimationBind("EMOTE2", "[EMOTE 2] Clap", "[EMOTE 2] Point"),
+            new AnimationBind("EMOTE3", "[EMOTE 3] Point", "[EMOTE 3] Raise Hand"),
+            new AnimationBind("EMOTE4", "[EMOTE 4] Cheer", "[EMOTE 4] Drum"),
+            new AnimationBind("EMOTE5", "[EMOTE 5] Dance", "[EMOTE 5] Clap"),
+            new AnimationBind("EMOTE6", "[EMOTE 6] BackFlip", "[EMOTE 6] Angry Fist"),
+            new AnimationBind("EMOTE7", "[EMOTE 7] Die", "[EMOTE 7] Disbelief"),
+            new AnimationBind("EMOTE8", "[EMOTE 8] Sad", "[EMOTE 8] Disapprove"),
+        };
+
         /*
          * Animation Info...
          */
@@ -65,6 +91,7 @@ namespace GestureManager.Scripts
         private static readonly int HandGestureLeft = Animator.StringToHash("HandGestureLeft");
         private static readonly int HandGestureRight = Animator.StringToHash("HandGestureRight");
         private static readonly int Emote = Animator.StringToHash("Emote");
+
         private bool isControllingAnAvatar;
 
         private void Awake()
@@ -84,6 +111,15 @@ namespace GestureManager.Scripts
 
         private void Update()
         {
+            
+            foreach (HumanBodyBones bodyBone in Enum.GetValues(typeof(HumanBodyBones)))
+            {
+                var bone = avatarAnimator.GetBoneTransform(bodyBone);
+                if (bodyBone != HumanBodyBones.LeftShoulder) continue;
+                
+                Debug.Log("Rotating: " + bone.name + " " + bone.rotation);
+            }
+            
             if (isControllingAnAvatar)
                 SetValues();
         }
@@ -100,6 +136,18 @@ namespace GestureManager.Scripts
         private void OnDisable()
         {
             UnlinkFromAvatar();
+        }
+
+        private void LateUpdate()
+        {
+            foreach (HumanBodyBones bodyBone in Enum.GetValues(typeof(HumanBodyBones)))
+            {
+                var bone = avatarAnimator.GetBoneTransform(bodyBone);
+                if (bone == null) continue;
+                
+                Debug.Log("Rotating: " + bone.name);
+                bone.rotation = new Quaternion(0, 0, 0, 0);
+            }
         }
 
         public void StopCurrentEmote()
@@ -129,12 +177,12 @@ namespace GestureManager.Scripts
             currentlyCheckingForUpdates = true;
             StartCoroutine(GetRequest(VersionUrl, (error) =>
             {
-                onNetworkResponseError(error);
                 currentlyCheckingForUpdates = false;
+                onNetworkResponseError(error);
             }, (response) =>
             {
-                onNetworkResponse(response);
                 currentlyCheckingForUpdates = false;
+                onNetworkResponse(response);
             }));
         }
 
@@ -207,12 +255,12 @@ namespace GestureManager.Scripts
 
         public bool HasGestureBeenOverridden(int gestureIndex)
         {
-            return hasBeenOverridden.ContainsKey(myTranslateDictionary["F" + (gestureIndex + 1)]);
+            return hasBeenOverridden.ContainsKey(gestureBinds[gestureIndex].GetMyName(usingType));
         }
 
         public void RequestGestureDuplication(int gestureIndex)
         {
-            var fullGestureName = myTranslateDictionary["F" + (gestureIndex + 1)];
+            var fullGestureName = gestureBinds[gestureIndex].GetMyName(usingType);
             var gestureName = "[" + fullGestureName.Substring(fullGestureName.IndexOf("]", StringComparison.Ordinal) + 2) + "]";
             var newAnimation = MyAnimationHelper.CloneAnimationAsset(myRuntimeOverrideController[fullGestureName]);
             var path = EditorUtility.SaveFilePanelInProject("Creating Gesture: " + fullGestureName, gestureName + ".anim", "anim", "Hi (?)");
@@ -222,7 +270,7 @@ namespace GestureManager.Scripts
 
             AssetDatabase.CreateAsset(newAnimation, path);
             newAnimation = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
-            originalUsingOverrideController[myTranslateDictionary[fullGestureName]] = newAnimation;
+            originalUsingOverrideController[gestureBinds[gestureIndex].GetOriginalName()] = newAnimation;
 
             SetupOverride(usingType, false);
         }
@@ -265,32 +313,23 @@ namespace GestureManager.Scripts
         private void SetupOverride(ControllerType controllerType, bool saveController)
         {
             string controllerName;
-            switch (controllerType)
+            if (controllerType == ControllerType.Standing)
             {
-                case ControllerType.Standing:
-                {
-                    usingType = ControllerType.Standing;
-                    notUsedType = ControllerType.Seated;
+                usingType = ControllerType.Standing;
+                notUsedType = ControllerType.Seated;
 
-                    originalUsingOverrideController = avatarDescriptor.CustomStandingAnims;
-                    myRuntimeOverrideController = new AnimatorOverrideController(GetStandingRuntimeOverrideControllerPreset());
-                    controllerName = GetStandingRuntimeOverrideControllerPreset().name;
+                originalUsingOverrideController = avatarDescriptor.CustomStandingAnims;
+                myRuntimeOverrideController = new AnimatorOverrideController(GetStandingRuntimeOverrideControllerPreset());
+                controllerName = GetStandingRuntimeOverrideControllerPreset().name;
+            }
+            else
+            {
+                usingType = ControllerType.Seated;
+                notUsedType = ControllerType.Standing;
 
-                    break;
-                }
-                case ControllerType.Seated:
-                {
-                    usingType = ControllerType.Seated;
-                    notUsedType = ControllerType.Standing;
-
-                    originalUsingOverrideController = avatarDescriptor.CustomSittingAnims;
-                    myRuntimeOverrideController = new AnimatorOverrideController(GetSeatedRuntimeOverrideControllerPreset());
-                    controllerName = GetSeatedRuntimeOverrideControllerPreset().name;
-
-                    break;
-                }
-                default:
-                    throw new Exception("Rider always suggest a 'default' catch .-.");
+                originalUsingOverrideController = avatarDescriptor.CustomSittingAnims;
+                myRuntimeOverrideController = new AnimatorOverrideController(GetSeatedRuntimeOverrideControllerPreset());
+                controllerName = GetSeatedRuntimeOverrideControllerPreset().name;
             }
 
             GenerateDictionary();
@@ -433,58 +472,42 @@ namespace GestureManager.Scripts
         }
 
         /**
-         *     STUPID DICTIONARY!!! >.<
+         *     This dictionary is needed just because I hate the original animation names.
+         *     It will just translate the name of the original animation to the my version of the name. 
          */
-
         private Dictionary<string, string> myTranslateDictionary;
 
         private void GenerateDictionary()
         {
             myTranslateDictionary = new Dictionary<string, string>()
             {
-                {"F2", "[GESTURE] Fist"},
-                {"F3", "[GESTURE] Open"},
-                {"F4", "[GESTURE] FingerPoint"},
-                {"F5", "[GESTURE] Victory"},
-                {"F6", "[GESTURE] Rock&Roll"},
-                {"F7", "[GESTURE] Gun"},
-                {"F8", "[GESTURE] ThumbsUp"},
+                {gestureBinds[1].GetOriginalName(), gestureBinds[1].GetMyName(usingType)},
+                {gestureBinds[2].GetOriginalName(), gestureBinds[2].GetMyName(usingType)},
+                {gestureBinds[3].GetOriginalName(), gestureBinds[3].GetMyName(usingType)},
+                {gestureBinds[4].GetOriginalName(), gestureBinds[4].GetMyName(usingType)},
+                {gestureBinds[5].GetOriginalName(), gestureBinds[5].GetMyName(usingType)},
+                {gestureBinds[6].GetOriginalName(), gestureBinds[6].GetMyName(usingType)},
+                {gestureBinds[7].GetOriginalName(), gestureBinds[7].GetMyName(usingType)},
 
-                {"FIST", "[GESTURE] Fist"},
-                {"HAND" + "OPEN", "[GESTURE] Open"},
-                {"FINGER" + "POINT", "[GESTURE] FingerPoint"},
-                {"VICTORY", "[GESTURE] Victory"},
-                {"ROCK" + "N" + "ROLL", "[GESTURE] Rock&Roll"},
-                {"HANDGUN", "[GESTURE] Gun"},
-                {"THUMBS" + "UP", "[GESTURE] ThumbsUp"},
-
-                {"[GESTURE] Fist", "FIST"},
-                {"[GESTURE] Open", "HAND" + "OPEN"},
-                {"[GESTURE] FingerPoint", "FINGER" + "POINT"},
-                {"[GESTURE] Victory", "VICTORY"},
-                {"[GESTURE] Rock&Roll", "ROCK" + "N" + "ROLL"},
-                {"[GESTURE] Gun", "HANDGUN"},
-                {"[GESTURE] ThumbsUp", "THUMBS" + "UP"},
-
-                {"EMOTE1", usingType == ControllerType.Standing ? "[P - EMOTE 1] Wave" : "[S - EMOTE 1] Laugh"},
-                {"EMOTE2", usingType == ControllerType.Standing ? "[P - EMOTE 2] Clap" : "[S - EMOTE 2] Point"},
-                {"EMOTE3", usingType == ControllerType.Standing ? "[P - EMOTE 3] Point" : "[S - EMOTE 3] Raise Hand"},
-                {"EMOTE4", usingType == ControllerType.Standing ? "[P - EMOTE 4] Cheer" : "[S - EMOTE 4] Drum"},
-                {"EMOTE5", usingType == ControllerType.Standing ? "[P - EMOTE 5] Dance" : "[S - EMOTE 5] Clap"},
-                {"EMOTE6", usingType == ControllerType.Standing ? "[P - EMOTE 6] BackFlip" : "[S - EMOTE 6] Angry Fist"},
-                {"EMOTE7", usingType == ControllerType.Standing ? "[P - EMOTE 7] Die" : "[S - EMOTE 7] Disbelief"},
-                {"EMOTE8", usingType == ControllerType.Standing ? "[P - EMOTE 8] Sad" : "[S - EMOTE 8] Disapprove"},
+                {emoteBinds[0].GetOriginalName(), emoteBinds[0].GetMyName(usingType)},
+                {emoteBinds[1].GetOriginalName(), emoteBinds[1].GetMyName(usingType)},
+                {emoteBinds[2].GetOriginalName(), emoteBinds[2].GetMyName(usingType)},
+                {emoteBinds[3].GetOriginalName(), emoteBinds[3].GetMyName(usingType)},
+                {emoteBinds[4].GetOriginalName(), emoteBinds[4].GetMyName(usingType)},
+                {emoteBinds[5].GetOriginalName(), emoteBinds[5].GetMyName(usingType)},
+                {emoteBinds[6].GetOriginalName(), emoteBinds[6].GetMyName(usingType)},
+                {emoteBinds[7].GetOriginalName(), emoteBinds[7].GetMyName(usingType)},
             };
         }
 
         private AnimationClip GetEmoteByIndex(int emoteIndex)
         {
-            return myRuntimeOverrideController[myTranslateDictionary["EMOTE" + (emoteIndex + 1)]];
+            return myRuntimeOverrideController[emoteBinds[emoteIndex].GetMyName(usingType)];
         }
 
         private AnimationClip GetFinalGestureByIndex(int gestureIndex)
         {
-            return myRuntimeOverrideController[myTranslateDictionary["F" + (gestureIndex + 1)]];
+            return myRuntimeOverrideController[gestureBinds[gestureIndex].GetMyName(usingType)];
         }
     }
 
@@ -493,4 +516,32 @@ namespace GestureManager.Scripts
         Standing,
         Seated
     };
+
+    public class AnimationBind
+    {
+        private readonly string originalName;
+        private readonly string myStandingName;
+        private readonly string mySeatedName;
+
+        public AnimationBind(string originalName, string myStandingName, string mySeatedName)
+        {
+            this.originalName = originalName;
+            this.myStandingName = myStandingName;
+            this.mySeatedName = mySeatedName;
+        }
+
+        public AnimationBind(string originalName, string myName) : this(originalName, myName, myName)
+        {
+        }
+
+        public string GetMyName(ControllerType controller)
+        {
+            return controller == ControllerType.Standing ? myStandingName : mySeatedName;
+        }
+
+        public string GetOriginalName()
+        {
+            return originalName;
+        }
+    }
 }

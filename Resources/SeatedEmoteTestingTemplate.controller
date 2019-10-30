@@ -30,7 +30,7 @@ AnimatorController:
   - serializedVersion: 5
     m_Name: Idle Layer
     m_StateMachine: {fileID: 110700000}
-    m_Mask: {fileID: 31900000, guid: 4f0d849b01d32d64a8c337476098b27d, type: 2}
+    m_Mask: {fileID: 0}
     m_Motions: []
     m_Behaviours: []
     m_BlendingMode: 0
