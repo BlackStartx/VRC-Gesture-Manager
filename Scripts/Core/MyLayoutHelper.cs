@@ -37,6 +37,23 @@ namespace GestureManager.Scripts.Core
 			}
 		}
 		
+		/*
+		 * 	Toggle
+		 * 	Toggle
+		 * 	Toggle
+		 */
+
+		public delegate void OnToggle(bool newValue);
+
+        public static void Toggle(bool value, string label, OnToggle onToggle)
+        {
+            var newValue = GUILayout.Toggle(value, label);
+            if (newValue != value)
+            {
+                onToggle(newValue);
+            }
+        }
+		
 		/**
 		 * 	ToolBar
 		 * 	ToolBar

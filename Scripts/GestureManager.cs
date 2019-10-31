@@ -54,6 +54,57 @@ namespace GestureManager.Scripts
 
         private RuntimeAnimatorController avatarWasUsing;
 
+        // Used to control the rotation of the model bones during the animation playtime. (like outside the play mode)
+        private Dictionary<HumanBodyBones, Quaternion> lastBoneQuaternions;
+        private int controlDelay;
+
+        private IEnumerable<HumanBodyBones> whiteListedControlBones;
+        private readonly List<HumanBodyBones> blackListedControlBones = new List<HumanBodyBones>()
+        {
+            // Left
+            HumanBodyBones.LeftThumbDistal,
+            HumanBodyBones.LeftThumbIntermediate,
+            HumanBodyBones.LeftThumbProximal,
+            
+            HumanBodyBones.LeftIndexDistal,
+            HumanBodyBones.LeftIndexIntermediate,
+            HumanBodyBones.LeftIndexProximal,
+            
+            HumanBodyBones.LeftMiddleDistal,
+            HumanBodyBones.LeftMiddleIntermediate,
+            HumanBodyBones.LeftMiddleProximal,
+            
+            HumanBodyBones.LeftRingDistal,
+            HumanBodyBones.LeftRingIntermediate,
+            HumanBodyBones.LeftRingProximal,
+            
+            HumanBodyBones.LeftLittleDistal,
+            HumanBodyBones.LeftLittleIntermediate,
+            HumanBodyBones.LeftLittleProximal,
+            
+            // Right
+            HumanBodyBones.RightThumbDistal,
+            HumanBodyBones.RightThumbIntermediate,
+            HumanBodyBones.RightThumbProximal,
+            
+            HumanBodyBones.RightIndexDistal,
+            HumanBodyBones.RightIndexIntermediate,
+            HumanBodyBones.RightIndexProximal,
+            
+            HumanBodyBones.RightMiddleDistal,
+            HumanBodyBones.RightMiddleIntermediate,
+            HumanBodyBones.RightMiddleProximal,
+            
+            HumanBodyBones.RightRingDistal,
+            HumanBodyBones.RightRingIntermediate,
+            HumanBodyBones.RightRingProximal,
+            
+            HumanBodyBones.RightLittleDistal,
+            HumanBodyBones.RightLittleIntermediate,
+            HumanBodyBones.RightLittleProximal,
+        };
+
+        // I'm using the ReShaper editor... and those type are really annoying! >.<
         // ReSharper disable StringLiteralTypo
         private readonly AnimationBind[] gestureBinds =
         {
@@ -109,21 +160,6 @@ namespace GestureManager.Scripts
             }
         }
 
-        private void Update()
-        {
-            
-            foreach (HumanBodyBones bodyBone in Enum.GetValues(typeof(HumanBodyBones)))
-            {
-                var bone = avatarAnimator.GetBoneTransform(bodyBone);
-                if (bodyBone != HumanBodyBones.LeftShoulder) continue;
-                
-                Debug.Log("Rotating: " + bone.name + " " + bone.rotation);
-            }
-            
-            if (isControllingAnAvatar)
-                SetValues();
-        }
-
         private void OnEnable()
         {
             if (Avatar != null) return;
@@ -138,16 +174,65 @@ namespace GestureManager.Scripts
             UnlinkFromAvatar();
         }
 
+        private void Update()
+        {
+            FetchLastBoneRotation();
+
+            if (isControllingAnAvatar)
+                SetValues();
+        }
+
         private void LateUpdate()
         {
-            foreach (HumanBodyBones bodyBone in Enum.GetValues(typeof(HumanBodyBones)))
+            if (emote != 0 || onCustomAnimation) return;
+
+            foreach (var bodyBone in GetWhiteListedControlBones())
             {
                 var bone = avatarAnimator.GetBoneTransform(bodyBone);
-                if (bone == null) continue;
-                
-                Debug.Log("Rotating: " + bone.name);
-                bone.rotation = new Quaternion(0, 0, 0, 0);
+                try
+                {
+                    var boneRotation = lastBoneQuaternions[bodyBone];
+                    bone.localRotation = new Quaternion(boneRotation.x, boneRotation.y, boneRotation.z, boneRotation.w);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
             }
+        }
+
+        private void FetchLastBoneRotation()
+        {
+            if (emote != 0 || onCustomAnimation)
+            {
+                controlDelay = 5;
+                return;
+            }
+
+            if (controlDelay > 0)
+            {
+                controlDelay--;
+                return;
+            }
+
+            lastBoneQuaternions = new Dictionary<HumanBodyBones, Quaternion>();
+            foreach (var bodyBone in GetWhiteListedControlBones())
+            {
+                var bone = avatarAnimator.GetBoneTransform(bodyBone);
+                try
+                {
+                    lastBoneQuaternions[bodyBone] = bone.localRotation;
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
+        }
+
+        private IEnumerable<HumanBodyBones> GetWhiteListedControlBones()
+        {
+            return whiteListedControlBones ?? (whiteListedControlBones = Enum.GetValues(typeof(HumanBodyBones)).Cast<HumanBodyBones>().Where(bones => !blackListedControlBones.Contains(bones)));
         }
 
         public void StopCurrentEmote()
@@ -312,6 +397,8 @@ namespace GestureManager.Scripts
 
         private void SetupOverride(ControllerType controllerType, bool saveController)
         {
+            controlDelay = 4;
+            
             string controllerName;
             if (controllerType == ControllerType.Standing)
             {
