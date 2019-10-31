@@ -176,14 +176,16 @@ namespace GestureManager.Scripts
 
         private void Update()
         {
+            if (!isControllingAnAvatar) return;
+            
             FetchLastBoneRotation();
-
-            if (isControllingAnAvatar)
-                SetValues();
+            SetValues();
         }
 
         private void LateUpdate()
         {
+            if (!isControllingAnAvatar) return;
+            
             if (emote != 0 || onCustomAnimation) return;
 
             foreach (var bodyBone in GetWhiteListedControlBones())
@@ -426,13 +428,21 @@ namespace GestureManager.Scripts
                 new KeyValuePair<AnimationClip, AnimationClip>(myRuntimeOverrideController["[EXTRA] CustomAnimation"], customAnim)
             };
 
-            finalOverride.AddRange(
-                MyAnimatorControllerHelper.GetOverrides(
-                    originalUsingOverrideController).Where(keyValuePair => keyValuePair.Value != null).Select(
-                    controllerOverride => new KeyValuePair<AnimationClip, AnimationClip>(myRuntimeOverrideController[myTranslateDictionary[controllerOverride.Key.name]], controllerOverride.Value
-                    )
-                )
-            );
+
+            var validOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+            foreach (var pair in MyAnimatorControllerHelper.GetOverrides(originalUsingOverrideController).Where(keyValuePair => keyValuePair.Value != null))
+            {
+                try
+                {
+                    validOverrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(myRuntimeOverrideController[myTranslateDictionary[pair.Key.name]], pair.Value));
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
+            
+            finalOverride.AddRange(validOverrides);
 
             hasBeenOverridden = new Dictionary<string, bool>();
             foreach (var valuePair in finalOverride) hasBeenOverridden[valuePair.Key.name] = true;
