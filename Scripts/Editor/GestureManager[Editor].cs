@@ -24,6 +24,7 @@ namespace GestureManager.Scripts.Editor
         private GUIStyle plusButton;
 
         private Texture plusTexture;
+        private Texture plusTexturePro;
 
         private AnimationClip selectingCustomAnim;
 
@@ -377,7 +378,8 @@ namespace GestureManager.Scripts.Editor
                 margin = new RectOffset(0, 20, 3, 3)
             };
 
-            plusTexture = Resources.Load<Texture>("BSX_GM_PlusSign");
+            plusTexture = Resources.Load<Texture>("Textures/BSX_GM_PlusSign");
+            plusTexturePro = Resources.Load<Texture>("Textures/BSX_GM_PlusSign[Pro]");
         }
 
         private int OnCheckBoxGuiHand(int position, OnNoneSelected onNone)
@@ -391,7 +393,7 @@ namespace GestureManager.Scripts.Editor
                 GUILayout.BeginHorizontal();
                 gesture[i] = EditorGUILayout.Toggle(manager.GetFinalGestureName(i), gesture[i]);
                 if (!manager.HasGestureBeenOverridden(i))
-                    if (GUILayout.Button(plusTexture, plusButton, GUILayout.Width(15), GUILayout.Height(15)))
+                    if (GUILayout.Button(EditorGUIUtility.isProSkin ? plusTexturePro : plusTexture, plusButton, GUILayout.Width(15), GUILayout.Height(15)))
                         manager.RequestGestureDuplication(i);
                 GUILayout.EndHorizontal();
             }
