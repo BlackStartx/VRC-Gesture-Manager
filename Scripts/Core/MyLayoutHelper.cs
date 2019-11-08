@@ -60,9 +60,9 @@ namespace GestureManager.Scripts.Core
 		 * 	ToolBar
 		 */
 
-		private static readonly Dictionary<string, MyToolbarHeader> ToolbarDictionary = new Dictionary<string, MyToolbarHeader>();
+		private static readonly Dictionary<object, MyToolbarHeader> ToolbarDictionary = new Dictionary<object, MyToolbarHeader>();
 		
-		public static void MyToolbar(string id, MyToolbarRow[] rows)
+		public static void MyToolbar(object id, MyToolbarRow[] rows)
 		{
 			if (!ToolbarDictionary.ContainsKey(id))
 			{

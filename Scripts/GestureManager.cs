@@ -33,6 +33,8 @@ namespace GestureManager.Scripts
 
         public AnimationClip customAnim;
 
+        public Animator avatarAnimator;
+
         private Vector3 beforeEmoteAvatarScale;
         private Vector3 beforeEmoteAvatarPosition;
         private Quaternion beforeEmoteAvatarRotation;
@@ -46,8 +48,6 @@ namespace GestureManager.Scripts
         private ControllerType notUsedType;
 
         private VRC_AvatarDescriptor[] lastCheckedActiveDescriptors;
-
-        private Animator avatarAnimator;
 
         private AnimatorOverrideController originalUsingOverrideController;
         private AnimatorOverrideController myRuntimeOverrideController;

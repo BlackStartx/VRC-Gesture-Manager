@@ -28,8 +28,6 @@ namespace GestureManager.Scripts.Editor
 
         private AnimationClip selectingCustomAnim;
 
-        private GestureManager manager;
-
         private delegate int OnNoneSelected(int lastPosition);
 
         public override void OnInspectorGUI()
@@ -64,6 +62,10 @@ namespace GestureManager.Scripts.Editor
                     }
                 });
 
+                MyLayoutHelper.ObjectField("Controlling Animator: ", GetManager().avatarAnimator, animator => { });
+                MyLayoutHelper.ObjectField("Manager: ", GetManager(), animator => { });
+                GUILayout.Label("Id: " + GetManager().GetInstanceID());
+
                 if (GetManager().Avatar == null)
                     return;
 
@@ -82,11 +84,11 @@ namespace GestureManager.Scripts.Editor
 
                 GUILayout.Space(15);
 
-                MyLayoutHelper.MyToolbar("GestureManager_Main_Toolbar", new[]
+                MyLayoutHelper.MyToolbar(this, new[]
                 {
                     new MyLayoutHelper.MyToolbarRow("Gestures", () =>
                     {
-                        if (manager.emote != 0 || manager.onCustomAnimation)
+                        if (GetManager().emote != 0 || GetManager().onCustomAnimation)
                         {
                             GUILayout.BeginHorizontal(emoteError);
                             GUILayout.Label("Gesture doesn't work while you're playing an emote!");
@@ -167,7 +169,7 @@ namespace GestureManager.Scripts.Editor
                             GetManager().SetCustomAnimation(selectingCustomAnim);
                         }
 
-                        if (manager.onCustomAnimation)
+                        if (GetManager().onCustomAnimation)
                         {
                             if (GUILayout.Button("Stop", guiGreenButton))
                             {
@@ -391,10 +393,10 @@ namespace GestureManager.Scripts.Editor
             for (var i = 1; i < 8; i++)
             {
                 GUILayout.BeginHorizontal();
-                gesture[i] = EditorGUILayout.Toggle(manager.GetFinalGestureName(i), gesture[i]);
-                if (!manager.HasGestureBeenOverridden(i))
+                gesture[i] = EditorGUILayout.Toggle(GetManager().GetFinalGestureName(i), gesture[i]);
+                if (!GetManager().HasGestureBeenOverridden(i))
                     if (GUILayout.Button(EditorGUIUtility.isProSkin ? plusTexturePro : plusTexture, plusButton, GUILayout.Width(15), GUILayout.Height(15)))
-                        manager.RequestGestureDuplication(i);
+                        GetManager().RequestGestureDuplication(i);
                 GUILayout.EndHorizontal();
             }
 
@@ -422,8 +424,8 @@ namespace GestureManager.Scripts.Editor
         private void OnEmoteButton(int emote)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label(manager.GetEmoteName(emote - 1));
-            if (manager.emote == emote)
+            GUILayout.Label(GetManager().GetEmoteName(emote - 1));
+            if (GetManager().emote == emote)
             {
                 if (GUILayout.Button("Stop", guiGreenButton))
                 {
@@ -444,9 +446,7 @@ namespace GestureManager.Scripts.Editor
 
         private GestureManager GetManager()
         {
-            if (manager == null)
-                manager = (GestureManager) target;
-            return manager;
+            return (GestureManager) target;
         }
 
         /**
