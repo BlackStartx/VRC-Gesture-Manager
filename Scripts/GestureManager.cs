@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using GestureManager.Scripts.Core;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 using VRCSDK2;
@@ -345,21 +344,9 @@ namespace GestureManager.Scripts
             return hasBeenOverridden.ContainsKey(gestureBinds[gestureIndex].GetMyName(usingType));
         }
 
-        public void RequestGestureDuplication(int gestureIndex)
+        public string GetMyGestureNameByIndex(int gestureIndex)
         {
-            var fullGestureName = gestureBinds[gestureIndex].GetMyName(usingType);
-            var gestureName = "[" + fullGestureName.Substring(fullGestureName.IndexOf("]", StringComparison.Ordinal) + 2) + "]";
-            var newAnimation = MyAnimationHelper.CloneAnimationAsset(myRuntimeOverrideController[fullGestureName]);
-            var path = EditorUtility.SaveFilePanelInProject("Creating Gesture: " + fullGestureName, gestureName + ".anim", "anim", "Hi (?)");
-
-            if (path.Length == 0)
-                return;
-
-            AssetDatabase.CreateAsset(newAnimation, path);
-            newAnimation = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
-            originalUsingOverrideController[gestureBinds[gestureIndex].GetOriginalName()] = newAnimation;
-
-            SetupOverride(usingType, false);
+            return gestureBinds[gestureIndex].GetMyName(usingType);
         }
 
         public void InitForAvatar(VRC_AvatarDescriptor descriptor)
@@ -602,9 +589,15 @@ namespace GestureManager.Scripts
             return myRuntimeOverrideController[emoteBinds[emoteIndex].GetMyName(usingType)];
         }
 
-        private AnimationClip GetFinalGestureByIndex(int gestureIndex)
+        public AnimationClip GetFinalGestureByIndex(int gestureIndex)
         {
             return myRuntimeOverrideController[gestureBinds[gestureIndex].GetMyName(usingType)];
+        }
+
+        public void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation)
+        {
+            originalUsingOverrideController[gestureBinds[gestureIndex].GetOriginalName()] = newAnimation;
+            SetupOverride(usingType, false);
         }
     }
 

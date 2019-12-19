@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using GestureManager.Scripts.Core;
+using GestureManager.Scripts.Core.Editor;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -61,10 +63,6 @@ namespace GestureManager.Scripts.Editor
                         GetManager().UnlinkFromAvatar();
                     }
                 });
-
-                MyLayoutHelper.ObjectField("Controlling Animator: ", GetManager().avatarAnimator, animator => { });
-                MyLayoutHelper.ObjectField("Manager: ", GetManager(), animator => { });
-                GUILayout.Label("Id: " + GetManager().GetInstanceID());
 
                 if (GetManager().Avatar == null)
                     return;
@@ -127,36 +125,42 @@ namespace GestureManager.Scripts.Editor
                         OnEmoteButton(7);
                         OnEmoteButton(8);
                     }),
-                    new MyLayoutHelper.MyToolbarRow("Idles", () =>
-                    {
-                        GUILayout.Label("Avatar Idles.", guiHandTitle);
-
-                        EditorGUILayout.Slider("X Speed: ", 0, -1, 1);
-                        EditorGUILayout.Slider("Y Speed: ", 0, -1, 1);
-
-                        GUILayout.BeginHorizontal();
-
-                        GUILayout.BeginVertical(new GUIStyle()
-                        {
-                            alignment = TextAnchor.MiddleCenter
-                        });
-                        GUILayout.FlexibleSpace();
-                        GUILayout.Toggle(false, "Standing");
-                        GUILayout.FlexibleSpace();
-                        GUILayout.Toggle(false, "Crouch");
-                        GUILayout.FlexibleSpace();
-                        GUILayout.Toggle(false, "Prone");
-                        GUILayout.FlexibleSpace();
-                        GUILayout.EndVertical();
-                        
-                        GUILayout.BeginVertical();
-                        GUILayout.FlexibleSpace();
-                        GUILayout.Toggle(false, "Grounded");
-                        GUILayout.FlexibleSpace();
-                        GUILayout.EndVertical();
-                        
-                        GUILayout.EndHorizontal();
-                    }),
+                    
+                    /**
+                     *     This is just an idea...
+                     *     Who know, maybe on Gesture Manager 3.0 this will be uncommented ;D
+                     */
+                    
+//                    new MyLayoutHelper.MyToolbarRow("Idles", () =>
+//                    {
+//                        GUILayout.Label("Avatar Idles.", guiHandTitle);
+//
+//                        EditorGUILayout.Slider("X Speed: ", 0, -1, 1);
+//                        EditorGUILayout.Slider("Y Speed: ", 0, -1, 1);
+//
+//                        GUILayout.BeginHorizontal();
+//
+//                        GUILayout.BeginVertical(new GUIStyle()
+//                        {
+//                            alignment = TextAnchor.MiddleCenter
+//                        });
+//                        GUILayout.FlexibleSpace();
+//                        GUILayout.Toggle(false, "Standing");
+//                        GUILayout.FlexibleSpace();
+//                        GUILayout.Toggle(false, "Crouch");
+//                        GUILayout.FlexibleSpace();
+//                        GUILayout.Toggle(false, "Prone");
+//                        GUILayout.FlexibleSpace();
+//                        GUILayout.EndVertical();
+//                        
+//                        GUILayout.BeginVertical();
+//                        GUILayout.FlexibleSpace();
+//                        GUILayout.Toggle(false, "Grounded");
+//                        GUILayout.FlexibleSpace();
+//                        GUILayout.EndVertical();
+//                        
+//                        GUILayout.EndHorizontal();
+//                    }),
                     new MyLayoutHelper.MyToolbarRow("Test Animation", () =>
                     {
                         GUILayout.Label("Force animation.", guiHandTitle);
@@ -396,7 +400,7 @@ namespace GestureManager.Scripts.Editor
                 gesture[i] = EditorGUILayout.Toggle(GetManager().GetFinalGestureName(i), gesture[i]);
                 if (!GetManager().HasGestureBeenOverridden(i))
                     if (GUILayout.Button(EditorGUIUtility.isProSkin ? plusTexturePro : plusTexture, plusButton, GUILayout.Width(15), GUILayout.Height(15)))
-                        GetManager().RequestGestureDuplication(i);
+                        RequestGestureDuplication(i);
                 GUILayout.EndHorizontal();
             }
 
@@ -419,6 +423,21 @@ namespace GestureManager.Scripts.Editor
             }
 
             return onNone(position);
+        }
+
+        private void RequestGestureDuplication(int gestureIndex)
+        {
+            var fullGestureName = GetManager().GetMyGestureNameByIndex(gestureIndex);
+            var gestureName = "[" + fullGestureName.Substring(fullGestureName.IndexOf("]", StringComparison.Ordinal) + 2) + "]";
+            var newAnimation = MyAnimationHelper.CloneAnimationAsset(GetManager().GetFinalGestureByIndex(gestureIndex));
+            var path = EditorUtility.SaveFilePanelInProject("Creating Gesture: " + fullGestureName, gestureName + ".anim", "anim", "Hi (?)");
+
+            if (path.Length == 0)
+                return;
+
+            AssetDatabase.CreateAsset(newAnimation, path);
+            newAnimation = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+            GetManager().AddGestureToOverrideController(gestureIndex, newAnimation);
         }
 
         private void OnEmoteButton(int emote)

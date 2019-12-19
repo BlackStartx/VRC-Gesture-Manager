@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace GestureManager.Scripts.Core
+namespace GestureManager.Scripts.Core.Editor
 {
 	/**
 	 * 	Hi!
