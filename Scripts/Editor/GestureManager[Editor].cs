@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using GestureManager.Scripts.Core;
 using GestureManager.Scripts.Core.Editor;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
 using VRCSDK2;
 

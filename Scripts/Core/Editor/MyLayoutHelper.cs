@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace GestureManager.Scripts.Core.Editor
 {
@@ -16,12 +15,12 @@ namespace GestureManager.Scripts.Core.Editor
 	 */
 	public static class MyLayoutHelper
 	{
-		public static void ObjectField<T>(string label, T unityObject, Action<T> onObjectSet) where T : Object
+		public static void ObjectField<T>(string label, T unityObject, Action<T> onObjectSet) where T : UnityEngine.Object
 		{
 			ObjectField(label, unityObject, onObjectSet, (oldObject, newObject) => { onObjectSet(newObject); }, oldObject => { onObjectSet(null); });
 		}
 
-		private static void ObjectField<T>(string label, T unityObject, Action<T> onObjectSet, Action<T, T> onObjectChange, Action<T> onObjectRemove) where T : Object
+		private static void ObjectField<T>(string label, T unityObject, Action<T> onObjectSet, Action<T, T> onObjectChange, Action<T> onObjectRemove) where T : UnityEngine.Object
 		{
 			var oldObject = unityObject;
 
