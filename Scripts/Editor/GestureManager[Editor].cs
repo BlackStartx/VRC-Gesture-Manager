@@ -245,7 +245,9 @@ namespace GestureManager.Scripts.Editor
                                     GUILayout.Label("The model doesn't have any animator!", textError);
                                 else if (!descriptor.gameObject.GetComponent<Animator>().isHuman)
                                     GUILayout.Label("The avatar is not imported as a humanoid rig!", textError);
-
+                                else if (descriptor.gameObject.GetComponent<Animator>())
+                                    GUILayout.Label("The avatar is already controlled by another Gesture Manager!", textError);
+                                
                                 GUILayout.EndVertical();
                             }
                         }
