@@ -5,7 +5,8 @@ using System.Linq;
 using GestureManager.Scripts.Core;
 using UnityEngine;
 using UnityEngine.Networking;
-using VRC.SDKBase;
+using VRCSDK2;
+
 
 namespace GestureManager.Scripts
 {

@@ -4,7 +4,7 @@ using System.Linq;
 using GestureManager.Scripts.Core.Editor;
 using UnityEditor;
 using UnityEngine;
-using VRC.SDKBase;
+using VRCSDK2;
 
 namespace GestureManager.Scripts.Editor
 {
