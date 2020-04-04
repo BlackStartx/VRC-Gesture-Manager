@@ -4,7 +4,7 @@ using System.Linq;
 using GestureManager.Scripts.Core.Editor;
 using UnityEditor;
 using UnityEngine;
-using VRCSDK2;
+using VRC.SDKBase;
 
 namespace GestureManager.Scripts.Editor
 {
@@ -13,20 +13,20 @@ namespace GestureManager.Scripts.Editor
     {
         private const string Version = "1.0.0";
 
-        private GUIStyle titleStyle;
-        private GUIStyle middleStyle;
-        private GUIStyle bottomStyle;
-        private GUIStyle guiGreenButton;
-        private GUIStyle guiHandTitle;
-        private GUIStyle emoteError;
-        private GUIStyle textError;
-        private GUIStyle subHeader;
-        private GUIStyle plusButton;
+        private GUIStyle _titleStyle;
+        private GUIStyle _middleStyle;
+        private GUIStyle _bottomStyle;
+        private GUIStyle _guiGreenButton;
+        private GUIStyle _guiHandTitle;
+        private GUIStyle _emoteError;
+        private GUIStyle _textError;
+        private GUIStyle _subHeader;
+        private GUIStyle _plusButton;
 
-        private Texture plusTexture;
-        private Texture plusTexturePro;
+        private Texture _plusTexture;
+        private Texture _plusTexturePro;
 
-        private AnimationClip selectingCustomAnim;
+        private AnimationClip _selectingCustomAnim;
 
         private delegate int OnNoneSelected(int lastPosition);
 
@@ -34,7 +34,7 @@ namespace GestureManager.Scripts.Editor
         {
             Init();
 
-            GUILayout.Label("Gesture Manager", titleStyle);
+            GUILayout.Label("Gesture Manager", _titleStyle);
 
             if (GetManager().Avatar != null)
             {
@@ -46,7 +46,7 @@ namespace GestureManager.Scripts.Editor
                 var usingType = GetManager().GetUsedType();
                 var notUsingType = GetManager().GetNotUsedType();
 
-                MyLayoutHelper.ObjectField("Controlling Avatar: ", GetManager().Avatar, newObject =>
+                GmgMyLayoutHelper.ObjectField("Controlling Avatar: ", GetManager().Avatar, newObject =>
                 {
                     if (newObject != null)
                     {
@@ -80,15 +80,15 @@ namespace GestureManager.Scripts.Editor
 
                 GUILayout.Space(15);
 
-                MyLayoutHelper.MyToolbar(this, new[]
+                GmgMyLayoutHelper.MyToolbar(this, new[]
                 {
-                    new MyLayoutHelper.MyToolbarRow("Gestures", () =>
+                    new GmgMyLayoutHelper.MyToolbarRow("Gestures", () =>
                     {
                         if (GetManager().emote != 0 || GetManager().onCustomAnimation)
                         {
-                            GUILayout.BeginHorizontal(emoteError);
+                            GUILayout.BeginHorizontal(_emoteError);
                             GUILayout.Label("Gesture doesn't work while you're playing an emote!");
-                            if (GUILayout.Button("Stop!", guiGreenButton))
+                            if (GUILayout.Button("Stop!", _guiGreenButton))
                             {
                                 GetManager().StopCurrentEmote();
                             }
@@ -99,20 +99,20 @@ namespace GestureManager.Scripts.Editor
                         GUILayout.BeginHorizontal();
 
                         GUILayout.BeginVertical();
-                        GUILayout.Label("Left Hand", guiHandTitle);
+                        GUILayout.Label("Left Hand", _guiHandTitle);
                         GetManager().left = OnCheckBoxGuiHand(GetManager().left, position => 0);
                         GUILayout.EndVertical();
 
                         GUILayout.BeginVertical();
-                        GUILayout.Label("Right Hand", guiHandTitle);
+                        GUILayout.Label("Right Hand", _guiHandTitle);
                         GetManager().right = OnCheckBoxGuiHand(GetManager().right, position => 0);
                         GUILayout.EndVertical();
 
                         GUILayout.EndHorizontal();
                     }),
-                    new MyLayoutHelper.MyToolbarRow("Emotes", () =>
+                    new GmgMyLayoutHelper.MyToolbarRow("Emotes", () =>
                     {
-                        GUILayout.Label("Emotes", guiHandTitle);
+                        GUILayout.Label("Emotes", _guiHandTitle);
 
                         OnEmoteButton(1);
                         OnEmoteButton(2);
@@ -159,21 +159,21 @@ namespace GestureManager.Scripts.Editor
 //                        
 //                        GUILayout.EndHorizontal();
 //                    }),
-                    new MyLayoutHelper.MyToolbarRow("Test Animation", () =>
+                    new GmgMyLayoutHelper.MyToolbarRow("Test Animation", () =>
                     {
-                        GUILayout.Label("Force animation.", guiHandTitle);
+                        GUILayout.Label("Force animation.", _guiHandTitle);
 
                         GUILayout.BeginHorizontal();
-                        var lastAnim = selectingCustomAnim;
-                        selectingCustomAnim = (AnimationClip) EditorGUILayout.ObjectField("Animation: ", selectingCustomAnim, typeof(AnimationClip), true, null);
-                        if (selectingCustomAnim != lastAnim)
+                        var lastAnim = _selectingCustomAnim;
+                        _selectingCustomAnim = (AnimationClip) EditorGUILayout.ObjectField("Animation: ", _selectingCustomAnim, typeof(AnimationClip), true, null);
+                        if (_selectingCustomAnim != lastAnim)
                         {
-                            GetManager().SetCustomAnimation(selectingCustomAnim);
+                            GetManager().SetCustomAnimation(_selectingCustomAnim);
                         }
 
                         if (GetManager().onCustomAnimation)
                         {
-                            if (GUILayout.Button("Stop", guiGreenButton))
+                            if (GUILayout.Button("Stop", _guiGreenButton))
                             {
                                 GetManager().OnCustomEmoteStop();
                             }
@@ -183,7 +183,7 @@ namespace GestureManager.Scripts.Editor
                             if (GUILayout.Button("Play", GUILayout.Width(100)))
                             {
                                 GetManager().StopCurrentEmote();
-                                GetManager().SetCustomAnimation(selectingCustomAnim);
+                                GetManager().SetCustomAnimation(_selectingCustomAnim);
                                 GetManager().OnCustomEmoteStart();
                             }
                         }
@@ -202,7 +202,7 @@ namespace GestureManager.Scripts.Editor
                         {
                             GUILayout.Label(
                                 "There are no VRC_AvatarDescriptor on your scene. \nPlease consider adding one to your avatar before entering in PlayMode."
-                                , textError);
+                                , _textError);
                         }
                         else
                         {
@@ -217,7 +217,7 @@ namespace GestureManager.Scripts.Editor
                                     nonEligible.Add(descriptor);
                             }
 
-                            GUILayout.Label(eligible.Count == 0 ? "No one of your VRC_AvatarDescriptor are eligible." : "Eligible VRC_AvatarDescriptors:", subHeader);
+                            GUILayout.Label(eligible.Count == 0 ? "No one of your VRC_AvatarDescriptor are eligible." : "Eligible VRC_AvatarDescriptors:", _subHeader);
 
                             foreach (var descriptor in eligible)
                             {
@@ -230,24 +230,26 @@ namespace GestureManager.Scripts.Editor
                             }
 
                             if (eligible.Count != 0 && nonEligible.Count != 0)
-                                GUILayout.Label("Non-Eligible VRC_AvatarDescriptors:", subHeader);
+                                GUILayout.Label("Non-Eligible VRC_AvatarDescriptors:", _subHeader);
 
                             foreach (var descriptor in nonEligible.Where(descriptor => descriptor != null))
                             {
-                                GUILayout.BeginVertical(emoteError);
+                                GUILayout.BeginVertical(_emoteError);
                                 GUILayout.Label(descriptor.gameObject.name + ":");
 
                                 if (!descriptor.gameObject.activeInHierarchy)
-                                    GUILayout.Label("The GameObject is disabled!", textError);
+                                    GUILayout.Label("- The GameObject is disabled!", _textError);
                                 if (descriptor.CustomSittingAnims == null && descriptor.CustomStandingAnims == null)
-                                    GUILayout.Label("The Descriptor doesn't have any kind of controller!", textError);
-                                if (descriptor.gameObject.GetComponent<Animator>() == null)
-                                    GUILayout.Label("The model doesn't have any animator!", textError);
-                                else if (!descriptor.gameObject.GetComponent<Animator>().isHuman)
-                                    GUILayout.Label("The avatar is not imported as a humanoid rig!", textError);
-                                else if (descriptor.gameObject.GetComponent<Animator>())
-                                    GUILayout.Label("The avatar is already controlled by another Gesture Manager!", textError);
+                                    GUILayout.Label("- The Descriptor doesn't have any kind of controller!", _textError);
                                 
+                                if (descriptor.gameObject.GetComponent<Animator>() == null)
+                                    GUILayout.Label("- The model doesn't have any animator!", _textError);
+                                else if (!descriptor.gameObject.GetComponent<Animator>().isHuman)
+                                    GUILayout.Label("- The avatar is not imported as a humanoid rig!", _textError);
+                                
+                                if(GestureManager.ControlledAvatars.ContainsKey(descriptor.gameObject))
+                                    GUILayout.Label("- The avatar is already controlled by another Gesture Manager!", _textError);
+
                                 GUILayout.EndVertical();
                             }
                         }
@@ -259,12 +261,12 @@ namespace GestureManager.Scripts.Editor
                     }
                     else
                     {
-                        GUILayout.Label("I'm disabled!", textError);
+                        GUILayout.Label("I'm disabled!", _textError);
                     }
                 }
                 else
                 {
-                    GUILayout.Label("I'm an useless script if you aren't on play mode :D", middleStyle);
+                    GUILayout.Label("I'm an useless script if you aren't on play mode :D", _middleStyle);
                     GUILayout.BeginHorizontal();
                     GUILayout.FlexibleSpace();
                     if (GUILayout.Button("Check For Updates", GUILayout.Width(130)))
@@ -293,10 +295,11 @@ namespace GestureManager.Scripts.Editor
                     GUILayout.Space(20);
                     if (GUILayout.Button("My Discord Name", GUILayout.Width(130)))
                     {
-                        const string CONTENT_ME = "BlackStartx#6593";
-                        if (EditorUtility.DisplayDialog("It's me!", CONTENT_ME, "Copy To Clipboard!", "Ok!"))
+                        // ReSharper disable once StringLiteralTypo
+                        const string contentMe = "BlackStartx#6593";
+                        if (EditorUtility.DisplayDialog("It's me!", contentMe, "Copy To Clipboard!", "Ok!"))
                         {
-                            ClipBoard = CONTENT_ME;
+                            ClipBoard = contentMe;
                         }
                     }
 
@@ -316,12 +319,13 @@ namespace GestureManager.Scripts.Editor
                 }
             }
 
-            GUILayout.Label("Script made by BlackStartx", bottomStyle);
+            // ReSharper disable once StringLiteralTypo
+            GUILayout.Label("Script made by BlackStartx", _bottomStyle);
         }
 
         private void Init()
         {
-            titleStyle = new GUIStyle(GUI.skin.label)
+            _titleStyle = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 15,
                 fontStyle = FontStyle.Bold,
@@ -329,7 +333,7 @@ namespace GestureManager.Scripts.Editor
                 padding = new RectOffset(10, 10, 10, 10)
             };
 
-            guiHandTitle = new GUIStyle(GUI.skin.label)
+            _guiHandTitle = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 12,
                 fontStyle = FontStyle.Bold,
@@ -337,7 +341,7 @@ namespace GestureManager.Scripts.Editor
                 padding = new RectOffset(10, 10, 10, 10)
             };
 
-            bottomStyle = new GUIStyle(GUI.skin.label)
+            _bottomStyle = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 11,
                 fontStyle = FontStyle.Bold,
@@ -345,7 +349,7 @@ namespace GestureManager.Scripts.Editor
                 padding = new RectOffset(5, 5, 5, 5)
             };
 
-            middleStyle = new GUIStyle(GUI.skin.label)
+            _middleStyle = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 12,
                 fontStyle = FontStyle.Bold,
@@ -353,13 +357,13 @@ namespace GestureManager.Scripts.Editor
                 padding = new RectOffset(5, 5, 5, 5)
             };
 
-            emoteError = new GUIStyle(GUI.skin.box)
+            _emoteError = new GUIStyle(GUI.skin.box)
             {
                 padding = new RectOffset(5, 5, 5, 5),
                 margin = new RectOffset(5, 5, 5, 5)
             };
 
-            textError = new GUIStyle(GUI.skin.label)
+            _textError = new GUIStyle(GUI.skin.label)
             {
                 active = {textColor = Color.red},
                 normal = {textColor = Color.red},
@@ -367,25 +371,25 @@ namespace GestureManager.Scripts.Editor
                 alignment = TextAnchor.MiddleCenter
             };
 
-            guiGreenButton = new GUIStyle(GUI.skin.button)
+            _guiGreenButton = new GUIStyle(GUI.skin.button)
             {
                 normal = {textColor = Color.green},
                 fixedWidth = 100
             };
 
 
-            subHeader = new GUIStyle(GUI.skin.label)
+            _subHeader = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleCenter
             };
 
-            plusButton = new GUIStyle()
+            _plusButton = new GUIStyle()
             {
                 margin = new RectOffset(0, 20, 3, 3)
             };
 
-            plusTexture = Resources.Load<Texture>("Textures/BSX_GM_PlusSign");
-            plusTexturePro = Resources.Load<Texture>("Textures/BSX_GM_PlusSign[Pro]");
+            _plusTexture = Resources.Load<Texture>("Textures/BSX_GM_PlusSign");
+            _plusTexturePro = Resources.Load<Texture>("Textures/BSX_GM_PlusSign[Pro]");
         }
 
         private int OnCheckBoxGuiHand(int position, OnNoneSelected onNone)
@@ -399,7 +403,7 @@ namespace GestureManager.Scripts.Editor
                 GUILayout.BeginHorizontal();
                 gesture[i] = EditorGUILayout.Toggle(GetManager().GetFinalGestureName(i), gesture[i]);
                 if (!GetManager().HasGestureBeenOverridden(i))
-                    if (GUILayout.Button(EditorGUIUtility.isProSkin ? plusTexturePro : plusTexture, plusButton, GUILayout.Width(15), GUILayout.Height(15)))
+                    if (GUILayout.Button(EditorGUIUtility.isProSkin ? _plusTexturePro : _plusTexture, _plusButton, GUILayout.Width(15), GUILayout.Height(15)))
                         RequestGestureDuplication(i);
                 GUILayout.EndHorizontal();
             }
@@ -429,7 +433,7 @@ namespace GestureManager.Scripts.Editor
         {
             var fullGestureName = GetManager().GetMyGestureNameByIndex(gestureIndex);
             var gestureName = "[" + fullGestureName.Substring(fullGestureName.IndexOf("]", StringComparison.Ordinal) + 2) + "]";
-            var newAnimation = MyAnimationHelper.CloneAnimationAsset(GetManager().GetFinalGestureByIndex(gestureIndex));
+            var newAnimation = GmgMyAnimationHelper.CloneAnimationAsset(GetManager().GetFinalGestureByIndex(gestureIndex));
             var path = EditorUtility.SaveFilePanelInProject("Creating Gesture: " + fullGestureName, gestureName + ".anim", "anim", "Hi (?)");
 
             if (path.Length == 0)
@@ -446,7 +450,7 @@ namespace GestureManager.Scripts.Editor
             GUILayout.Label(GetManager().GetEmoteName(emote - 1));
             if (GetManager().emote == emote)
             {
-                if (GUILayout.Button("Stop", guiGreenButton))
+                if (GUILayout.Button("Stop", _guiGreenButton))
                 {
                     GetManager().OnEmoteStop();
                 }
@@ -474,7 +478,7 @@ namespace GestureManager.Scripts.Editor
 
         private static string ClipBoard
         {
-            set { EditorGUIUtility.systemCopyBuffer = value; }
+            set => EditorGUIUtility.systemCopyBuffer = value;
         }
     }
 }

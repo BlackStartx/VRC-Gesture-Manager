@@ -10,8 +10,10 @@ namespace GestureManager.Scripts.Core.Editor
      *  Anyway, you're looking at some of the methods of my Core Unity Library OwO
      *  I didn't included all of them (files and methods) because otherwise the UnityPackage would have been so much bigger >.<
      *  And actually the "Clone Animation Asset" is way different... but i need only to clone frames and not other stuffs, so... OwO 
+     *
+     *  P.S: Gmg stands for GestureManager UwU
      */
-    public class MyAnimationHelper : MonoBehaviour
+    public class GmgMyAnimationHelper : MonoBehaviour
     {
         public static AnimationClip CloneAnimationAsset(AnimationClip toClone)
         {

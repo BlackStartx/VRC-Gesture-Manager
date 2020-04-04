@@ -9,8 +9,10 @@ namespace GestureManager.Scripts.Core
      * 
      *  Anyway, you're looking at some of the methods of my Core Unity Library OwO
      *  I didn't included all of them (files and methods) because otherwise the UnityPackage would have been so much bigger >.<
+     *
+     *  P.S: Gmg stands for GestureManager UwU
      */
-    public static class MyAnimatorControllerHelper {
+    public static class GmgMyAnimatorControllerHelper {
 
         public static IEnumerable<KeyValuePair<AnimationClip, AnimationClip>> GetOverrides(AnimatorOverrideController overrideController)
         {

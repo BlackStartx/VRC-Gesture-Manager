@@ -12,8 +12,10 @@ namespace GestureManager.Scripts.Core.Editor
 	 * 
 	 *  Anyway, you're looking at some of the methods of my Core Unity Library OwO
 	 *  I didn't included all of them (files and methods) because otherwise the UnityPackage would have been so much bigger >.<
+     *
+     *  P.S: Gmg stands for GestureManager UwU
 	 */
-	public static class MyLayoutHelper
+	public static class GmgMyLayoutHelper
 	{
 		public static void ObjectField<T>(string label, T unityObject, Action<T> onObjectSet) where T : UnityEngine.Object
 		{
@@ -35,24 +37,7 @@ namespace GestureManager.Scripts.Core.Editor
 					onObjectChange(oldObject, unityObject);
 			}
 		}
-		
-		/*
-		 * 	Toggle
-		 * 	Toggle
-		 * 	Toggle
-		 */
 
-		public delegate void OnToggle(bool newValue);
-
-        public static void Toggle(bool value, string label, OnToggle onToggle)
-        {
-            var newValue = GUILayout.Toggle(value, label);
-            if (newValue != value)
-            {
-                onToggle(newValue);
-            }
-        }
-		
 		/**
 		 * 	ToolBar
 		 * 	ToolBar
@@ -75,51 +60,51 @@ namespace GestureManager.Scripts.Core.Editor
 		
 		private class MyToolbarHeader
 		{
-			private int selected;
-			private readonly string[] titles;
-			private readonly MyToolbarRow[] rows;
+			private int _selected;
+			private readonly string[] _titles;
+			private readonly MyToolbarRow[] _rows;
 
 			public MyToolbarHeader(MyToolbarRow[] rows)
 			{
-				selected = 0;
-				titles = rows.Select(row => row.GetTitle()).ToArray();
-				this.rows = rows;
+				_selected = 0;
+				_titles = rows.Select(row => row.GetTitle()).ToArray();
+				_rows = rows;
 			}
 
 			public int GetSelected()
 			{
-				return selected;
+				return _selected;
 			}
 
 			public void SetSelected(int newSelected)
 			{
-				if (selected != newSelected)
-					rows[newSelected].OnStartFocus();
-				selected = newSelected;
+				if (_selected != newSelected)
+					_rows[newSelected].OnStartFocus();
+				_selected = newSelected;
 			}
 
 			public string[] GetTitles()
 			{
-				return titles;
+				return _titles;
 			}
 
 			public void ShowSelected()
 			{
-				rows[selected].Show();
+				_rows[_selected].Show();
 			}
 		}
 		
 		public class MyToolbarRow
 		{
-			private readonly string title;
-			private readonly Action willShow;
-			private readonly Action onStartFocus;
+			private readonly string _title;
+			private readonly Action _willShow;
+			private readonly Action _onStartFocus;
 
 			private MyToolbarRow(string title, Action willShow, Action onStartFocus)
 			{
-				this.title = title;
-				this.willShow = willShow;
-				this.onStartFocus = onStartFocus;
+				_title = title;
+				_willShow = willShow;
+				_onStartFocus = onStartFocus;
 			}
 
 			public MyToolbarRow(string title, Action willShow) : this(title, willShow, () => { })
@@ -128,17 +113,17 @@ namespace GestureManager.Scripts.Core.Editor
 
 			public void Show()
 			{
-				willShow();
+				_willShow();
 			}
 
 			public void OnStartFocus()
 			{
-				onStartFocus();
+				_onStartFocus();
 			}
 
 			internal string GetTitle()
 			{
-				return title;
+				return _title;
 			}
 		}
 	}

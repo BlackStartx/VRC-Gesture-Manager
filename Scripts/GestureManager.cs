@@ -5,23 +5,25 @@ using System.Linq;
 using GestureManager.Scripts.Core;
 using UnityEngine;
 using UnityEngine.Networking;
-using VRCSDK2;
+using VRC.SDKBase;
 
 namespace GestureManager.Scripts
 {
     public class GestureManager : MonoBehaviour
     {
+        public static readonly Dictionary<GameObject, GestureManager> ControlledAvatars = new Dictionary<GameObject, GestureManager>();
+        
         private const string VersionUrl = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.version";
 
-        private GameObject avatar;
+        private GameObject _avatar;
 
         public GameObject Avatar
         {
-            get { return avatar; }
+            get => _avatar;
             private set
             {
-                isControllingAnAvatar = value != null;
-                avatar = value;
+                _isControllingAnAvatar = value != null;
+                _avatar = value;
             }
         }
 
@@ -34,78 +36,82 @@ namespace GestureManager.Scripts
 
         public Animator avatarAnimator;
 
-        private Vector3 beforeEmoteAvatarScale;
-        private Vector3 beforeEmoteAvatarPosition;
-        private Quaternion beforeEmoteAvatarRotation;
+        private Vector3 _beforeEmoteAvatarScale;
+        private Vector3 _beforeEmoteAvatarPosition;
+        private Quaternion _beforeEmoteAvatarRotation;
 
-        private RuntimeAnimatorController standingRuntimeOverrideControllerPreset;
-        private RuntimeAnimatorController seatedRuntimeOverrideControllerPreset;
+        private RuntimeAnimatorController _standingRuntimeOverrideControllerPreset;
+        private RuntimeAnimatorController _seatedRuntimeOverrideControllerPreset;
 
-        private VRC_AvatarDescriptor avatarDescriptor;
+        private VRC_AvatarDescriptor _avatarDescriptor;
 
-        private ControllerType usingType;
-        private ControllerType notUsedType;
+        private ControllerType _usingType;
+        private ControllerType _notUsedType;
 
-        private VRC_AvatarDescriptor[] lastCheckedActiveDescriptors;
+        private VRC_AvatarDescriptor[] _lastCheckedActiveDescriptors;
 
-        private AnimatorOverrideController originalUsingOverrideController;
-        private AnimatorOverrideController myRuntimeOverrideController;
+        private AnimatorOverrideController _originalUsingOverrideController;
+        private AnimatorOverrideController _myRuntimeOverrideController;
 
-        private RuntimeAnimatorController avatarWasUsing;
+        private RuntimeAnimatorController _avatarWasUsing;
 
         // Used to control the rotation of the model bones during the animation playtime. (like outside the play mode)
-        private Dictionary<HumanBodyBones, Quaternion> lastBoneQuaternions;
-        private int controlDelay;
+        private Dictionary<HumanBodyBones, Quaternion> _lastBoneQuaternions;
+        private int _controlDelay;
 
-        private IEnumerable<HumanBodyBones> whiteListedControlBones;
-        private readonly List<HumanBodyBones> blackListedControlBones = new List<HumanBodyBones>()
+        private IEnumerable<HumanBodyBones> _whiteListedControlBones;
+
+        private readonly List<HumanBodyBones> _blackListedControlBones = new List<HumanBodyBones>()
         {
             // Left
             HumanBodyBones.LeftThumbDistal,
             HumanBodyBones.LeftThumbIntermediate,
             HumanBodyBones.LeftThumbProximal,
-            
+
             HumanBodyBones.LeftIndexDistal,
             HumanBodyBones.LeftIndexIntermediate,
             HumanBodyBones.LeftIndexProximal,
-            
+
             HumanBodyBones.LeftMiddleDistal,
             HumanBodyBones.LeftMiddleIntermediate,
             HumanBodyBones.LeftMiddleProximal,
-            
+
             HumanBodyBones.LeftRingDistal,
             HumanBodyBones.LeftRingIntermediate,
             HumanBodyBones.LeftRingProximal,
-            
+
             HumanBodyBones.LeftLittleDistal,
             HumanBodyBones.LeftLittleIntermediate,
             HumanBodyBones.LeftLittleProximal,
-            
+
             // Right
             HumanBodyBones.RightThumbDistal,
             HumanBodyBones.RightThumbIntermediate,
             HumanBodyBones.RightThumbProximal,
-            
+
             HumanBodyBones.RightIndexDistal,
             HumanBodyBones.RightIndexIntermediate,
             HumanBodyBones.RightIndexProximal,
-            
+
             HumanBodyBones.RightMiddleDistal,
             HumanBodyBones.RightMiddleIntermediate,
             HumanBodyBones.RightMiddleProximal,
-            
+
             HumanBodyBones.RightRingDistal,
             HumanBodyBones.RightRingIntermediate,
             HumanBodyBones.RightRingProximal,
-            
+
             HumanBodyBones.RightLittleDistal,
             HumanBodyBones.RightLittleIntermediate,
             HumanBodyBones.RightLittleProximal,
+
+            // ???
+            HumanBodyBones.LastBone
         };
 
         // I'm using the ReShaper editor... and those type are really annoying! >.<
         // ReSharper disable StringLiteralTypo
-        private readonly AnimationBind[] gestureBinds =
+        private readonly AnimationBind[] _gestureBinds =
         {
             new AnimationBind(null, "[GESTURE] Idle"),
             new AnimationBind("FIST", "[GESTURE] Fist"),
@@ -118,7 +124,7 @@ namespace GestureManager.Scripts
         };
         // ReSharper restore StringLiteralTypo
 
-        private readonly AnimationBind[] emoteBinds =
+        private readonly AnimationBind[] _emoteBinds =
         {
             new AnimationBind("EMOTE1", "[EMOTE 1] Wave", "[EMOTE 1] Laugh"),
             new AnimationBind("EMOTE2", "[EMOTE 2] Clap", "[EMOTE 2] Point"),
@@ -134,7 +140,7 @@ namespace GestureManager.Scripts
          * Animation Info...
          */
 
-        private Dictionary<string, bool> hasBeenOverridden;
+        private Dictionary<string, bool> _hasBeenOverridden;
 
         [SerializeField] private int instanceId;
 
@@ -142,7 +148,7 @@ namespace GestureManager.Scripts
         private static readonly int HandGestureRight = Animator.StringToHash("HandGestureRight");
         private static readonly int Emote = Animator.StringToHash("Emote");
 
-        private bool isControllingAnAvatar;
+        private bool _isControllingAnAvatar;
 
         private void Awake()
         {
@@ -175,16 +181,16 @@ namespace GestureManager.Scripts
 
         private void Update()
         {
-            if (!isControllingAnAvatar) return;
-            
+            if (!_isControllingAnAvatar) return;
+
             FetchLastBoneRotation();
             SetValues();
         }
 
         private void LateUpdate()
         {
-            if (!isControllingAnAvatar) return;
-            
+            if (!_isControllingAnAvatar) return;
+
             if (emote != 0 || onCustomAnimation) return;
 
             foreach (var bodyBone in GetWhiteListedControlBones())
@@ -192,7 +198,7 @@ namespace GestureManager.Scripts
                 var bone = avatarAnimator.GetBoneTransform(bodyBone);
                 try
                 {
-                    var boneRotation = lastBoneQuaternions[bodyBone];
+                    var boneRotation = _lastBoneQuaternions[bodyBone];
                     bone.localRotation = new Quaternion(boneRotation.x, boneRotation.y, boneRotation.z, boneRotation.w);
                 }
                 catch (Exception)
@@ -206,23 +212,23 @@ namespace GestureManager.Scripts
         {
             if (emote != 0 || onCustomAnimation)
             {
-                controlDelay = 5;
+                _controlDelay = 5;
                 return;
             }
 
-            if (controlDelay > 0)
+            if (_controlDelay > 0)
             {
-                controlDelay--;
+                _controlDelay--;
                 return;
             }
 
-            lastBoneQuaternions = new Dictionary<HumanBodyBones, Quaternion>();
+            _lastBoneQuaternions = new Dictionary<HumanBodyBones, Quaternion>();
             foreach (var bodyBone in GetWhiteListedControlBones())
             {
                 var bone = avatarAnimator.GetBoneTransform(bodyBone);
                 try
                 {
-                    lastBoneQuaternions[bodyBone] = bone.localRotation;
+                    _lastBoneQuaternions[bodyBone] = bone.localRotation;
                 }
                 catch (Exception)
                 {
@@ -233,7 +239,7 @@ namespace GestureManager.Scripts
 
         private IEnumerable<HumanBodyBones> GetWhiteListedControlBones()
         {
-            return whiteListedControlBones ?? (whiteListedControlBones = Enum.GetValues(typeof(HumanBodyBones)).Cast<HumanBodyBones>().Where(bones => !blackListedControlBones.Contains(bones)));
+            return _whiteListedControlBones ?? (_whiteListedControlBones = Enum.GetValues(typeof(HumanBodyBones)).Cast<HumanBodyBones>().Where(bones => !_blackListedControlBones.Contains(bones)));
         }
 
         public void StopCurrentEmote()
@@ -249,7 +255,7 @@ namespace GestureManager.Scripts
         {
             ResetCurrentAvatarController();
             Avatar = null;
-            avatarDescriptor = null;
+            _avatarDescriptor = null;
         }
 
         public void CheckForUpdates(Action<UnityWebRequest> onNetworkResponseError, Action<UnityWebRequest> onNetworkResponse)
@@ -274,25 +280,25 @@ namespace GestureManager.Scripts
 
         public bool CanSwitchController()
         {
-            if (notUsedType == ControllerType.Seated)
-                return avatarDescriptor.CustomSittingAnims != null;
-            return avatarDescriptor.CustomStandingAnims != null;
+            if (_notUsedType == ControllerType.Seated)
+                return _avatarDescriptor.CustomSittingAnims != null;
+            return _avatarDescriptor.CustomStandingAnims != null;
         }
 
         private VRC_AvatarDescriptor GetValidDescriptor()
         {
             CheckActiveDescriptors();
-            return lastCheckedActiveDescriptors.FirstOrDefault(IsValidDesc);
+            return _lastCheckedActiveDescriptors.FirstOrDefault(IsValidDesc);
         }
 
         public void CheckActiveDescriptors()
         {
-            lastCheckedActiveDescriptors = VRC.Tools.FindSceneObjectsOfTypeAll<VRC_AvatarDescriptor>();
+            _lastCheckedActiveDescriptors = VRC.Tools.FindSceneObjectsOfTypeAll<VRC_AvatarDescriptor>();
         }
 
         public VRC_AvatarDescriptor[] GetLastCheckedActiveDescriptors()
         {
-            return lastCheckedActiveDescriptors;
+            return _lastCheckedActiveDescriptors;
         }
 
         public bool IsValidDesc(VRC_AvatarDescriptor descriptor)
@@ -306,16 +312,12 @@ namespace GestureManager.Scripts
             if (!animator.isHuman) return false;
             if (descriptor.CustomSittingAnims == null && descriptor.CustomStandingAnims == null) return false;
 
-            var runtimeAnimatorController = animator.runtimeAnimatorController;
-
-            return runtimeAnimatorController == null ||
-                   !runtimeAnimatorController.name.Equals(GetStandingRuntimeOverrideControllerPreset().name) &&
-                   !runtimeAnimatorController.name.Equals(GetSeatedRuntimeOverrideControllerPreset().name);
+            return !ControlledAvatars.ContainsKey(descriptor.gameObject);
         }
 
         public AnimatorOverrideController GetOverrideController()
         {
-            return originalUsingOverrideController;
+            return _originalUsingOverrideController;
         }
 
         private void ResetCurrentAvatarController()
@@ -325,8 +327,9 @@ namespace GestureManager.Scripts
             var animator = Avatar.GetComponent<Animator>();
             if (animator == null) return;
 
-            animator.runtimeAnimatorController = avatarWasUsing;
-            avatarWasUsing = null;
+            animator.runtimeAnimatorController = _avatarWasUsing;
+            _avatarWasUsing = null;
+            ControlledAvatars.Remove(Avatar);
         }
 
         public string GetEmoteName(int emoteIndex)
@@ -341,70 +344,71 @@ namespace GestureManager.Scripts
 
         public bool HasGestureBeenOverridden(int gestureIndex)
         {
-            return hasBeenOverridden.ContainsKey(gestureBinds[gestureIndex].GetMyName(usingType));
+            return _hasBeenOverridden.ContainsKey(_gestureBinds[gestureIndex].GetMyName(_usingType));
         }
 
         public string GetMyGestureNameByIndex(int gestureIndex)
         {
-            return gestureBinds[gestureIndex].GetMyName(usingType);
+            return _gestureBinds[gestureIndex].GetMyName(_usingType);
         }
 
         public void InitForAvatar(VRC_AvatarDescriptor descriptor)
         {
             Avatar = descriptor.gameObject;
-            avatarDescriptor = descriptor;
+            _avatarDescriptor = descriptor;
 
             avatarAnimator = Avatar.GetComponent<Animator>();
             if (avatarAnimator == null)
                 avatarAnimator = Avatar.AddComponent<Animator>();
 
-            if (avatarDescriptor.CustomStandingAnims != null)
+            if (_avatarDescriptor.CustomStandingAnims != null)
                 SetupOverride(ControllerType.Standing, true);
-            else if (avatarDescriptor.CustomSittingAnims != null)
+            else if (_avatarDescriptor.CustomSittingAnims != null)
                 SetupOverride(ControllerType.Seated, true);
             else
             {
                 Avatar = null;
-                avatarDescriptor = null;
+                _avatarDescriptor = null;
                 avatarAnimator = null;
             }
         }
 
         private RuntimeAnimatorController GetStandingRuntimeOverrideControllerPreset()
         {
-            if (standingRuntimeOverrideControllerPreset == null)
-                standingRuntimeOverrideControllerPreset = Resources.Load<RuntimeAnimatorController>("StandingEmoteTestingTemplate");
-            return standingRuntimeOverrideControllerPreset;
+            if (_standingRuntimeOverrideControllerPreset == null)
+                _standingRuntimeOverrideControllerPreset = Resources.Load<RuntimeAnimatorController>("StandingEmoteTestingTemplate");
+            return _standingRuntimeOverrideControllerPreset;
         }
 
         private RuntimeAnimatorController GetSeatedRuntimeOverrideControllerPreset()
         {
-            if (seatedRuntimeOverrideControllerPreset == null)
-                seatedRuntimeOverrideControllerPreset = Resources.Load<RuntimeAnimatorController>("SeatedEmoteTestingTemplate");
-            return seatedRuntimeOverrideControllerPreset;
+            if (_seatedRuntimeOverrideControllerPreset == null)
+                _seatedRuntimeOverrideControllerPreset = Resources.Load<RuntimeAnimatorController>("SeatedEmoteTestingTemplate");
+            return _seatedRuntimeOverrideControllerPreset;
         }
 
         private void SetupOverride(ControllerType controllerType, bool saveController)
         {
-            controlDelay = 4;
-            
+            ControlledAvatars[Avatar] = this;
+            _controlDelay = 4;
+
             string controllerName;
             if (controllerType == ControllerType.Standing)
             {
-                usingType = ControllerType.Standing;
-                notUsedType = ControllerType.Seated;
+                _usingType = ControllerType.Standing;
+                _notUsedType = ControllerType.Seated;
 
-                originalUsingOverrideController = avatarDescriptor.CustomStandingAnims;
-                myRuntimeOverrideController = new AnimatorOverrideController(GetStandingRuntimeOverrideControllerPreset());
+                _originalUsingOverrideController = _avatarDescriptor.CustomStandingAnims;
+                _myRuntimeOverrideController = new AnimatorOverrideController(GetStandingRuntimeOverrideControllerPreset());
                 controllerName = GetStandingRuntimeOverrideControllerPreset().name;
             }
             else
             {
-                usingType = ControllerType.Seated;
-                notUsedType = ControllerType.Standing;
+                _usingType = ControllerType.Seated;
+                _notUsedType = ControllerType.Standing;
 
-                originalUsingOverrideController = avatarDescriptor.CustomSittingAnims;
-                myRuntimeOverrideController = new AnimatorOverrideController(GetSeatedRuntimeOverrideControllerPreset());
+                _originalUsingOverrideController = _avatarDescriptor.CustomSittingAnims;
+                _myRuntimeOverrideController = new AnimatorOverrideController(GetSeatedRuntimeOverrideControllerPreset());
                 controllerName = GetSeatedRuntimeOverrideControllerPreset().name;
             }
 
@@ -412,34 +416,34 @@ namespace GestureManager.Scripts
 
             var finalOverride = new List<KeyValuePair<AnimationClip, AnimationClip>>
             {
-                new KeyValuePair<AnimationClip, AnimationClip>(myRuntimeOverrideController["[EXTRA] CustomAnimation"], customAnim)
+                new KeyValuePair<AnimationClip, AnimationClip>(_myRuntimeOverrideController["[EXTRA] CustomAnimation"], customAnim)
             };
 
 
             var validOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
-            foreach (var pair in MyAnimatorControllerHelper.GetOverrides(originalUsingOverrideController).Where(keyValuePair => keyValuePair.Value != null))
+            foreach (var pair in GmgMyAnimatorControllerHelper.GetOverrides(_originalUsingOverrideController).Where(keyValuePair => keyValuePair.Value != null))
             {
                 try
                 {
-                    validOverrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(myRuntimeOverrideController[myTranslateDictionary[pair.Key.name]], pair.Value));
+                    validOverrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(_myRuntimeOverrideController[_myTranslateDictionary[pair.Key.name]], pair.Value));
                 }
                 catch (Exception)
                 {
                     // ignored
                 }
             }
-            
+
             finalOverride.AddRange(validOverrides);
 
-            hasBeenOverridden = new Dictionary<string, bool>();
-            foreach (var valuePair in finalOverride) hasBeenOverridden[valuePair.Key.name] = true;
+            _hasBeenOverridden = new Dictionary<string, bool>();
+            foreach (var valuePair in finalOverride) _hasBeenOverridden[valuePair.Key.name] = true;
 
-            myRuntimeOverrideController.ApplyOverrides(finalOverride);
+            _myRuntimeOverrideController.ApplyOverrides(finalOverride);
 
             if (saveController)
-                avatarWasUsing = avatarAnimator.runtimeAnimatorController;
+                _avatarWasUsing = avatarAnimator.runtimeAnimatorController;
 
-            avatarAnimator.runtimeAnimatorController = myRuntimeOverrideController;
+            avatarAnimator.runtimeAnimatorController = _myRuntimeOverrideController;
             avatarAnimator.runtimeAnimatorController.name = controllerName;
         }
 
@@ -467,31 +471,31 @@ namespace GestureManager.Scripts
 
         public void SwitchType()
         {
-            SetupOverride(notUsedType, false);
+            SetupOverride(_notUsedType, false);
         }
 
         public ControllerType GetUsedType()
         {
-            return usingType;
+            return _usingType;
         }
 
         public ControllerType GetNotUsedType()
         {
-            return notUsedType;
+            return _notUsedType;
         }
 
         private void SaveCurrentStartEmotePosition()
         {
-            beforeEmoteAvatarPosition = Avatar.transform.position;
-            beforeEmoteAvatarRotation = Avatar.transform.rotation;
-            beforeEmoteAvatarScale = Avatar.transform.localScale;
+            _beforeEmoteAvatarPosition = Avatar.transform.position;
+            _beforeEmoteAvatarRotation = Avatar.transform.rotation;
+            _beforeEmoteAvatarScale = Avatar.transform.localScale;
         }
 
         private void RevertToEmotePosition()
         {
-            Avatar.transform.position = beforeEmoteAvatarPosition;
-            Avatar.transform.rotation = beforeEmoteAvatarRotation;
-            Avatar.transform.localScale = beforeEmoteAvatarScale;
+            Avatar.transform.position = _beforeEmoteAvatarPosition;
+            Avatar.transform.rotation = _beforeEmoteAvatarRotation;
+            Avatar.transform.localScale = _beforeEmoteAvatarScale;
         }
 
         public void SetCustomAnimation(AnimationClip clip)
@@ -559,45 +563,45 @@ namespace GestureManager.Scripts
          *     This dictionary is needed just because I hate the original animation names.
          *     It will just translate the name of the original animation to the my version of the name. 
          */
-        private Dictionary<string, string> myTranslateDictionary;
+        private Dictionary<string, string> _myTranslateDictionary;
 
         private void GenerateDictionary()
         {
-            myTranslateDictionary = new Dictionary<string, string>()
+            _myTranslateDictionary = new Dictionary<string, string>()
             {
-                {gestureBinds[1].GetOriginalName(), gestureBinds[1].GetMyName(usingType)},
-                {gestureBinds[2].GetOriginalName(), gestureBinds[2].GetMyName(usingType)},
-                {gestureBinds[3].GetOriginalName(), gestureBinds[3].GetMyName(usingType)},
-                {gestureBinds[4].GetOriginalName(), gestureBinds[4].GetMyName(usingType)},
-                {gestureBinds[5].GetOriginalName(), gestureBinds[5].GetMyName(usingType)},
-                {gestureBinds[6].GetOriginalName(), gestureBinds[6].GetMyName(usingType)},
-                {gestureBinds[7].GetOriginalName(), gestureBinds[7].GetMyName(usingType)},
+                {_gestureBinds[1].GetOriginalName(), _gestureBinds[1].GetMyName(_usingType)},
+                {_gestureBinds[2].GetOriginalName(), _gestureBinds[2].GetMyName(_usingType)},
+                {_gestureBinds[3].GetOriginalName(), _gestureBinds[3].GetMyName(_usingType)},
+                {_gestureBinds[4].GetOriginalName(), _gestureBinds[4].GetMyName(_usingType)},
+                {_gestureBinds[5].GetOriginalName(), _gestureBinds[5].GetMyName(_usingType)},
+                {_gestureBinds[6].GetOriginalName(), _gestureBinds[6].GetMyName(_usingType)},
+                {_gestureBinds[7].GetOriginalName(), _gestureBinds[7].GetMyName(_usingType)},
 
-                {emoteBinds[0].GetOriginalName(), emoteBinds[0].GetMyName(usingType)},
-                {emoteBinds[1].GetOriginalName(), emoteBinds[1].GetMyName(usingType)},
-                {emoteBinds[2].GetOriginalName(), emoteBinds[2].GetMyName(usingType)},
-                {emoteBinds[3].GetOriginalName(), emoteBinds[3].GetMyName(usingType)},
-                {emoteBinds[4].GetOriginalName(), emoteBinds[4].GetMyName(usingType)},
-                {emoteBinds[5].GetOriginalName(), emoteBinds[5].GetMyName(usingType)},
-                {emoteBinds[6].GetOriginalName(), emoteBinds[6].GetMyName(usingType)},
-                {emoteBinds[7].GetOriginalName(), emoteBinds[7].GetMyName(usingType)},
+                {_emoteBinds[0].GetOriginalName(), _emoteBinds[0].GetMyName(_usingType)},
+                {_emoteBinds[1].GetOriginalName(), _emoteBinds[1].GetMyName(_usingType)},
+                {_emoteBinds[2].GetOriginalName(), _emoteBinds[2].GetMyName(_usingType)},
+                {_emoteBinds[3].GetOriginalName(), _emoteBinds[3].GetMyName(_usingType)},
+                {_emoteBinds[4].GetOriginalName(), _emoteBinds[4].GetMyName(_usingType)},
+                {_emoteBinds[5].GetOriginalName(), _emoteBinds[5].GetMyName(_usingType)},
+                {_emoteBinds[6].GetOriginalName(), _emoteBinds[6].GetMyName(_usingType)},
+                {_emoteBinds[7].GetOriginalName(), _emoteBinds[7].GetMyName(_usingType)},
             };
         }
 
         private AnimationClip GetEmoteByIndex(int emoteIndex)
         {
-            return myRuntimeOverrideController[emoteBinds[emoteIndex].GetMyName(usingType)];
+            return _myRuntimeOverrideController[_emoteBinds[emoteIndex].GetMyName(_usingType)];
         }
 
         public AnimationClip GetFinalGestureByIndex(int gestureIndex)
         {
-            return myRuntimeOverrideController[gestureBinds[gestureIndex].GetMyName(usingType)];
+            return _myRuntimeOverrideController[_gestureBinds[gestureIndex].GetMyName(_usingType)];
         }
 
         public void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation)
         {
-            originalUsingOverrideController[gestureBinds[gestureIndex].GetOriginalName()] = newAnimation;
-            SetupOverride(usingType, false);
+            _originalUsingOverrideController[_gestureBinds[gestureIndex].GetOriginalName()] = newAnimation;
+            SetupOverride(_usingType, false);
         }
     }
 
@@ -609,15 +613,15 @@ namespace GestureManager.Scripts
 
     public class AnimationBind
     {
-        private readonly string originalName;
-        private readonly string myStandingName;
-        private readonly string mySeatedName;
+        private readonly string _originalName;
+        private readonly string _myStandingName;
+        private readonly string _mySeatedName;
 
         public AnimationBind(string originalName, string myStandingName, string mySeatedName)
         {
-            this.originalName = originalName;
-            this.myStandingName = myStandingName;
-            this.mySeatedName = mySeatedName;
+            _originalName = originalName;
+            _myStandingName = myStandingName;
+            _mySeatedName = mySeatedName;
         }
 
         public AnimationBind(string originalName, string myName) : this(originalName, myName, myName)
@@ -626,12 +630,12 @@ namespace GestureManager.Scripts
 
         public string GetMyName(ControllerType controller)
         {
-            return controller == ControllerType.Standing ? myStandingName : mySeatedName;
+            return controller == ControllerType.Standing ? _myStandingName : _mySeatedName;
         }
 
         public string GetOriginalName()
         {
-            return originalName;
+            return _originalName;
         }
     }
 }
