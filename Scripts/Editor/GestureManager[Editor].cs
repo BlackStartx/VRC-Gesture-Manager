@@ -11,7 +11,7 @@ namespace GestureManager.Scripts.Editor
     [CustomEditor(typeof(GestureManager))]
     public class GestureManagerEditor : UnityEditor.Editor
     {
-        private const string Version = "1.0.0";
+        private const string Version = "2.0.0";
 
         private GUIStyle _titleStyle;
         private GUIStyle _middleStyle;
@@ -34,7 +34,7 @@ namespace GestureManager.Scripts.Editor
         {
             Init();
 
-            GUILayout.Label("Gesture Manager", _titleStyle);
+            GUILayout.Label("Gesture Manager 2.0", _titleStyle);
 
             if (GetManager().Avatar != null)
             {
