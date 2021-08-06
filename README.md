@@ -2,13 +2,18 @@
 
 A tool that will help you preview and edit your avatar animation directly in Unity.
 
-Available for both VRChat SDK 2.0 and SDK 3.0.
+Available for both VRChat SDK 2.0 and SDK 3.0, in Unity 2018 or 2019.
 
 ## How to Use (SDK 3.0)
-If you're using the VRChat SDK 3.0 download the latest UnityPackage from the release tab.<br>
-[[Or click here to go to the latest release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v3.0)]
+### Download the right UnityPackage
+If you're using the Unity 2019 download the latest UnityPackage from the release tab.<br>
+[[Or click here to go to the latest release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v3.1)]
 
-You can than import the UnityPackage directly in your project, 
+If you're using the Unity 2018 download the 3.0 UnityPackage from the release tab.<br>
+[[Or click here to go to the 3.0 release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v3.0)]
+
+### Import on Unity
+You can now import the UnityPackage directly in your project, 
 and you will find a folder called "GestureManager" in your **Assets** directory.
 
 ![img.png](.markdown/3.0/GestureManagerFolder.png)
@@ -72,12 +77,15 @@ some flickering effects.
   break the simulation and you need to restart the Play-Mode.
 
 ## How to Use (SDK 2.0)
-If you're using the VRChat SDK 2.0 download the UnityPackage from the 2.0 release.<br>
+### Download the right UnityPackage
+If you're using the VRChat SDK 2.0 download the 2.0 UnityPackage from the release tab.<br>
 [[Or click here to go to the 2.0 release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v2.0)]
 
-> Gesture Manager 3.0 release is still compatible with VRChat 2.0 SDK but using the 2.0 release is highly recommended.
+> GestureManager 3.0 and 3.1 releases are still compatible with VRChat SDK 2.0 but using the 2.0 release is highly recommended.
 
-You can than import the UnityPackage directly in your project,
+### Import on Unity
+
+You can now import the UnityPackage directly in your project,
 and you will find a folder called "GestureManager" in your **Assets** directory.
 
 ![alt text](.markdown/2.0/GestureManagerFolder.png)
