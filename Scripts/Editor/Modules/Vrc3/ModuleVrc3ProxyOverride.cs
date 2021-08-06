@@ -6,15 +6,10 @@ using UnityEngine;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3
 {
-    /**
-     * This class should be responsible to override the default proxy animations with actual animations.
-     * Right now this class is inactive since using OverrideControllers with UnityPlayable is unstable and could cause Unity to crash.
-     */
     public static class Vrc3ProxyOverride
     {
-        public static RuntimeAnimatorController OverrideController(RuntimeAnimatorController controller, bool overrideActive = false)
+        public static RuntimeAnimatorController OverrideController(RuntimeAnimatorController controller)
         {
-            if (!overrideActive) return controller;
             var overrideController = new AnimatorOverrideController(controller);
             overrideController.ApplyOverrides(controller.animationClips.Select(OverrideClip).Where(pair => pair.Value).ToList());
             return overrideController;

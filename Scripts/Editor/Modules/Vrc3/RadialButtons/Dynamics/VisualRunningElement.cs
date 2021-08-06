@@ -1,7 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
 using UnityEngine;
-using UnityEngine.Experimental.UIElements;
-using UnityEngine.Experimental.UIElements.StyleEnums;
+using UnityEngine.UIElements;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons.Dynamics
 {
@@ -9,8 +8,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons.Dynamics
     {
         public VisualRunningElement(bool active)
         {
-            style.positionLeft = 25;
-            style.positionTop = 25;
+            style.left = 25;
+            style.top = 25;
 
             Add(new VisualElement
             {
@@ -18,22 +17,21 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons.Dynamics
                 {
                     width = 50,
                     height = 50,
-                    positionLeft = -25,
-                    positionTop = -25,
-                    positionType = PositionType.Absolute,
+                    left = -25,
+                    top = -25,
+                    position = Position.Absolute,
                     backgroundImage = ModuleVrc3Styles.RunningParam
                 }
             });
 
             visible = active;
-        }
 
-        protected override void DoRepaint(IStylePainter painter)
-        {
-            var eulerVector = transform.rotation.eulerAngles;
-            eulerVector.z += 2f;
-            transform.rotation = Quaternion.Euler(eulerVector);
-            base.DoRepaint(painter);
+            experimental.animation.Start(25f, 200f, int.MaxValue, (b, val) =>
+            {
+                var eulerVector = transform.rotation.eulerAngles;
+                eulerVector.z += 2f;
+                transform.rotation = Quaternion.Euler(eulerVector);
+            });
         }
     }
 }

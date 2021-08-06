@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using GestureManager.Scripts.Core.Editor;
+using GestureManager.Scripts.Core.VisualElements;
 using GestureManager.Scripts.Editor.Modules.Vrc3.Params;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
 using UnityEngine;
 using UnityEngine.Animations;
-using UnityEngine.Experimental.UIElements;
-using UnityEngine.Experimental.UIElements.StyleEnums;
+using UnityEngine.UIElements;
 using UnityEngine.Playables;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using ControlType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType;
@@ -22,14 +22,19 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         {
             internal static readonly Color RadialTextBackground = new Color(0.11f, 0.11f, 0.11f, 0.49f);
 
+            internal static readonly Color ProgressRadial = new Color(0.07f, 0.55f, 0.58f);
+            internal static readonly Color ProgressBorder = new Color(0.06f, 0.79f, 0.83f);
+
             internal static readonly Color OuterBorder = new Color(0.1f, 0.35f, 0.38f);
             internal static readonly Color SubIcon = new Color(0.22f, 0.24f, 0.27f);
 
-            internal static readonly Color Middle = new Color(0.14f, 0.18f, 0.2f);
-            internal static readonly Color Inner = new Color(0.21f, 0.24f, 0.27f);
+            internal static readonly Color RadialBorder = new Color(0.1f, 0.35f, 0.38f);
+            internal static readonly Color RadialCenter = new Color(0.06f, 0.27f, 0.29f);
+            internal static readonly Color RadialMiddle = new Color(0.14f, 0.18f, 0.2f);
+            internal static readonly Color RadialInner = new Color(0.21f, 0.24f, 0.27f);
 
+            internal static readonly Color Cursor = RadialMiddle;
             internal static readonly Color CursorBorder = new Color(0.1f, 0.35f, 0.38f);
-            internal static Color Cursor => Middle;
         }
 
         public static class Prefabs
@@ -42,8 +47,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                     {
                         width = size,
                         height = 2,
-                        backgroundColor = Colors.OuterBorder,
-                        positionType = PositionType.Absolute
+                        backgroundColor = Colors.RadialBorder,
+                        position = Position.Absolute
                     }
                 };
             }
@@ -65,10 +70,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                     {
                         width = size,
                         height = size,
-                        positionLeft = x - hSize,
-                        positionTop = y - hSize,
+                        left = x - hSize,
+                        top = y - hSize,
                         backgroundImage = icon,
-                        positionType = PositionType.Absolute
+                        position = Position.Absolute
                     }
                 }.With(new TextElement
                 {
@@ -78,62 +83,63 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         color = Color.white,
                         fontSize = 8,
                         unityTextAlign = TextAnchor.MiddleCenter,
-                        positionTop = size
+                        top = size
                     }
                 });
             }
 
-            internal static VisualElement NewData()
+            internal static VisualElement NewData(float width, float height)
             {
                 return new VisualElement
                 {
                     style =
                     {
-                        width = 1,
-                        height = 1,
+                        width = width,
+                        height = height,
+                        left = -width / 2,
+                        top = -height / 2,
                         backgroundColor = Color.clear,
-                        positionType = PositionType.Absolute,
+                        position = Position.Absolute,
                         alignItems = Align.Center,
                         justifyContent = Justify.Center
                     }
                 };
             }
 
-            internal static VisualElement NewCircle(float size, Color color, Color border, PositionType positionType = default)
-            {
-                return SetCircle(new VisualElement(), size, color, border, positionType);
-            }
+            internal static GmgCircleElement NewCircle(float size, Color color, Color border, Position position = default) => SetCircle(new GmgCircleElement(), size, color, color, border, position);
 
-            internal static VisualElement SetCircle(VisualElement element, float size, Color color, Color border, PositionType positionType = default)
+            internal static GmgCircleElement NewCircle(float size, Color centerColor, Color color, Color border, Position position = default) => SetCircle(new GmgCircleElement(), size, centerColor, color, border, position);
+
+            internal static GmgCircleElement SetCircle(GmgCircleElement element, float size, Color color, Color border, Position position = default) => SetCircle(element, size, color, color, border, position);
+
+            private static GmgCircleElement SetCircle(GmgCircleElement element, float size, Color centerColor, Color color, Color border, Position position = default)
             {
                 element.style.width = element.style.height = size;
-
-                element.style.backgroundColor = color;
-
-                element.style.borderColor = border;
-                element.style.borderRadius = size;
-                element.style.borderBottomWidth = element.style.borderLeftWidth = element.style.borderRightWidth = element.style.borderTopWidth = 2;
-
+                element.CenterColor = centerColor;
+                element.VertexColor = color;
+                element.MyBorder(2, size, border);
                 element.style.alignItems = Align.Center;
                 element.style.justifyContent = Justify.Center;
-                element.style.positionType = positionType;
+                element.style.position = position;
                 return element;
             }
 
-            internal static VisualElement NewRadialText(out TextElement text, int positionTop, PositionType positionType = default)
+            internal static VisualElement NewRadialText(out TextElement text, int top, Position position = default)
             {
-                return SetRadialText(new VisualElement(), out text, positionTop, positionType);
+                return SetRadialText(new VisualElement(), out text, top, position);
             }
 
-            internal static VisualElement SetRadialText(VisualElement element, out TextElement text, int positionTop, PositionType positionType = default)
+            internal static VisualElement SetRadialText(VisualElement element, out TextElement text, int top, Position position = default)
             {
                 element.style.width = 50;
                 element.style.height = 20;
                 element.style.backgroundColor = Colors.RadialTextBackground;
-                element.style.borderColor = Color.clear;
-                element.style.borderRadius = 10;
-                element.style.positionType = positionType;
-                if (positionTop != 0) element.style.positionTop = positionTop;
+                element.style.borderTopLeftRadius = 10;
+                element.style.borderTopRightRadius = 10;
+                element.style.borderBottomLeftRadius = 10;
+                element.style.borderBottomRightRadius = 10;
+                element.style.position = position;
+                if (top != 0) element.style.top = top;
                 text = element.MyAdd(new TextElement {style = {height = 20, unityTextAlign = TextAnchor.MiddleCenter, color = Color.white, fontSize = 14}});
                 return element;
             }
@@ -146,11 +152,14 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                     {
                         width = 25,
                         height = 25,
-                        borderRadius = 15,
-                        positionLeft = 10,
-                        positionTop = -2,
+                        borderTopLeftRadius = 15,
+                        borderTopRightRadius = 15,
+                        borderBottomLeftRadius = 15,
+                        borderBottomRightRadius = 15,
+                        left = 60,
+                        top = 42,
                         backgroundColor = Colors.SubIcon,
-                        positionType = PositionType.Absolute,
+                        position = Position.Absolute,
                         justifyContent = Justify.Center,
                         alignItems = Align.Center
                     }

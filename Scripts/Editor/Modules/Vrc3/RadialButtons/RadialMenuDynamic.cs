@@ -3,7 +3,7 @@ using System;
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons.Dynamics;
 using UnityEngine;
-using UnityEngine.Experimental.UIElements;
+using UnityEngine.UIElements;
 using ControlType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons

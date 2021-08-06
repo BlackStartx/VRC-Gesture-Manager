@@ -1,5 +1,6 @@
-﻿using UnityEngine;
-using UnityEngine.Experimental.UIElements;
+﻿using GestureManager.Scripts.Core.VisualElements;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace GestureManager.Scripts.Core.Editor
 {
@@ -25,15 +26,10 @@ namespace GestureManager.Scripts.Core.Editor
             return visualElement;
         }
 
-        public static T MyBorder<T>(this T visualElement, float width, float radius, Color color) where T : VisualElement
+        public static void MyBorder(this GmgCircleElement visualElement, float width, float radius, Color color)
         {
-            visualElement.style.borderColor = color;
-            visualElement.style.borderRadius = radius;
-            visualElement.style.borderTopWidth = width;
-            visualElement.style.borderLeftWidth = width;
-            visualElement.style.borderRightWidth = width;
-            visualElement.style.borderBottomWidth = width;
-            return visualElement;
+            visualElement.BorderColor = color;
+            visualElement.BorderWidth = width;
         }
 
         public static T OnClickUpEvent<T>(this T visualElement, EventCallback<MouseUpEvent> action) where T : VisualElement

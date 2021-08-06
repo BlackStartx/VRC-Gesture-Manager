@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 using VRC.SDKBase;
 
 namespace GestureManager.Scripts.Extra
@@ -43,7 +44,7 @@ namespace GestureManager.Scripts.Extra
         public abstract AnimationClip GetFinalGestureByIndex(GestureHand hand, int gestureIndex);
         public abstract void OnCustomAnimationChange();
         public abstract void EditorHeader();
-        public abstract void EditorContent();
+        public abstract void EditorContent(VisualElement element);
         public abstract void SetValues(bool onCustomAnimation, int left, int right, int emote);
         public abstract bool HasGestureBeenOverridden(int gesture);
         public abstract void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation);

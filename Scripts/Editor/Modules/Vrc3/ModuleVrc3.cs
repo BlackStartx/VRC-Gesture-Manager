@@ -9,6 +9,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
+using UnityEngine.UIElements;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using VRC.SDKBase;
@@ -74,7 +75,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             layerList.AddRange(_avatarDescriptor.specialAnimationLayers);
             layerList.Sort(ModuleVrc3Styles.Data.LayerSort);
 
-            _playableGraph = PlayableGraph.Create("Gesture Manager 3.0");
+            _playableGraph = PlayableGraph.Create("Gesture Manager 3.1");
             var externalOutput = AnimationPlayableOutput.Create(_playableGraph, "Gesture Manager", AvatarAnimator);
             var playableMixer = AnimationLayerMixerPlayable.Create(_playableGraph, layerList.Count + 1);
             externalOutput.SetSourcePlayable(playableMixer);
@@ -135,7 +136,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             if (Editing.State) DisableEditMode();
             if (AvatarAnimator) ForgetAvatar();
             StopVrcHooks();
-            DestroyMenu();
         }
 
         public override void SetValues(bool onCustomAnimation, int left, int right, int emote)
@@ -152,7 +152,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             return errors;
         }
 
-        public override void EditorContent()
+        public override void EditorContent(VisualElement element)
         {
             GUILayout.BeginHorizontal();
 
@@ -173,8 +173,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             GUILayout.Label("Radial Menu", GestureManagerStyles.GuiHandTitle);
 
             GUILayout.Label("", GUILayout.ExpandWidth(true), GUILayout.Height(RadialMenu.Size));
-            _rect = GmgLayoutHelper.GetLastRect(_rect);
-            var extraSize = RadialMenu.Render(_rect) - RadialMenu.Size;
+            var extraSize = RadialMenu.Render(element, GmgLayoutHelper.GetLastRect(ref _rect)) - RadialMenu.Size;
             if (extraSize > 0) GUILayout.Label("", GUILayout.ExpandWidth(true), GUILayout.Height(extraSize));
 
             if (_radialDescription != null) ShowRadialDescription();
@@ -249,12 +248,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         {
             if (_playableGraph.IsValid()) _playableGraph.Destroy();
             if (AvatarAnimator.playableGraph.IsValid()) AvatarAnimator.playableGraph.Destroy();
-        }
-
-        private void DestroyMenu()
-        {
-            RadialMenu.RemoveFromHierarchy();
-            _radialMenu = null;
         }
 
         private void OnEditModeChange(bool editMode)

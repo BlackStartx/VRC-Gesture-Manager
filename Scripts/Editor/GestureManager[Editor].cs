@@ -2,23 +2,24 @@
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using GestureManager.Scripts.Core;
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Editor.Modules;
 using GestureManager.Scripts.Extra;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace GestureManager.Scripts.Editor
 {
     [CustomEditor(typeof(GestureManager))]
     public class GestureManagerEditor : UnityEditor.Editor
     {
+        private GestureManager Manager => target as GestureManager;
         public override bool RequiresConstantRepaint() => Manager.Module?.RequiresConstantRepaint ?? false;
 
-        private GestureManager Manager => target as GestureManager;
+        private VisualElement _root;
 
-        private const string Version = "3.0.0";
+        private const string Version = "3.1.0";
         private const string BsxName = "BlackStartx";
         private const string Discord = "BlackStartx#6593";
 
@@ -33,9 +34,16 @@ namespace GestureManager.Scripts.Editor
             Manager.SetModule(GetValidDescriptor());
         }
 
-        public override void OnInspectorGUI()
+        public override VisualElement CreateInspectorGUI()
         {
-            GUILayout.Label("Gesture Manager 3.0", GestureManagerStyles.TitleStyle);
+            _root = new VisualElement();
+            _root.Add(new IMGUIContainer(ManagerGui));
+            return _root;
+        }
+
+        private void ManagerGui()
+        {
+            GUILayout.Label("Gesture Manager 3.1", GestureManagerStyles.TitleStyle);
 
             if (Manager.Module != null)
             {
@@ -58,8 +66,7 @@ namespace GestureManager.Scripts.Editor
                 Manager.Module.EditorHeader();
                 GUILayout.EndHorizontal();
 
-                GizmosButton(false);
-                Manager.Module.EditorContent();
+                Manager.Module.EditorContent(_root);
             }
             else
             {
@@ -170,31 +177,6 @@ namespace GestureManager.Scripts.Editor
                 .ToList();
         }
 
-        private static void GizmosButton(bool show)
-        {
-            if (!show) return;
-            var isHidden = GmgGizmosHelper.HavePreset(GestureManager.GizmosState);
-            if (GUILayout.Button(isHidden ? "Show Gizmos" : "Hide Gizmos")) SetGizmos(isHidden);
-        }
-
-        private static void SetGizmos(bool isHidden)
-        {
-            if (isHidden) ShowGizmos();
-            else HideGizmos();
-        }
-
-        private static void ShowGizmos()
-        {
-            GmgGizmosHelper.LoadPreset(GestureManager.GizmosState);
-            GmgGizmosHelper.DeletePreset(GestureManager.GizmosState);
-        }
-
-        private static void HideGizmos()
-        {
-            GmgGizmosHelper.SavePreset(GestureManager.GizmosState);
-            GmgGizmosHelper.DisableAllGizmos();
-        }
-
         private static void DiscordPopup(string discord)
         {
             if (EditorUtility.DisplayDialog("It's me!", discord, "Copy To Clipboard!", "Ok!"))
@@ -229,10 +211,11 @@ namespace GestureManager.Scripts.Editor
             for (var i = 1; i < 8; i++)
             {
                 GUILayout.BeginHorizontal();
-                gesture[i] = EditorGUILayout.Toggle(manager.GetFinalGestureName(hand, i), gesture[i]);
-                if (!manager.Module.HasGestureBeenOverridden(i))
-                    if (GUILayout.Button(texture, GestureManagerStyles.PlusButton, GUILayout.Width(15), GUILayout.Height(15)))
-                        RequestGestureDuplication(manager, hand, i);
+                GUILayout.Label(manager.GetFinalGestureName(hand, i));
+                GUILayout.FlexibleSpace();
+                gesture[i] = GUILayout.Toggle(gesture[i], "");
+                if (!manager.Module.HasGestureBeenOverridden(i)) OverrideButton(texture, manager, hand, i);
+                else GUILayout.Space(35);
                 GUILayout.EndHorizontal();
             }
 
@@ -250,6 +233,12 @@ namespace GestureManager.Scripts.Editor
                     return i;
 
             return onNone(position);
+        }
+
+        private static void OverrideButton(Texture texture, GestureManager manager, GestureHand hand, int i)
+        {
+            if (GUILayout.Button(texture, GestureManagerStyles.PlusButton, GUILayout.Width(15), GUILayout.Height(15)))
+                RequestGestureDuplication(manager, hand, i);
         }
 
         internal static void OnEmoteButton(GestureManager manager, int emote)

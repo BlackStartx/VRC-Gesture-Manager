@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Experimental.UIElements;
+using UnityEngine.UIElements;
 
 namespace GestureManager.Scripts.Core.Editor
 {
@@ -31,10 +31,7 @@ namespace GestureManager.Scripts.Core.Editor
             return EditorWindow.GetWindow(Assembly.GetAssembly(typeof(EditorWindow)).GetType("UnityEditor.InspectorWindow"));
         }
 
-        public static VisualElement GetEditorWindowElementRoot(EditorWindow e)
-        {
-            return (VisualElement) e.GetType().GetProperty("rootVisualContainer", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(e);
-        }
+        public static VisualElement GetEditorWindowElementRoot(EditorWindow e) => e.rootVisualElement;
 
         /*
          *  Object Field!!!
@@ -67,10 +64,10 @@ namespace GestureManager.Scripts.Core.Editor
             EditorGUI.DrawRect(rect, new Color(0.5f, 0.5f, 0.5f, 1));
         }
 
-        public static Rect GetLastRect(Rect lastRect)
+        public static Rect GetLastRect(ref Rect lastRect)
         {
             if (Event.current.type == EventType.Layout || Event.current.type == EventType.Used) return lastRect;
-            return GUILayoutUtility.GetLastRect();
+            return lastRect = GUILayoutUtility.GetLastRect();
         }
 
         /*
