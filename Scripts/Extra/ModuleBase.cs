@@ -47,7 +47,7 @@ namespace GestureManager.Scripts.Extra
         public abstract AnimationClip GetFinalGestureByIndex(GestureHand hand, int gestureIndex);
         public abstract Animator OnCustomAnimationPlay(AnimationClip clip);
         public abstract void EditorHeader();
-        public abstract void EditorContent(UnityEditor.Editor editor, VisualElement element);
+        public abstract void EditorContent(object editor, VisualElement element);
         public abstract void SetValues(bool onCustomAnimation, int left, int right, int emote);
         public abstract bool HasGestureBeenOverridden(int gesture);
         public abstract void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation);

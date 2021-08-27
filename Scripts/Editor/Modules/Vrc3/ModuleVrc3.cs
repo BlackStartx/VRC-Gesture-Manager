@@ -157,7 +157,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             return errors;
         }
 
-        public override void EditorContent(UnityEditor.Editor editor, VisualElement element)
+        public override void EditorContent(object editor, VisualElement element)
         {
             GmgLayoutHelper.MyToolbar(ref _toolBar, new[]
             {
@@ -211,7 +211,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             GUILayout.Label("Radial Menu", GestureManagerStyles.GuiHandTitle);
 
             GUILayout.Label("", GUILayout.ExpandWidth(true), GUILayout.Height(RadialMenu.Size));
-            var menu = GetOrCreateRadial(editor);
+            var menu = GetOrCreateRadial(editor as UnityEditor.Editor);
             var extraSize = menu.Render(element, GmgLayoutHelper.GetLastRect(ref menu.Rect)) - RadialMenu.Size;
             if (extraSize > 0) GUILayout.Label("", GUILayout.ExpandWidth(true), GUILayout.Height(extraSize));
             menu.ShowRadialDescription();

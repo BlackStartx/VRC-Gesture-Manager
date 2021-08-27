@@ -139,7 +139,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             GUI.enabled = true;
         }
 
-        public override void EditorContent(UnityEditor.Editor editor, VisualElement element)
+        public override void EditorContent(object editor, VisualElement element)
         {
             GUILayout.Space(15);
 
