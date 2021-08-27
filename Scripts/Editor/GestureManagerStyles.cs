@@ -12,6 +12,7 @@ namespace GestureManager.Scripts.Editor
         private static GUIStyle _plusButton;
         private static GUIStyle _subHeader;
         private static GUIStyle _textError;
+        private static GUIStyle _textWarning;
         private static GUIStyle _titleStyle;
 
         private static Texture _plusTexture;
@@ -55,6 +56,13 @@ namespace GestureManager.Scripts.Editor
             margin = new RectOffset(5, 5, 5, 5)
         });
 
+        internal static GUIStyle TextWarning => _textWarning ?? (_textWarning = new GUIStyle(GUI.skin.label)
+        {
+            active = {textColor = Color.yellow},
+            normal = {textColor = Color.yellow},
+            alignment = TextAnchor.MiddleCenter
+        });
+
         internal static GUIStyle TextError => _textError ?? (_textError = new GUIStyle(GUI.skin.label)
         {
             active = {textColor = Color.red},
@@ -65,7 +73,9 @@ namespace GestureManager.Scripts.Editor
 
         internal static GUIStyle GuiGreenButton => _guiGreenButton ?? (_guiGreenButton = new GUIStyle(GUI.skin.button)
         {
+            active = {textColor = Color.green},
             normal = {textColor = Color.green},
+            hover = {textColor = Color.green},
             fixedWidth = 100
         });
 

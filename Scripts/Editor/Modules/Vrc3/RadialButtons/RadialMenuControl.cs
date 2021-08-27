@@ -88,9 +88,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
 
         internal void SetControlValue() => SetValue(ActiveValue);
 
-        internal void SetValue(float value) => _parameter?.Set(_menu, value);
+        internal void SetValue(float value) => _parameter?.Set(_menu.RadialMenus, value);
 
-        internal void SetSubValue(int index, float value) => _subParameters[index]?.Set(_menu, value);
+        internal void SetSubValue(int index, float value) => _subParameters[index]?.Set(_menu.RadialMenus, value);
 
         public VRCExpressionsMenu.Control.Label[] GetSubLabels() => _subLabels;
 

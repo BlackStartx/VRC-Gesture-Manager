@@ -1,5 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
@@ -21,13 +22,13 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
             _amplifier = amplifier;
         }
 
-        public void Set(RadialMenu menu, float value)
+        public void Set(IEnumerable<RadialMenu> menus, float value)
         {
             value *= _amplifier;
             if (Is(value)) return;
             InternalSet(value);
             _onChange?.Invoke(this, value);
-            menu.UpdateValue(Name, value);
+            foreach (var menu in menus) menu.UpdateValue(Name, value);
         }
 
         public void Amplify(float amplifier) => _amplifier = amplifier;
@@ -40,9 +41,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
 
         protected internal abstract void InternalSet(float value);
 
-        public void Add(RadialMenu menu, float value) => Set(menu, Get() + value);
+        public void Add(IEnumerable<RadialMenu> menu, float value) => Set(menu, Get() + value);
 
-        public void Random(RadialMenu menu, float min, float max, float chance)
+        public void Random(IEnumerable<RadialMenu> menu, float min, float max, float chance)
         {
             switch (Type)
             {

@@ -23,41 +23,45 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private readonly int _handGestureLeft = Animator.StringToHash("GestureLeft");
         private readonly int _handGestureRight = Animator.StringToHash("GestureRight");
 
-        private GameObject _editAvatar;
+        private DummyMode _dummyMode;
+        internal GameObject DummyAvatar;
         private PlayableGraph _playableGraph;
         private AnimationPlayableOutput _externalOutput;
         private AnimatorControllerPlayable[] _humanAnimatorPlayables;
         private RadialWeightController[] _weightControllers;
-        private Rect _rect;
         private bool _hooked;
 
         internal readonly Vrc3ParamBool Debug = new Vrc3ParamBool();
-        internal readonly Vrc3ParamBool Editing;
+        internal readonly Vrc3ParamBool Dummy;
 
-        private RadialMenu _radialMenu;
-        private RadialMenu RadialMenu => _radialMenu ?? (_radialMenu = new RadialMenu(this));
+        internal readonly Dictionary<string, Vrc3Param> Params = new Dictionary<string, Vrc3Param>();
+        internal readonly Dictionary<UnityEditor.Editor, RadialMenu> RadialMenus = new Dictionary<UnityEditor.Editor, RadialMenu>();
+
         private IEnumerable<AnimationClip> OriginalClips => _avatarClips.Where(clip => !clip.name.StartsWith("proxy_"));
         private VRCExpressionsMenu Menu => _avatarDescriptor.expressionsMenu;
         private VRCExpressionParameters Parameters => _avatarDescriptor.expressionParameters;
 
         public override bool LateBoneUpdate => false;
         public override bool RequiresConstantRepaint => true;
+        public string ExitDummyText => "Exit " + _dummyMode + "-Mode";
 
         private readonly Dictionary<VRCAvatarDescriptor.AnimLayerType, RadialWeightController> _fromBlend = new Dictionary<VRCAvatarDescriptor.AnimLayerType, RadialWeightController>();
         private readonly HashSet<AnimationClip> _avatarClips = new HashSet<AnimationClip>();
-        private RadialDescription _radialDescription;
 
         private float _prevSeated, _prevTPoseCalibration, _prevIKPoseCalibration;
+
+        private AnimationClip _selectingCustomAnim;
+        private GmgLayoutHelper.GmgToolbarHeader _toolBar;
 
         public ModuleVrc3(GestureManager manager, VRCAvatarDescriptor avatarDescriptor) : base(manager, avatarDescriptor)
         {
             _avatarDescriptor = avatarDescriptor;
-            Editing = new Vrc3ParamBool(OnEditModeChange);
+            Dummy = new Vrc3ParamBool(OnDummyModeChange);
         }
 
         public override void Update()
         {
-            if (Editing.State && (!_editAvatar || Avatar.activeSelf)) DisableEditMode();
+            if (_dummyMode != DummyMode.None && (!DummyAvatar || Avatar.activeSelf)) DisableDummy();
             foreach (var weightController in _weightControllers) weightController.Update();
         }
 
@@ -75,7 +79,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             layerList.AddRange(_avatarDescriptor.specialAnimationLayers);
             layerList.Sort(ModuleVrc3Styles.Data.LayerSort);
 
-            _playableGraph = PlayableGraph.Create("Gesture Manager 3.1");
+            _playableGraph = PlayableGraph.Create("Gesture Manager 3.2");
             var externalOutput = AnimationPlayableOutput.Create(_playableGraph, "Gesture Manager", AvatarAnimator);
             var playableMixer = AnimationLayerMixerPlayable.Create(_playableGraph, layerList.Count + 1);
             externalOutput.SetSourcePlayable(playableMixer);
@@ -107,40 +111,41 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
                 _humanAnimatorPlayables[i] = AnimatorControllerPlayable.Create(_playableGraph, Vrc3ProxyOverride.OverrideController(controller));
                 _weightControllers[i] = new RadialWeightController(playableMixer, iGraph);
-                for (var j = 0; j < _humanAnimatorPlayables[i].GetLayerCount(); j++) _humanAnimatorPlayables[i].SetLayerWeight(j, 1f);
 
                 playableMixer.ConnectInput(iGraph, _humanAnimatorPlayables[i], 0, 1);
                 _fromBlend[vrcAnimLayer.type] = _weightControllers[i];
 
                 if (limit) playableMixer.SetInputWeight(iGraph, 0f);
-                if (isAdd) playableMixer.SetLayerAdditive((uint) iGraph, true);
-                if (mask) playableMixer.SetLayerMaskFromAvatarMask((uint) iGraph, mask);
+                if (isAdd) playableMixer.SetLayerAdditive((uint)iGraph, true);
+                if (mask) playableMixer.SetLayerMaskFromAvatarMask((uint)iGraph, mask);
             }
 
             _playableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
             _playableGraph.Play();
             _playableGraph.Evaluate(0f);
 
-            RadialMenu.Set(AvatarAnimator, Menu, Parameters, _humanAnimatorPlayables);
-            RadialMenu.GetParam("TrackingType")?.InternalSet(1f);
-            RadialMenu.GetParam("Upright")?.InternalSet(1f);
-            RadialMenu.GetParam("Grounded")?.InternalSet(1f);
-            RadialMenu.GetParam("VelocityX")?.Amplify(-7f);
-            RadialMenu.GetParam("VelocityZ")?.Amplify(7f);
-            RadialMenu.GetParam("AvatarVersion")?.InternalSet(3f);
-            RadialMenu.GetParam("Seated")?.OnChange(OnSeatedModeChange);
+            foreach (var radialMenu in RadialMenus.Values) radialMenu.Set(Menu);
+            InitParams(AvatarAnimator, Parameters, _humanAnimatorPlayables);
+
+            GetParam("TrackingType")?.InternalSet(1f);
+            GetParam("Upright")?.InternalSet(1f);
+            GetParam("Grounded")?.InternalSet(1f);
+            GetParam("VelocityX")?.Amplify(-7f);
+            GetParam("VelocityZ")?.Amplify(7f);
+            GetParam("AvatarVersion")?.InternalSet(3f);
+            GetParam("Seated")?.OnChange(OnSeatedModeChange);
         }
 
         public override void Unlink()
         {
-            if (Editing.State) DisableEditMode();
+            if (Dummy.State) DisableDummy();
             if (AvatarAnimator) ForgetAvatar();
             StopVrcHooks();
         }
 
         public override void SetValues(bool onCustomAnimation, int left, int right, int emote)
         {
-            if (Editing.State) return;
+            if (Dummy.State) return;
             AvatarAnimator.SetInteger(_handGestureLeft, left);
             AvatarAnimator.SetInteger(_handGestureRight, right);
         }
@@ -152,31 +157,64 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             return errors;
         }
 
-        public override void EditorContent(VisualElement element)
+        public override void EditorContent(UnityEditor.Editor editor, VisualElement element)
         {
-            GUILayout.BeginHorizontal();
+            GmgLayoutHelper.MyToolbar(ref _toolBar, new[]
+            {
+                new GmgLayoutHelper.GmgToolbarRow("Gestures", () =>
+                {
+                    GUILayout.BeginHorizontal();
 
-            GUILayout.BeginVertical();
-            GUILayout.Label("Left Hand", GestureManagerStyles.GuiHandTitle);
-            Manager.left = GestureManagerEditor.OnCheckBoxGuiHand(Manager, GestureHand.Left, Manager.left, position => 0);
-            GUILayout.EndVertical();
+                    GUILayout.BeginVertical();
+                    GUILayout.Label("Left Hand", GestureManagerStyles.GuiHandTitle);
+                    Manager.left = GestureManagerEditor.OnCheckBoxGuiHand(Manager, GestureHand.Left, Manager.left, position => 0);
+                    GUILayout.EndVertical();
 
-            GUILayout.BeginVertical();
-            GUILayout.Label("Right Hand", GestureManagerStyles.GuiHandTitle);
-            Manager.right = GestureManagerEditor.OnCheckBoxGuiHand(Manager, GestureHand.Right, Manager.right, position => 0);
-            GUILayout.EndVertical();
+                    GUILayout.BeginVertical();
+                    GUILayout.Label("Right Hand", GestureManagerStyles.GuiHandTitle);
+                    Manager.right = GestureManagerEditor.OnCheckBoxGuiHand(Manager, GestureHand.Right, Manager.right, position => 0);
+                    GUILayout.EndVertical();
 
-            GUILayout.EndHorizontal();
+                    GUILayout.EndHorizontal();
+                }),
+                new GmgLayoutHelper.GmgToolbarRow("Test Animation", () =>
+                {
+                    GUILayout.Label("Test animation", GestureManagerStyles.GuiHandTitle);
+                    GUILayout.Label("Use this window to preview any animation in your project.", GestureManagerStyles.SubHeader);
+                    GUILayout.Label("You can preview Emotes or Gestures.", GestureManagerStyles.SubHeader);
+
+                    GUILayout.Space(18);
+
+                    GUILayout.BeginHorizontal();
+                    _selectingCustomAnim = GmgLayoutHelper.ObjectField("Animation: ", _selectingCustomAnim, Manager.SetCustomAnimation);
+                    var isEditMode = _dummyMode == DummyMode.Edit;
+
+                    GUI.enabled = _selectingCustomAnim && !isEditMode;
+                    if (Manager.OnCustomAnimation)
+                    {
+                        if (GUILayout.Button("Stop", GestureManagerStyles.GuiGreenButton)) Manager.StopCustomAnimation();
+                    }
+                    else if (GUILayout.Button("Play", GUILayout.Width(100))) Manager.PlayCustomAnimation(_selectingCustomAnim);
+
+                    GUI.enabled = true;
+
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.Space(18);
+                    GUILayout.Label(isEditMode ? "Cannot test animation while in Edit-Mode." : "Will reset the simulation.", GestureManagerStyles.TextError);
+                    GUILayout.Space(18);
+                })
+            });
 
             GUILayout.Space(4);
             GmgLayoutHelper.Divisor(1);
             GUILayout.Label("Radial Menu", GestureManagerStyles.GuiHandTitle);
 
             GUILayout.Label("", GUILayout.ExpandWidth(true), GUILayout.Height(RadialMenu.Size));
-            var extraSize = RadialMenu.Render(element, GmgLayoutHelper.GetLastRect(ref _rect)) - RadialMenu.Size;
+            var menu = GetOrCreateRadial(editor);
+            var extraSize = menu.Render(element, GmgLayoutHelper.GetLastRect(ref menu.Rect)) - RadialMenu.Size;
             if (extraSize > 0) GUILayout.Label("", GUILayout.ExpandWidth(true), GUILayout.Height(extraSize));
-
-            if (_radialDescription != null) ShowRadialDescription();
+            menu.ShowRadialDescription();
         }
 
         public override AnimationClip GetFinalGestureByIndex(GestureHand hand, int gestureIndex)
@@ -188,8 +226,18 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         public override bool HasGestureBeenOverridden(int gesture) => true;
 
-        public override void OnCustomAnimationChange()
+        public override Animator OnCustomAnimationPlay(AnimationClip clip)
         {
+            if (!clip)
+            {
+                RemoveDummy(true);
+                return null;
+            }
+
+            if (!DummyAvatar) CreateDummy("[Testing]", DummyMode.Test);
+            var animator = DummyAvatar.GetOrAddComponent<Animator>();
+            animator.runtimeAnimatorController = GmgAnimatorControllerHelper.CreateControllerWith(clip);
+            return animator;
         }
 
         public override void EditorHeader()
@@ -204,30 +252,79 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
          *  Functions
          */
 
-        private void DisableEditMode() => Editing.Set(RadialMenu, 0f);
-
-        public void RemoveRadialDescription() => _radialDescription = null;
-
-        public void SetRadialDescription(string text, string link, string url) => _radialDescription = new RadialDescription(text, link, url);
-
-        private void ShowRadialDescription()
+        private RadialMenu GetOrCreateRadial(UnityEditor.Editor editor)
         {
-            GUILayout.Space(10);
-            GUILayout.BeginHorizontal(GestureManagerStyles.EmoteError);
-            GUILayout.FlexibleSpace();
-            GUILayout.Label(_radialDescription.Text);
+            if (RadialMenus.ContainsKey(editor)) return RadialMenus[editor];
 
-            var style = EditorGUIUtility.isProSkin ? ModuleVrc3Styles.UrlPro : ModuleVrc3Styles.Url;
-            if (GUILayout.Button(_radialDescription.Link, style)) Application.OpenURL(_radialDescription.Url);
-            EditorGUIUtility.AddCursorRect(GUILayoutUtility.GetLastRect(), MouseCursor.Link);
-            GUILayout.FlexibleSpace();
+            RadialMenus[editor] = new RadialMenu(this);
+            RadialMenus[editor].Set(Menu);
+            return RadialMenus[editor];
+        }
 
-            GUILayout.EndHorizontal();
+        private void CreateDummy(string dummyName, DummyMode mode)
+        {
+            ForgetAvatar();
+            Dummy.State = true;
+            DummyAvatar = UnityEngine.Object.Instantiate(Avatar);
+            DummyAvatar.name = Avatar.name + " " + dummyName;
+            _dummyMode = mode;
+            Avatar.SetActive(false);
+            Avatar.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
+            EditorApplication.DirtyHierarchyWindowSorting();
+            foreach (var radialMenu in RadialMenus.Values) radialMenu.MainMenuPrefab();
+        }
+
+        private void RemoveDummy(bool reset)
+        {
+            if (DummyAvatar) UnityEngine.Object.DestroyImmediate(DummyAvatar);
+            Dummy.State = false;
+            Avatar.SetActive(true);
+            Avatar.hideFlags = HideFlags.None;
+            EditorApplication.DirtyHierarchyWindowSorting();
+            if (!reset) return;
+
+            AvatarAnimator.Update(1f);
+            AvatarAnimator.runtimeAnimatorController = null;
+            AvatarAnimator.Update(1f);
+            InitForAvatar();
+        }
+
+        private void OnDummyModeChange(bool state)
+        {
+            if (state) return;
+            DisableDummy();
+        }
+
+        private void DisableDummy()
+        {
+            if (!Avatar) return;
+
+            switch (_dummyMode)
+            {
+                case DummyMode.Edit:
+                    break;
+                case DummyMode.Test:
+                    Manager.StopCustomAnimation();
+                    break;
+                case DummyMode.None:
+                    break;
+                default: throw new ArgumentOutOfRangeException();
+            }
+
+            RemoveDummy(true);
+            Dummy.State = false;
+            _dummyMode = DummyMode.None;
+        }
+
+        internal void EnableEditMode()
+        {
+            CreateDummy("[Edit-Mode]", DummyMode.Edit);
+            DummyAvatar.GetOrAddComponent<Animator>().runtimeAnimatorController = GmgAnimatorControllerHelper.CreateControllerWith(OriginalClips);
         }
 
         public void NoExpressionRefresh()
         {
-            if (Editing.State) return;
+            if (Dummy.State) return;
             if (Menu) ResetAvatar();
         }
 
@@ -240,7 +337,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private void ForgetAvatar()
         {
             AvatarAnimator.Rebind();
-            RadialMenu.ForgetParams();
+            ForgetParams();
             DestroyGraphs();
         }
 
@@ -250,39 +347,39 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             if (AvatarAnimator.playableGraph.IsValid()) AvatarAnimator.playableGraph.Destroy();
         }
 
-        private void OnEditModeChange(bool editMode)
-        {
-            if (editMode)
-            {
-                ForgetAvatar();
-                _editAvatar = UnityEngine.Object.Instantiate(Avatar);
-                _editAvatar.name = Avatar.name + " (Edit-Mode)";
-
-                Avatar.SetActive(false);
-                Avatar.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
-                _editAvatar.GetOrAddComponent<Animator>().runtimeAnimatorController = GmgAnimatorControllerHelper.CreateControllerWith(OriginalClips);
-                _radialMenu.MainMenuPrefab();
-                EditorApplication.DirtyHierarchyWindowSorting();
-            }
-            else
-            {
-                if (_editAvatar) UnityEngine.Object.DestroyImmediate(_editAvatar);
-
-                Avatar.SetActive(true);
-                Avatar.hideFlags = HideFlags.None;
-
-                AvatarAnimator.Update(1f);
-                AvatarAnimator.runtimeAnimatorController = null;
-                AvatarAnimator.Update(1f);
-                InitForAvatar();
-                EditorApplication.DirtyHierarchyWindowSorting();
-            }
-        }
-
         private void OnSeatedModeChange(Vrc3Param param, float seated)
         {
             _fromBlend[VRCAvatarDescriptor.AnimLayerType.Sitting].Set(seated);
         }
+
+        /*
+         * Params
+         */
+
+        private void InitParams(Animator animator, VRCExpressionParameters parameters, IEnumerable<AnimatorControllerPlayable> animatorControllerPlayables)
+        {
+            Params.Clear();
+            foreach (var controller in animatorControllerPlayables)
+            foreach (var parameter in RadialMenuUtility.GetParameters(controller))
+                Params[parameter.name] = RadialMenuUtility.CreateParamFromController(animator, parameter, controller);
+
+            if (!parameters) return;
+            foreach (var parameter in parameters.parameters)
+                if (!Params.ContainsKey(parameter.name))
+                    Params[parameter.name] = RadialMenuUtility.CreateParamFromNothing(parameter);
+
+            foreach (var parameter in parameters.parameters)
+                Params[parameter.name].InternalSet(parameter.defaultValue);
+        }
+
+        public Vrc3Param GetParam(string pName)
+        {
+            if (pName == null) return null;
+            Params.TryGetValue(pName, out var param);
+            return param;
+        }
+
+        private void ForgetParams() => Params.Clear();
 
         /*
          * Vrc Hooks
@@ -323,23 +420,30 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             foreach (var parameter in driver.parameters)
             {
-                var param = RadialMenu.GetParam(parameter.name);
+                var param = GetParam(parameter.name);
                 if (param == null) continue;
 
                 switch (parameter.type)
                 {
                     case VRC_AvatarParameterDriver.ChangeType.Set:
-                        param.Set(RadialMenu, parameter.value);
+                        param.Set(RadialMenus.Values, parameter.value);
                         break;
                     case VRC_AvatarParameterDriver.ChangeType.Add:
-                        param.Add(RadialMenu, parameter.value);
+                        param.Add(RadialMenus.Values, parameter.value);
                         break;
                     case VRC_AvatarParameterDriver.ChangeType.Random:
-                        param.Random(RadialMenu, parameter.valueMin, parameter.valueMax, parameter.chance);
+                        param.Random(RadialMenus.Values, parameter.valueMin, parameter.valueMax, parameter.chance);
                         break;
                     default: throw new ArgumentOutOfRangeException();
                 }
             }
+        }
+
+        private enum DummyMode
+        {
+            None,
+            Edit,
+            Test
         }
     }
 }

@@ -14,7 +14,6 @@ namespace GestureManager.Scripts.Core.VisualElements
 
         public float Progress
         {
-            get => _progress;
             set
             {
                 if (Math.Abs(_progress - value) < Tolerance) return;
@@ -28,7 +27,6 @@ namespace GestureManager.Scripts.Core.VisualElements
 
         public float BorderWidth
         {
-            get => _borderWidth;
             set
             {
                 if (Math.Abs(_borderWidth - value) < Tolerance) return;
@@ -41,7 +39,6 @@ namespace GestureManager.Scripts.Core.VisualElements
 
         public Color BorderColor
         {
-            get => _borderColor;
             set
             {
                 if (_borderColor == value) return;
@@ -54,7 +51,6 @@ namespace GestureManager.Scripts.Core.VisualElements
 
         public Color VertexColor
         {
-            get => _vertexColor;
             set
             {
                 if (_vertexColor == value) return;
@@ -67,7 +63,6 @@ namespace GestureManager.Scripts.Core.VisualElements
 
         public Color CenterColor
         {
-            get => _centerColor;
             set
             {
                 if (_centerColor == value) return;

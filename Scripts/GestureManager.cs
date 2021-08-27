@@ -13,7 +13,6 @@ namespace GestureManager.Scripts
         public static Dictionary<GameObject, ModuleBase> ControlledAvatars = new Dictionary<GameObject, ModuleBase>();
 
         public int right, left, emote;
-        public bool onCustomAnimation;
 
         public bool inWebClientRequest;
 
@@ -24,7 +23,9 @@ namespace GestureManager.Scripts
         public List<ModuleBase> LastCheckedActiveDescriptors = new List<ModuleBase>();
         public ModuleBase Module;
 
+        public bool OnCustomAnimation { get; private set; }
         public AnimationClip customAnim;
+        private Animator _customAnimator;
 
         public RuntimeAnimatorController avatarWasUsing;
 
@@ -106,7 +107,7 @@ namespace GestureManager.Scripts
             if (Module == null) return;
 
             FetchLastBoneRotation();
-            Module.SetValues(onCustomAnimation, left, right, emote);
+            Module.SetValues(OnCustomAnimation, left, right, emote);
             Module.Update();
         }
 
@@ -114,7 +115,7 @@ namespace GestureManager.Scripts
         {
             if (Module == null || !Module.LateBoneUpdate) return;
 
-            if (emote != 0 || onCustomAnimation) return;
+            if (emote != 0 || OnCustomAnimation) return;
 
             foreach (var bodyBone in GetWhiteListedControlBones())
             {
@@ -135,7 +136,7 @@ namespace GestureManager.Scripts
         {
             if (!Module.LateBoneUpdate) return;
 
-            if (emote != 0 || onCustomAnimation)
+            if (emote != 0 || OnCustomAnimation)
             {
                 controlDelay = 5;
                 return;
@@ -165,12 +166,6 @@ namespace GestureManager.Scripts
         private IEnumerable<HumanBodyBones> GetWhiteListedControlBones()
         {
             return _whiteListedControlBones ?? (_whiteListedControlBones = Enum.GetValues(typeof(HumanBodyBones)).Cast<HumanBodyBones>().Where(bones => !_blackListedControlBones.Contains(bones)));
-        }
-
-        public void StopCurrentEmote()
-        {
-            if (emote != 0) OnEmoteStop();
-            if (onCustomAnimation) OnCustomEmoteStop();
         }
 
         public void UnlinkModule() => SetModule(null);
@@ -216,58 +211,49 @@ namespace GestureManager.Scripts
 
         private void SaveCurrentStartEmotePosition()
         {
-            _beforeEmoteAvatarPosition = Module.Avatar.transform.position;
-            _beforeEmoteAvatarRotation = Module.Avatar.transform.rotation;
-            _beforeEmoteAvatarScale = Module.Avatar.transform.localScale;
+            var animatorGameObject = _customAnimator.gameObject;
+            _beforeEmoteAvatarPosition = animatorGameObject.transform.position;
+            _beforeEmoteAvatarRotation = animatorGameObject.transform.rotation;
+            _beforeEmoteAvatarScale = animatorGameObject.transform.localScale;
         }
 
         private void RevertToEmotePosition()
         {
-            Module.Avatar.transform.position = _beforeEmoteAvatarPosition;
-            Module.Avatar.transform.rotation = _beforeEmoteAvatarRotation;
-            Module.Avatar.transform.localScale = _beforeEmoteAvatarScale;
+            var animatorGameObject = _customAnimator.gameObject;
+            animatorGameObject.transform.position = _beforeEmoteAvatarPosition;
+            animatorGameObject.transform.rotation = _beforeEmoteAvatarRotation;
+            animatorGameObject.transform.localScale = _beforeEmoteAvatarScale;
         }
 
         public void SetCustomAnimation(AnimationClip clip)
         {
-            customAnim = clip;
-
-            Module.OnCustomAnimationChange();
+            if (!OnCustomAnimation) customAnim = clip;
+            else if (!clip) StopCustomAnimation();
+            else PlayCustomAnimation(clip);
         }
 
         /*
          *  Events
          */
 
-        public void OnEmoteStop()
+        public void PlayCustomAnimation(AnimationClip clip)
         {
-            emote = 0;
-            Module.AvatarAnimator.applyRootMotion = false;
-            RevertToEmotePosition();
-            SetCustomAnimation(null);
-        }
-
-        public void OnEmoteStart(int emoteIndex)
-        {
-            emote = emoteIndex;
-            Module.AvatarAnimator.applyRootMotion = true;
-            SetCustomAnimation(Module.GetEmoteByIndex(emoteIndex - 1));
+            if (OnCustomAnimation) RevertToEmotePosition();
+            customAnim = clip;
+            OnCustomAnimation = true;
+            _customAnimator = Module.OnCustomAnimationPlay(customAnim);
             SaveCurrentStartEmotePosition();
+            _customAnimator.applyRootMotion = true;
         }
 
-        public void OnCustomEmoteStop()
+        public void StopCustomAnimation()
         {
-            onCustomAnimation = false;
-            Module.AvatarAnimator.applyRootMotion = false;
+            OnCustomAnimation = false;
             SetCustomAnimation(null);
+            _customAnimator = Module.OnCustomAnimationPlay(null);
+            if (!_customAnimator) return;
             RevertToEmotePosition();
-        }
-
-        public void OnCustomEmoteStart()
-        {
-            Module.AvatarAnimator.applyRootMotion = true;
-            SaveCurrentStartEmotePosition();
-            onCustomAnimation = true;
+            _customAnimator.applyRootMotion = false;
         }
     }
 }

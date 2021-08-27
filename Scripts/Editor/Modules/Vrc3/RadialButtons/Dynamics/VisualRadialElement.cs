@@ -1,5 +1,4 @@
 ﻿#if VRC_SDK_VRCSDK3
-using GestureManager.Scripts.Core.VisualElements;
 using UnityEngine.UIElements;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons.Dynamics

@@ -1,9 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace GestureManager.Scripts.Core.Editor
 {
@@ -26,12 +25,10 @@ namespace GestureManager.Scripts.Core.Editor
             id.ShowSelected();
         }
 
-        public static EditorWindow GetInspectorWindow()
+        public static IEnumerable<EditorWindow> GetInspectorWindows()
         {
-            return EditorWindow.GetWindow(Assembly.GetAssembly(typeof(EditorWindow)).GetType("UnityEditor.InspectorWindow"));
+            return Resources.FindObjectsOfTypeAll<EditorWindow>().Where(window => window.titleContent.text == "Inspector");
         }
-
-        public static VisualElement GetEditorWindowElementRoot(EditorWindow e) => e.rootVisualElement;
 
         /*
          *  Object Field!!!
@@ -48,7 +45,7 @@ namespace GestureManager.Scripts.Core.Editor
         {
             var oldObject = unityObject;
 
-            unityObject = (T) (label != null ? EditorGUILayout.ObjectField(label, unityObject, typeof(T), true, null) : EditorGUILayout.ObjectField(unityObject, typeof(T), true, null));
+            unityObject = (T)(label != null ? EditorGUILayout.ObjectField(label, unityObject, typeof(T), true, null) : EditorGUILayout.ObjectField(unityObject, typeof(T), true, null));
             if (oldObject == unityObject) return unityObject;
             if (!oldObject) onObjectSet(unityObject);
             else if (!unityObject) onObjectRemove(oldObject);

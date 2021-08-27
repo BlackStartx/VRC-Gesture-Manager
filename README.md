@@ -7,7 +7,7 @@ Available for both VRChat SDK 2.0 and SDK 3.0, in Unity 2018 or 2019.
 ## How to Use (SDK 3.0)
 ### Download the right UnityPackage
 If you're using the Unity 2019 download the latest UnityPackage from the release tab.<br>
-[[Or click here to go to the latest release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v3.1)]
+[[Or click here to go to the latest release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v3.2)]
 
 If you're using the Unity 2018 download the 3.0 UnityPackage from the release tab.<br>
 [[Or click here to go to the 3.0 release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v3.0)]
@@ -71,9 +71,7 @@ From here, you can edit your animation as you usually do, by clicking the record
 
 ### Knew Issues
 There are some issue with the RadialMenu:
-- Having more than one Inspector tab rendering the RadialMenu will cause
-some flickering effects.
-- Editing the AnimatorControllers that your Avatar use while is controlled by the GestureManager could 
+- Editing your 3.0 Avatar AnimatorControllers while your Avatar is controlled by the GestureManager could 
   break the simulation and you need to restart the Play-Mode.
 
 ## How to Use (SDK 2.0)
@@ -81,7 +79,7 @@ some flickering effects.
 If you're using the VRChat SDK 2.0 download the 2.0 UnityPackage from the release tab.<br>
 [[Or click here to go to the 2.0 release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v2.0)]
 
-> GestureManager 3.0 and 3.1 releases are still compatible with VRChat SDK 2.0 but using the 2.0 release is highly recommended.
+> GestureManager 3.0 and newer releases are still compatible with VRChat SDK 2.0 but using the 2.0 release is recommended.
 
 ### Import on Unity
 

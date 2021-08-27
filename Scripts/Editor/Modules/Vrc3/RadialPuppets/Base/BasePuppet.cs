@@ -2,7 +2,6 @@
 using GestureManager.Scripts.Core.VisualElements;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base
 {

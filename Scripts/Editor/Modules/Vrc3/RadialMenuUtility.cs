@@ -184,7 +184,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             public static RadialMenuControl ParamStateToggle(RadialMenu menu, string name, Vrc3Param param, float activeValue)
             {
-                return new RadialMenuControl(menu, name, null, ControlType.Toggle, activeValue, param, new Vrc3Param[0], null, null);
+                return new RadialMenuControl(menu, name, null, ControlType.Toggle, activeValue, param, Array.Empty<Vrc3Param>(), null, null);
             }
 
             public static RadialMenuControl AxisFromParams(RadialMenu menu, string name, Vrc3Param xParam, Vrc3Param yParam)
