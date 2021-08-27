@@ -16,7 +16,7 @@ If you're using the Unity 2018 download the 3.0 UnityPackage from the release ta
 You can now import the UnityPackage directly in your project, 
 and you will find a folder called "GestureManager" in your **Assets** directory.
 
-![img.png](.markdown/3.0/GestureManagerFolder.png)
+![img.png](.markdown/3.2/GestureManagerFolder.png)
 
 Drag and drop the prefab that you find in that folder in to the scene and you're done. 
 
@@ -27,13 +27,13 @@ If there are no errors the GestureManager will take control of your Avatar and y
 You can test Left and Right hand gesture with the buttons on top, and you can test 3.0 Expressions from
 the RadialMenu bellow.
 
-![img.png](.markdown/3.0/TestingStart.png)
+![img.png](.markdown/3.2/TestingStart.png)
 
 ### Option Button!
 The Option button in the RadialMenu contains a lot of sub-category that helps you change parameters that
 usually are controlled by the VRChat client.
 
-![img.png](.markdown/3.0/RadialOptions.png)
+![img.png](.markdown/3.2/RadialOptions.png)
 
 In the **Locomotion** category you can preview animation like: 
 - Walking 
@@ -42,7 +42,7 @@ In the **Locomotion** category you can preview animation like:
 - Prone
 - Falling
 
-![img.png](.markdown/3.0/TestingMove.png)
+![img.png](.markdown/3.2/TestingMove.png)
 
 In the **States** category you can preview AFK and Seated animations.
 
@@ -58,7 +58,7 @@ In the Option Menu you can find a button called: Edit-Mode.<br>
 Clicking that button will enable the Edit-Mode feature and will create a clone of your avatar 
 giving him all the animation of your VRChat controller layers.
 
-![img.png](.markdown/3.0/EditingMode.png)
+![img.png](.markdown/3.2/EditingMode.png)
 
 Since the avatar have all the animation you can edit them by going in to the Animation tab and selecting 
 your avatar from the hierarchy window.
@@ -67,7 +67,7 @@ The Default clip that opens will be the "Idle" animation clip. You can ignore it
 you want with the dropdown menu.<br>
 From here, you can edit your animation as you usually do, by clicking the record button or by inserting keyframe manually. 
 
-![img.png](.markdown/3.0/Editing.png)
+![img.png](.markdown/3.2/Editing.png)
 
 ### Knew Issues
 There are some issue with the RadialMenu:
