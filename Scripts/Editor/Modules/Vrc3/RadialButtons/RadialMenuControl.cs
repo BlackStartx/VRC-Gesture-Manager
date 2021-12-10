@@ -23,7 +23,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
             _subMenu = control.subMenu;
             _subLabels = control.labels;
             _parameter = menu.GetParam(control.parameter.name);
-            _subParameters = control.subParameters.Select(parameter => menu.GetParam(parameter.name)).ToArray();
+            _subParameters = control.subParameters == null ? Array.Empty<Vrc3Param>() : control.subParameters.Select(parameter => menu.GetParam(parameter.name)).ToArray();
         }
 
         public RadialMenuControl(RadialMenu menu, string name, Texture2D icon, ControlType type, float activeValue, Vrc3Param param, Vrc3Param[] subParams, VRCExpressionsMenu subMenu, VRCExpressionsMenu.Control.Label[] subLabels) : base(name, icon, type, activeValue)
@@ -98,7 +98,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
 
         protected override float GetValue() => _parameter?.Get() ?? 0;
 
-        internal override float GetSubValue(int index) => _subParameters[index]?.Get() ?? 0;
+        internal override float GetSubValue(int index) => _subParameters[index]?.NotAmplified ?? 0;
     }
 }
 #endif

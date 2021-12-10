@@ -1,6 +1,7 @@
 ﻿#if VRC_SDK_VRCSDK3
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
+using UnityEngine;
 using UnityEngine.UIElements;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
@@ -12,7 +13,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base
 
         protected BaseAxisPuppet(RadialMenuControl control) : base(140, control)
         {
-            var holder = this.MyAdd(new VisualElement {style = {position = Position.Absolute}});
+            var holder = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } });
             holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 45));
             holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 135));
             holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 225));
@@ -24,12 +25,16 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base
         public override void AfterCursor()
         {
             const int v = 50;
-            var holder = this.MyAdd(new VisualElement {style = {position = Position.Absolute}});
-            holder.Add(RadialMenuUtility.Prefabs.NewIconText(0, -v, 24, _labels[0].icon ? _labels[0].icon : ModuleVrc3Styles.AxisUp, _labels[0].name));
-            holder.Add(RadialMenuUtility.Prefabs.NewIconText(v, 0, 24, _labels[1].icon ? _labels[1].icon : ModuleVrc3Styles.AxisRight, _labels[1].name));
-            holder.Add(RadialMenuUtility.Prefabs.NewIconText(0, v, 24, _labels[2].icon ? _labels[2].icon : ModuleVrc3Styles.AxisDown, _labels[2].name));
-            holder.Add(RadialMenuUtility.Prefabs.NewIconText(-v, 0, 24, _labels[3].icon ? _labels[3].icon : ModuleVrc3Styles.AxisLeft, _labels[3].name));
+            var holder = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } });
+            holder.Add(RadialMenuUtility.Prefabs.NewIconText(0, -v, 24, LabelIcon(0, ModuleVrc3Styles.AxisUp), LabelText(0)));
+            holder.Add(RadialMenuUtility.Prefabs.NewIconText(v, 0, 24, LabelIcon(1, ModuleVrc3Styles.AxisRight), LabelText(1)));
+            holder.Add(RadialMenuUtility.Prefabs.NewIconText(0, v, 24, LabelIcon(2, ModuleVrc3Styles.AxisDown), LabelText(2)));
+            holder.Add(RadialMenuUtility.Prefabs.NewIconText(-v, 0, 24, LabelIcon(3, ModuleVrc3Styles.AxisLeft), LabelText(3)));
         }
+
+        private Texture2D LabelIcon(int index, Texture2D def) => _labels == null || _labels.Length <= index || !_labels[index].icon ? def : _labels[index].icon;
+
+        private string LabelText(int index) => _labels == null || _labels.Length <= index ? null : _labels[index].name;
 
         public override void UpdateValue(string pName, float value)
         {

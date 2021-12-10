@@ -43,6 +43,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             {
                 return new VisualElement
                 {
+                    pickingMode = PickingMode.Ignore,
                     style =
                     {
                         width = size,
@@ -66,6 +67,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             {
                 return new VisualElement
                 {
+                    pickingMode = PickingMode.Ignore,
                     style =
                     {
                         width = size,
@@ -78,6 +80,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 }.With(new TextElement
                 {
                     text = text,
+                    pickingMode = PickingMode.Ignore,
                     style =
                     {
                         color = Color.white,
@@ -92,6 +95,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             {
                 return new VisualElement
                 {
+                    pickingMode = PickingMode.Ignore,
                     style =
                     {
                         width = width,
@@ -114,13 +118,15 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             private static GmgCircleElement SetCircle(GmgCircleElement element, float size, Color centerColor, Color color, Color border, Position position = default)
             {
-                element.style.width = element.style.height = size;
-                element.CenterColor = centerColor;
+                element.BorderWidth = 2;
                 element.VertexColor = color;
-                element.MyBorder(2, size, border);
-                element.style.alignItems = Align.Center;
-                element.style.justifyContent = Justify.Center;
+                element.BorderColor = border;
+                element.CenterColor = centerColor;
+                element.pickingMode = PickingMode.Ignore;
                 element.style.position = position;
+                element.style.alignItems = Align.Center;
+                element.style.width = element.style.height = size;
+                element.style.justifyContent = Justify.Center;
                 return element;
             }
 
@@ -133,6 +139,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             {
                 element.style.width = 50;
                 element.style.height = 20;
+                element.pickingMode = PickingMode.Ignore;
                 element.style.backgroundColor = Colors.RadialTextBackground;
                 element.style.borderTopLeftRadius = 10;
                 element.style.borderTopRightRadius = 10;
@@ -140,7 +147,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 element.style.borderBottomRightRadius = 10;
                 element.style.position = position;
                 if (top != 0) element.style.top = top;
-                text = element.MyAdd(new TextElement {style = {height = 20, unityTextAlign = TextAnchor.MiddleCenter, color = Color.white, fontSize = 14}});
+                text = element.MyAdd(new TextElement { pickingMode = PickingMode.Ignore, style = { height = 20, unityTextAlign = TextAnchor.MiddleCenter, color = Color.white, fontSize = 14 } });
                 return element;
             }
 
@@ -148,6 +155,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             {
                 return new VisualElement
                 {
+                    pickingMode = PickingMode.Ignore,
                     style =
                     {
                         width = 25,
@@ -165,6 +173,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                     }
                 }.With(new VisualElement
                 {
+                    pickingMode = PickingMode.Ignore,
                     style =
                     {
                         width = 20,
@@ -190,12 +199,12 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             public static RadialMenuControl AxisFromParams(RadialMenu menu, string name, Vrc3Param xParam, Vrc3Param yParam)
             {
                 var subLabels = new VRCExpressionsMenu.Control.Label[4];
-                return new RadialMenuControl(menu, name, null, ControlType.TwoAxisPuppet, 1f, null, new[] {xParam, yParam}, null, subLabels);
+                return new RadialMenuControl(menu, name, null, ControlType.TwoAxisPuppet, 1f, null, new[] { xParam, yParam }, null, subLabels);
             }
 
             public static RadialMenuItem RadialFromParam(RadialMenu menu, string name, Vrc3Param param)
             {
-                return new RadialMenuControl(menu, name, null, ControlType.RadialPuppet, 1f, null, new[] {param}, null, null);
+                return new RadialMenuControl(menu, name, null, ControlType.RadialPuppet, 1f, null, new[] { param }, null, null);
             }
         }
 
@@ -244,7 +253,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         public static int RadialPercentage(float value, out float clamp)
         {
             clamp = Mathf.Clamp(value, 0f, 1f);
-            return (int) (clamp * 100);
+            return (int)(clamp * 100);
         }
 
         private static void AppendMenus(VRCExpressionsMenu menu, ICollection<VRCExpressionsMenu> menus)

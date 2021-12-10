@@ -15,15 +15,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base
             RadialMenuUtility.Prefabs.SetCircle(this, size, RadialMenuUtility.Colors.RadialMiddle, RadialMenuUtility.Colors.OuterBorder);
         }
 
-        public void OnOpen()
-        {
-            Control.SetControlValue();
-        }
+        public void OnOpen() => Control.SetControlValue();
 
-        public void OnClose()
-        {
-            Control.SetValue(0);
-        }
+        public void OnClose() => Control.SetValue(0);
 
         public abstract void UpdateValue(string pName, float value);
 

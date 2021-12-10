@@ -16,8 +16,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         public RadialCursor(int size)
         {
             RadialMenuUtility.Prefabs.SetCircle(this, size, RadialMenuUtility.Colors.Cursor, RadialMenuUtility.Colors.CursorBorder)
-                .MyAdd(RadialMenuUtility.Prefabs.NewCircle((int) (size / 1.5f), RadialMenuUtility.Colors.Cursor, RadialMenuUtility.Colors.CursorBorder))
-                .Add(RadialMenuUtility.Prefabs.NewCircle((int) (size / 4f), RadialMenuUtility.Colors.Cursor, RadialMenuUtility.Colors.CursorBorder));
+                .MyAdd(RadialMenuUtility.Prefabs.NewCircle((int)(size / 1.5f), RadialMenuUtility.Colors.Cursor, RadialMenuUtility.Colors.CursorBorder))
+                .Add(RadialMenuUtility.Prefabs.NewCircle((int)(size / 4f), RadialMenuUtility.Colors.Cursor, RadialMenuUtility.Colors.CursorBorder));
         }
 
         /*
@@ -45,29 +45,16 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             else SetCursorPosition(0, 0);
         }
 
-        private float GetAngle() => GetAngle(new Vector2(style.left.value.value, style.top.value.value));
+        /*
+         * Static
+         */
 
         private static float GetAngle(Vector2 vector)
         {
             return -Mathf.Atan2(vector.x, vector.y) * 180f / Mathf.PI + 180f;
         }
 
-        /*
-         * Listeners
-         */
-
-        internal bool GetRadial(Vector2 mouse, out float radial)
-        {
-            radial = -1;
-            if (Event.current.type == EventType.Layout) return false;
-
-            if (mouse.magnitude < _min) return false;
-
-            radial = GetAngle(mouse) / 360f;
-            return true;
-        }
-
-        internal bool Get2Axis(Vector2 mouse, float range, out Vector2 axis)
+        internal static bool Get2Axis(Vector2 mouse, float range, out Vector2 axis)
         {
             axis = Vector2.zero;
             if (Event.current.type == EventType.Layout) return false;
@@ -76,7 +63,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             return true;
         }
 
-        internal bool Get4Axis(Vector2 mouse, float range, out Vector4 axis)
+        internal static bool Get4Axis(Vector2 mouse, float range, out Vector4 axis)
         {
             axis = Vector4.zero;
             if (!Get2Axis(mouse, range, out var twoAxis)) return false;
@@ -89,9 +76,27 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             return true;
         }
 
+        private static bool GetRadial(Vector2 mouse, float min, out float radial)
+        {
+            radial = -1;
+            if (Event.current.type == EventType.Layout) return false;
+
+            if (mouse.magnitude < min) return false;
+
+            radial = GetAngle(mouse) / 360f;
+            return true;
+        }
+
+        /*
+         * Listeners
+         */
+
+        private float GetAngle() => GetAngle(new Vector2(style.left.value.value, style.top.value.value));
+
+        internal bool GetRadial(Vector2 mouse, out float radial) => GetRadial(mouse, _min, out radial);
+
         internal int GetChoice(Vector2 mouse, VisualElement borderHolder)
         {
-            mouse -= parent.worldBound.center;
             if (mouse.magnitude < _min || mouse.magnitude > _max) return -1;
 
             var angle = GetAngle();

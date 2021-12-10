@@ -35,7 +35,7 @@ namespace GestureManager.Scripts
 
         private IEnumerable<HumanBodyBones> _whiteListedControlBones;
 
-        private readonly List<HumanBodyBones> _blackListedControlBones = new List<HumanBodyBones>()
+        private readonly List<HumanBodyBones> _blackListedControlBones = new List<HumanBodyBones>
         {
             // Left
             HumanBodyBones.LeftThumbDistal,

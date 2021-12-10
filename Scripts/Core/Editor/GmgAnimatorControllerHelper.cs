@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEditor.Animations;
 using UnityEngine;
 
@@ -23,14 +24,14 @@ namespace GestureManager.Scripts.Core.Editor
 
         public static AnimatorController CreateControllerWith(IEnumerable<AnimationClip> clips)
         {
-            var controller = CreateControllerWith(new AnimationClip {name = "Idle"});
+            var controller = CreateControllerWith(new AnimationClip { name = "[SELECT YOUR ANIMATION!]" });
             foreach (var clip in clips) AddMotion(controller, clip);
             return controller;
         }
 
         public static AnimatorController CreateControllerWith(AnimationClip clip)
         {
-            var controller = new AnimatorController {layers = new[] {new AnimatorControllerLayer {stateMachine = new AnimatorStateMachine()}}};
+            var controller = new AnimatorController { layers = new[] { new AnimatorControllerLayer { stateMachine = new AnimatorStateMachine() } } };
             controller.AddMotion(clip);
             return controller;
         }

@@ -61,7 +61,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             new AnimationBind("EMOTE5", GmData.EmoteStandingName[4], GmData.EmoteSeatedName[4]),
             new AnimationBind("EMOTE6", GmData.EmoteStandingName[5], GmData.EmoteSeatedName[5]),
             new AnimationBind("EMOTE7", GmData.EmoteStandingName[6], GmData.EmoteSeatedName[6]),
-            new AnimationBind("EMOTE8", GmData.EmoteStandingName[7], GmData.EmoteSeatedName[7]),
+            new AnimationBind("EMOTE8", GmData.EmoteStandingName[7], GmData.EmoteSeatedName[7])
         };
 
         public ModuleVrc2(GestureManager manager, VRC_AvatarDescriptor avatarDescriptor) : base(manager, avatarDescriptor)
@@ -160,12 +160,12 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
 
                     GUILayout.BeginVertical();
                     GUILayout.Label("Left Hand", GestureManagerStyles.GuiHandTitle);
-                    Manager.left = GestureManagerEditor.OnCheckBoxGuiHand(Manager, GestureHand.Left, Manager.left, position => 0);
+                    Manager.left = GestureManagerEditor.OnCheckBoxGuiHand(Manager, GestureHand.Left, Manager.left, position => 0, true);
                     GUILayout.EndVertical();
 
                     GUILayout.BeginVertical();
                     GUILayout.Label("Right Hand", GestureManagerStyles.GuiHandTitle);
-                    Manager.right = GestureManagerEditor.OnCheckBoxGuiHand(Manager, GestureHand.Right, Manager.right, position => 0);
+                    Manager.right = GestureManagerEditor.OnCheckBoxGuiHand(Manager, GestureHand.Right, Manager.right, position => 0, true);
                     GUILayout.EndVertical();
 
                     GUILayout.EndHorizontal();
@@ -203,6 +203,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
                             Manager.PlayCustomAnimation(_selectingCustomAnim);
                         }
                     }
+
                     GUI.enabled = true;
 
                     GUILayout.EndHorizontal();
@@ -296,24 +297,24 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
 
         private void GenerateDictionary()
         {
-            _myTranslateDictionary = new Dictionary<string, string>()
+            _myTranslateDictionary = new Dictionary<string, string>
             {
-                {_gestureBinds[1].GetOriginalName(), _gestureBinds[1].GetMyName(_usingType)},
-                {_gestureBinds[2].GetOriginalName(), _gestureBinds[2].GetMyName(_usingType)},
-                {_gestureBinds[3].GetOriginalName(), _gestureBinds[3].GetMyName(_usingType)},
-                {_gestureBinds[4].GetOriginalName(), _gestureBinds[4].GetMyName(_usingType)},
-                {_gestureBinds[5].GetOriginalName(), _gestureBinds[5].GetMyName(_usingType)},
-                {_gestureBinds[6].GetOriginalName(), _gestureBinds[6].GetMyName(_usingType)},
-                {_gestureBinds[7].GetOriginalName(), _gestureBinds[7].GetMyName(_usingType)},
+                { _gestureBinds[1].GetOriginalName(), _gestureBinds[1].GetMyName(_usingType) },
+                { _gestureBinds[2].GetOriginalName(), _gestureBinds[2].GetMyName(_usingType) },
+                { _gestureBinds[3].GetOriginalName(), _gestureBinds[3].GetMyName(_usingType) },
+                { _gestureBinds[4].GetOriginalName(), _gestureBinds[4].GetMyName(_usingType) },
+                { _gestureBinds[5].GetOriginalName(), _gestureBinds[5].GetMyName(_usingType) },
+                { _gestureBinds[6].GetOriginalName(), _gestureBinds[6].GetMyName(_usingType) },
+                { _gestureBinds[7].GetOriginalName(), _gestureBinds[7].GetMyName(_usingType) },
 
-                {_emoteBinds[0].GetOriginalName(), _emoteBinds[0].GetMyName(_usingType)},
-                {_emoteBinds[1].GetOriginalName(), _emoteBinds[1].GetMyName(_usingType)},
-                {_emoteBinds[2].GetOriginalName(), _emoteBinds[2].GetMyName(_usingType)},
-                {_emoteBinds[3].GetOriginalName(), _emoteBinds[3].GetMyName(_usingType)},
-                {_emoteBinds[4].GetOriginalName(), _emoteBinds[4].GetMyName(_usingType)},
-                {_emoteBinds[5].GetOriginalName(), _emoteBinds[5].GetMyName(_usingType)},
-                {_emoteBinds[6].GetOriginalName(), _emoteBinds[6].GetMyName(_usingType)},
-                {_emoteBinds[7].GetOriginalName(), _emoteBinds[7].GetMyName(_usingType)},
+                { _emoteBinds[0].GetOriginalName(), _emoteBinds[0].GetMyName(_usingType) },
+                { _emoteBinds[1].GetOriginalName(), _emoteBinds[1].GetMyName(_usingType) },
+                { _emoteBinds[2].GetOriginalName(), _emoteBinds[2].GetMyName(_usingType) },
+                { _emoteBinds[3].GetOriginalName(), _emoteBinds[3].GetMyName(_usingType) },
+                { _emoteBinds[4].GetOriginalName(), _emoteBinds[4].GetMyName(_usingType) },
+                { _emoteBinds[5].GetOriginalName(), _emoteBinds[5].GetMyName(_usingType) },
+                { _emoteBinds[6].GetOriginalName(), _emoteBinds[6].GetMyName(_usingType) },
+                { _emoteBinds[7].GetOriginalName(), _emoteBinds[7].GetMyName(_usingType) }
             };
         }
 
@@ -327,7 +328,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
     {
         Standing,
         Seated
-    };
+    }
 
     public class AnimationBind
     {

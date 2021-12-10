@@ -11,8 +11,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
         protected readonly int HashId;
         public readonly string Name;
 
-        private Action<Vrc3Param, float> _onChange;
+        internal Action<Vrc3Param, float> OnChange;
+
         private float _amplifier;
+        public float NotAmplified => Get() / _amplifier;
 
         protected Vrc3Param(string name, AnimatorControllerParameterType type, float amplifier = 1f)
         {
@@ -24,16 +26,16 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
 
         public void Set(IEnumerable<RadialMenu> menus, float value)
         {
-            value *= _amplifier;
-            if (Is(value)) return;
-            InternalSet(value);
-            _onChange?.Invoke(this, value);
-            foreach (var menu in menus) menu.UpdateValue(Name, value);
+            var amplified = value * _amplifier;
+            if (Is(amplified)) return;
+            InternalSet(amplified);
+            OnChange?.Invoke(this, amplified);
+            foreach (var menu in menus) menu.UpdateValue(Name, amplified, value);
         }
 
         public void Amplify(float amplifier) => _amplifier = amplifier;
 
-        public void OnChange(Action<Vrc3Param, float> onChange) => _onChange = onChange;
+        public void SetOnChange(Action<Vrc3Param, float> onChange) => OnChange = onChange;
 
         private bool Is(float value) => RadialMenuUtility.Is(Get(), value);
 
@@ -48,7 +50,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
             switch (Type)
             {
                 case AnimatorControllerParameterType.Int:
-                    Set(menu, UnityEngine.Random.Range((int) min, (int) max + 1));
+                    Set(menu, UnityEngine.Random.Range((int)min, (int)max + 1));
                     break;
                 case AnimatorControllerParameterType.Float:
                     Set(menu, UnityEngine.Random.Range(min, max));
@@ -57,6 +59,21 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
                 case AnimatorControllerParameterType.Trigger:
                     Set(menu, UnityEngine.Random.Range(0.0f, 1.0f) < chance ? 1f : 0f);
                     break;
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public (Color? color, string text) LabelTuple()
+        {
+            switch (Type)
+            {
+                case AnimatorControllerParameterType.Float:
+                    return (null, Get().ToString("0.00"));
+                case AnimatorControllerParameterType.Int:
+                    return (null, ((int)Get()).ToString());
+                case AnimatorControllerParameterType.Bool:
+                case AnimatorControllerParameterType.Trigger:
+                    return Get() < 0.5f ? (Color.red, "False") : (Color.green, "True");
                 default: throw new ArgumentOutOfRangeException();
             }
         }

@@ -42,7 +42,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
                     _animator.SetFloat(HashId, value);
                     break;
                 case AnimatorControllerParameterType.Int:
-                    _animator.SetInteger(HashId, (int) value);
+                    _animator.SetInteger(HashId, (int)value);
                     break;
                 case AnimatorControllerParameterType.Trigger:
                 case AnimatorControllerParameterType.Bool:

@@ -7,7 +7,7 @@ Available for both VRChat SDK 2.0 and SDK 3.0, in Unity 2018 or 2019.
 ## How to Use (SDK 3.0)
 ### Download the right UnityPackage
 If you're using the Unity 2019 download the latest UnityPackage from the release tab.<br>
-[[Or click here to go to the latest release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v3.2)]
+[[Or click here to go to the latest release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v3.3)]
 
 If you're using the Unity 2018 download the 3.0 UnityPackage from the release tab.<br>
 [[Or click here to go to the 3.0 release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v3.0)]
@@ -60,14 +60,36 @@ giving him all the animation of your VRChat controller layers.
 
 ![img.png](.markdown/3.2/EditingMode.png)
 
-Since the avatar have all the animation you can edit them by going in to the Animation tab and selecting 
+Since the avatar have all the animation of your animators, you can edit them by going in to the Animation tab and selecting 
 your avatar from the hierarchy window.
 
-The Default clip that opens will be the "Idle" animation clip. You can ignore it and select the animation 
-you want with the dropdown menu.<br>
+Once there you can select the animation you want by clicking the dropdown menu. <br>
+If you can't find it, look for the text `[Select Your Animation!]` and click it.
+
 From here, you can edit your animation as you usually do, by clicking the record button or by inserting keyframe manually. 
 
 ![img.png](.markdown/3.2/Editing.png)
+
+### Debug Menu
+
+The Debug tab of the Gesture Manager is where you can check lots of information about the current state of your avatar.
+
+This window contains: Animator Parameters, Tracking Controls, Animation Controllers Weight, Animator States and Layer 
+Weights as well as Locomotion and Pose Space current values.
+
+If you need to constantly check for updates of your avatar while using the Gesture Manager features you can undock the window by simply
+clicking the `Undock Debug Window` button bellow.
+
+This will create a floating window that you can move independently.
+You can maximize it on another screen too, if you wish.
+
+You can put the floating debug window wherever you want and use the Gesture Manager as you usually do.
+
+> The Debug Window is responsive, it will change the way content displayed inside of it depending of the width of the window.
+
+#### Debug Window Example
+
+![img.gif](.markdown/Debug/DebugWindow.gif)
 
 ### Knew Issues
 There are some issue with the RadialMenu:
