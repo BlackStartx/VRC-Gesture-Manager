@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using GestureManager.Scripts.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,13 +17,20 @@ namespace GestureManager.Scripts.Core.Editor
      */
     public static class GmgLayoutHelper
     {
-        public static void MyToolbar(ref GmgToolbarHeader id, GmgToolbarRow[] rows)
+        public struct Toolbar
         {
-            if (id == null) id = new GmgToolbarHeader(rows);
+            private GUIContent[] _contents;
 
-            var selected = GUILayout.Toolbar(id.GetSelected(), id.GetTitles());
-            id.SetSelected(selected);
-            id.ShowSelected();
+            public GUIContent[] Contents(IEnumerable<(string, Action)> field) => _contents ?? (_contents = field.Select(tuple => new GUIContent(tuple.Item1)).ToArray());
+            public int Selected;
+        }
+
+        public static void MyToolbar(ref Toolbar toolbar, (string, Action)[] field) => MyToolbar(ref toolbar.Selected, toolbar.Contents(field), field);
+
+        private static void MyToolbar(ref int toolbar, GUIContent[] contents, (string, Action)[] actions)
+        {
+            toolbar = GUILayout.Toolbar(toolbar, contents);
+            actions[toolbar].Item2();
         }
 
         public static IEnumerable<EditorWindow> GetInspectorWindows()
@@ -31,7 +39,7 @@ namespace GestureManager.Scripts.Core.Editor
         }
 
         public static void GuiLabel((Color? color, string text) tuple) => GuiLabel(tuple.color, tuple.text);
-        
+
         public static void GuiLabel((Color? color, string text) tuple, params GUILayoutOption[] options) => GuiLabel(tuple.color, tuple.text, null, options);
 
         private static void GuiLabel(Color? color, string text, GUIStyle style = null, params GUILayoutOption[] options)
@@ -45,6 +53,23 @@ namespace GestureManager.Scripts.Core.Editor
                 GUI.contentColor = textColor;
             }
             else GUILayout.Label(text, style, options);
+        }
+
+        public static bool Button(string text, Color color, params GUILayoutOption[] options)
+        {
+            using (new GuiBackground(color)) return GUILayout.Button(text, options);
+        }
+
+        public static bool DebugButton(string label, GUILayoutOption width = null) => GUILayout.Button(label, GUILayout.Height(30), width ?? GUILayout.Width(150));
+
+        public static bool TitleButton(string text, string button, int width = 85)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Space(15 + width);
+                GUILayout.Label(text, GestureManagerStyles.Header);
+                return GUILayout.Button(button, GestureManagerStyles.HeaderButton, GUILayout.Width(width));
+            }
         }
 
         /*
@@ -84,82 +109,51 @@ namespace GestureManager.Scripts.Core.Editor
             return lastRect = GUILayoutUtility.GetLastRect();
         }
 
+        public static ulong ULongField(string label, ulong value)
+        {
+            var backULong = value;
+            return ulong.TryParse(EditorGUILayout.TextField(label, value.ToString()), out value) ? value : backULong;
+        }
+
         /*
          * Classes...
          * Classes...
          * Classes...
          */
 
-        public class GmgToolbarHeader
+        internal class GuiBackground : IDisposable
         {
-            private int _selected;
-            private readonly string[] _titles;
-            private readonly GmgToolbarRow[] _rows;
+            private readonly Color _color;
 
-            public GmgToolbarHeader(GmgToolbarRow[] rows)
+            public GuiBackground(Color color)
             {
-                _selected = 0;
-                if (rows.Length != 0) rows[0].OnStartFocus(false);
-                _titles = rows.Select(row => row.GetTitle()).ToArray();
-                _rows = rows;
+                _color = GUI.backgroundColor;
+                GUI.backgroundColor = color;
             }
 
-            public int GetSelected()
-            {
-                return _selected;
-            }
-
-            public void SetSelected(int newSelected)
-            {
-                if (_selected != newSelected) _rows[newSelected].OnStartFocus(true);
-                _selected = newSelected;
-            }
-
-            public string[] GetTitles()
-            {
-                return _titles;
-            }
-
-            public void ShowSelected()
-            {
-                _rows[_selected].Show();
-            }
+            public void Dispose() => GUI.backgroundColor = _color;
         }
 
-        public class GmgToolbarRow
+        public static void HorizontalGrid<T1, T2>(T2 t2, float width, float sizeWidth, float sizeHeight, float divisor, IList<T1> data, Action<T2, Rect, T1> gridRect) where T1 : class
         {
-            private readonly string _title;
-            private readonly bool _focusOnStart;
-            private readonly Action _willShow;
-            private readonly Action _onStartFocus;
-
-            private GmgToolbarRow(string title, Action willShow, Action onStartFocus, bool focusOnStart = true)
+            var intCount = (int)(width / sizeWidth);
+            if (intCount <= 0) return;
+            GUILayout.BeginHorizontal();
+            for (var i = 0; i < data.Count + (intCount - data.Count % intCount) % intCount; i++)
             {
-                _title = title;
-                _willShow = willShow;
-                _onStartFocus = onStartFocus;
-                _focusOnStart = focusOnStart;
+                var t = i < data.Count ? data[i] : null;
+                GUILayout.FlexibleSpace();
+                var rect = GUILayoutUtility.GetRect(sizeWidth, sizeHeight);
+                if (t != null) gridRect(t2, rect, t);
+
+                if ((i + 1) % intCount != 0) continue;
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+                GUILayout.Space(divisor);
+                GUILayout.BeginHorizontal();
             }
 
-            public GmgToolbarRow(string title, Action willShow) : this(title, willShow, () => { })
-            {
-            }
-
-            public void Show()
-            {
-                _willShow();
-            }
-
-            public void OnStartFocus(bool bySelect)
-            {
-                if (!_focusOnStart && !bySelect) return;
-                _onStartFocus();
-            }
-
-            internal string GetTitle()
-            {
-                return _title;
-            }
+            GUILayout.EndHorizontal();
         }
     }
 }

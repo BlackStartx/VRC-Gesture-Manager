@@ -35,6 +35,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             internal static readonly Color Cursor = RadialMiddle;
             internal static readonly Color CursorBorder = new Color(0.1f, 0.35f, 0.38f);
+
+            internal static readonly Color RestartButton = new Color(1f, 0.72f, 0.41f);
         }
 
         public static class Prefabs
@@ -101,7 +103,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         width = width,
                         height = height,
                         left = -width / 2,
-                        top = -height / 2,
+                        top = -height / 2 - 10,
                         backgroundColor = Color.clear,
                         position = Position.Absolute,
                         alignItems = Align.Center,
@@ -165,7 +167,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         borderBottomLeftRadius = 15,
                         borderBottomRightRadius = 15,
                         left = 60,
-                        top = 42,
+                        top = 50,
                         backgroundColor = Colors.SubIcon,
                         position = Position.Absolute,
                         justifyContent = Justify.Center,
@@ -196,15 +198,15 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 return new RadialMenuControl(menu, name, null, ControlType.Toggle, activeValue, param, Array.Empty<Vrc3Param>(), null, null);
             }
 
-            public static RadialMenuControl AxisFromParams(RadialMenu menu, string name, Vrc3Param xParam, Vrc3Param yParam)
+            public static RadialMenuItem RadialFromParam(RadialMenu menu, string name, Vrc3Param param, float amplify = 1f)
             {
-                var subLabels = new VRCExpressionsMenu.Control.Label[4];
-                return new RadialMenuControl(menu, name, null, ControlType.TwoAxisPuppet, 1f, null, new[] { xParam, yParam }, null, subLabels);
+                return new RadialMenuControl(menu, name, null, ControlType.RadialPuppet, 1f, null, new[] { param }, null, null, amplify);
             }
 
-            public static RadialMenuItem RadialFromParam(RadialMenu menu, string name, Vrc3Param param)
+            public static RadialMenuControl AxisFromParams(RadialMenu menu, string name, Vrc3Param xParam, Vrc3Param yParam, float amplify = 1f)
             {
-                return new RadialMenuControl(menu, name, null, ControlType.RadialPuppet, 1f, null, new[] { param }, null, null);
+                var subLabels = new VRCExpressionsMenu.Control.Label[4];
+                return new RadialMenuControl(menu, name, null, ControlType.TwoAxisPuppet, 1f, null, new[] { xParam, yParam }, null, subLabels, amplify);
             }
         }
 
@@ -243,6 +245,11 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         public static Vrc3Param CreateParamFromNothing(VRCExpressionParameters.Parameter parameter)
         {
             return new Vrc3ParamExternal(parameter.name, ModuleVrc3Styles.Data.TypeOf[parameter.valueType]);
+        }
+
+        public static Vrc3Param CreateParamFromNothing(string name)
+        {
+            return new Vrc3ParamExternal(name, AnimatorControllerParameterType.Float);
         }
 
         public static int RadialPercentage(float value)

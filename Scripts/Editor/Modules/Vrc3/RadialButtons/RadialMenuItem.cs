@@ -1,5 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
 using GestureManager.Scripts.Core.Editor;
+using GestureManager.Scripts.Core.VisualElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -31,7 +32,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
             DataHolder = RadialMenuUtility.Prefabs.NewData(100, 100);
             Texture = DataHolder.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { width = 50, height = 50, backgroundImage = _texture } });
             if (_subIcon) DataHolder.Add(RadialMenuUtility.Prefabs.NewSubIcon(_subIcon));
-            DataHolder.MyAdd(new TextElement { pickingMode = PickingMode.Ignore, text = _text, style = { color = TextColor, unityTextAlign = TextAnchor.MiddleCenter } });
+            DataHolder.MyAdd(new GmgTmpRichTextElement { pickingMode = PickingMode.Ignore, Text = _text, style = { color = TextColor, unityTextAlign = TextAnchor.MiddleCenter } });
             CreateExtra();
         }
 

@@ -1,5 +1,4 @@
 ﻿#if VRC_SDK_VRCSDK3
-using System;
 using System.Collections.Generic;
 using GestureManager.Scripts.Core;
 using UnityEditor.Animations;
@@ -9,6 +8,7 @@ using ValueType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters.Val
 using AnimLayerType = VRC.SDK3.Avatars.Components.VRCAvatarDescriptor.AnimLayerType;
 using BlendablePlayableLayer = VRC.SDKBase.VRC_PlayableLayerControl.BlendableLayer;
 using BlendableAnimatorLayer = VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer;
+using TrackingType = VRC.SDKBase.VRC_AnimatorTrackingControl.TrackingType;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3
 {
@@ -68,9 +68,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             private static AnimatorController ControllerOfPath(string path) => Resources.Load<AnimatorController>(VrcSdk3ControllerPath + path);
 
             private static TextAsset RestoreOfPath(string path) => Resources.Load<TextAsset>(VrcSdk3RestorePath + path);
-            
+
             internal static TextAsset RestoreOf(AnimLayerType type) => RestoreOfPath(NameOf[type]);
-            
+
             internal static AnimatorController ControllerOf(AnimLayerType type) => ControllerOfPath(NameOf[type]);
 
             public static int LayerSort(VRCAvatarDescriptor.CustomAnimLayer x, VRCAvatarDescriptor.CustomAnimLayer y) => SortValue[x.type] - SortValue[y.type];
@@ -144,6 +144,20 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 new AnimationClip { name = GestureManagerStyles.Data.GestureNames[5] },
                 new AnimationClip { name = GestureManagerStyles.Data.GestureNames[6] },
                 new AnimationClip { name = GestureManagerStyles.Data.GestureNames[7] }
+            };
+
+            public static Dictionary<string, TrackingType> DefaultTrackingState => new Dictionary<string, TrackingType>
+            {
+                { "Head", TrackingType.Tracking },
+                { "Left Hand", TrackingType.Tracking },
+                { "Right Hand", TrackingType.Tracking },
+                { "Hip", TrackingType.Tracking },
+                { "Left Foot", TrackingType.Tracking },
+                { "Right Foot", TrackingType.Tracking },
+                { "Left Fingers", TrackingType.Tracking },
+                { "Right Fingers", TrackingType.Tracking },
+                { "Eye & Eyelid", TrackingType.Tracking },
+                { "Mouth & Jaw", TrackingType.Tracking }
             };
         }
 

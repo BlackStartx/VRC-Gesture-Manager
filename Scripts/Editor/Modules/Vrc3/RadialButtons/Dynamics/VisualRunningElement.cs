@@ -28,12 +28,14 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons.Dynamics
 
             visible = active;
 
-            experimental.animation.Start(25f, 200f, int.MaxValue, (b, val) =>
-            {
-                var eulerVector = transform.rotation.eulerAngles;
-                eulerVector.z += 2f;
-                transform.rotation = Quaternion.Euler(eulerVector);
-            });
+            experimental.animation.Start(25f, 200f, int.MaxValue, Animation);
+        }
+
+        private void Animation(VisualElement element, float val)
+        {
+            var eulerVector = transform.rotation.eulerAngles;
+            eulerVector.z += 2f;
+            transform.rotation = Quaternion.Euler(eulerVector);
         }
     }
 }

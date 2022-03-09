@@ -17,30 +17,28 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         public Vrc3WeightController(ModuleVrc3 module)
         {
             Module = module;
-            _lWeight = new Vrc3WeightSlider(this, "GestureLeftWeight");
-            _rWeight = new Vrc3WeightSlider(this, "GestureRightWeight");
+            _lWeight = new Vrc3WeightSlider(this, Vrc3DefaultParams.GestureLeftWeight);
+            _rWeight = new Vrc3WeightSlider(this, Vrc3DefaultParams.GestureRightWeight);
         }
 
         public void RenderLeft(VisualElement root)
         {
-            GUILayout.Label("", GUILayout.ExpandWidth(true), GUILayout.Height(10));
-            var rect = GmgLayoutHelper.GetLastRect(ref _lWeight.Rect);
-            _lWeight.Render(root, rect);
+            GUILayoutUtility.GetRect(new GUIContent(), GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.Height(10));
+            _lWeight.Render(root, GmgLayoutHelper.GetLastRect(ref _lWeight.Rect));
             _lWeight.ShowWeight();
         }
 
         public void RenderRight(VisualElement root)
         {
-            GUILayout.Label("", GUILayout.ExpandWidth(true), GUILayout.Height(10));
-            var rect = GmgLayoutHelper.GetLastRect(ref _rWeight.Rect);
-            _rWeight.Render(root, rect);
+            GUILayoutUtility.GetRect(new GUIContent(), GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.Height(10));
+            _rWeight.Render(root, GmgLayoutHelper.GetLastRect(ref _rWeight.Rect));
             _rWeight.ShowWeight();
         }
 
-        public void CheckCondition(int selectedIndex)
+        public void CheckCondition(ModuleVrc3 module, RadialMenu menu)
         {
-            _lWeight.CheckCondition(selectedIndex);
-            _rWeight.CheckCondition(selectedIndex);
+            _lWeight.CheckCondition(module, menu);
+            _rWeight.CheckCondition(module, menu);
         }
 
         public void StopRendering()

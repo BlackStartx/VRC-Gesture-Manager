@@ -36,7 +36,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
 
         public override void UpdateValue(string pName, float value)
         {
-            if (Control.GetSubParameterName(0) == pName) ShowValue(value);
+            if (Control.GetSubParameterName(0) == pName) ShowValue(Control.NonAmplifiedValue(value));
         }
 
         public override void Update(Vector2 mouse, RadialCursor cursor)

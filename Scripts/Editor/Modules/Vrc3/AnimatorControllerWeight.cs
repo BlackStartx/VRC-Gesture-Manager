@@ -14,10 +14,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private readonly Dictionary<int, SubTimer> _subControls = new Dictionary<int, SubTimer>();
         private readonly AnimationLayerMixerPlayable _playableMixer;
         private readonly int _index;
-        
+
         private AnimatorControllerPlayable _playable;
         private VRC_PlayableLayerControl _control;
-        
+
         private float _startWeight;
         private float _startTime;
 
