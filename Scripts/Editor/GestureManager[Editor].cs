@@ -25,8 +25,8 @@ namespace GestureManager.Scripts.Editor
         private VisualElement Root => _root ?? (_root = Inspector.GetRootVisualContainer());
 
         private const int AntiAliasing = 4;
-        
-        private const string Version = "3.2.0";
+
+        private const string Version = "3.3.0";
         private const string BsxName = "BlackStartx";
         private const string Discord = "BlackStartx#6593";
 
@@ -43,7 +43,7 @@ namespace GestureManager.Scripts.Editor
 
         public override void OnInspectorGUI()
         {
-            GUILayout.Label("Gesture Manager 3.2 (2018)", GestureManagerStyles.TitleStyle);
+            GUILayout.Label("Gesture Manager 3.3 (2018)", GestureManagerStyles.TitleStyle);
 
             if (Manager.Module != null)
             {
@@ -80,28 +80,28 @@ namespace GestureManager.Scripts.Editor
                                 GestureManagerStyles.TextError);
                         else
                         {
-                            var eligible = Manager.GetLastCheckedActiveDescriptors().Where(module => module.IsValidDesc()).ToList();
-                            var nonEligible = Manager.GetLastCheckedActiveDescriptors().Where(module => !module.IsValidDesc()).ToList();
+                            var eligibleList = Manager.GetLastCheckedActiveDescriptors().Where(module => module.Avatar && module.IsValidDesc()).ToList();
+                            var nonEligibleList = Manager.GetLastCheckedActiveDescriptors().Where(module => module.Avatar && !module.IsValidDesc()).ToList();
 
-                            GUILayout.Label(eligible.Count == 0 ? "No one of your VRC_AvatarDescriptor are eligible." : "Eligible VRC_AvatarDescriptors:", GestureManagerStyles.SubHeader);
+                            GUILayout.Label(eligibleList.Count == 0 ? "No one of your VRC_AvatarDescriptor are eligible." : "Eligible VRC_AvatarDescriptors:", GestureManagerStyles.SubHeader);
 
-                            foreach (var module in eligible)
+                            foreach (var module in eligibleList)
                             {
                                 GUILayout.BeginVertical(GUI.skin.box);
                                 EditorGUILayout.BeginHorizontal();
-                                GUILayout.Label(module.AvatarDescriptor.gameObject.name + ":", GUILayout.Width(Screen.width - 131));
+                                GUILayout.Label(module.Avatar.name + ":", GUILayout.Width(Screen.width - 131));
                                 if (GUILayout.Button("Set As Avatar", GUILayout.Width(100))) Manager.SetModule(module);
                                 GUILayout.EndHorizontal();
                                 foreach (var warning in module.GetWarnings()) GUILayout.Label(warning, GestureManagerStyles.TextWarning);
                                 GUILayout.EndVertical();
                             }
 
-                            if (eligible.Count != 0 && nonEligible.Count != 0) GUILayout.Label("Non-Eligible VRC_AvatarDescriptors:", GestureManagerStyles.SubHeader);
+                            if (eligibleList.Count != 0 && nonEligibleList.Count != 0) GUILayout.Label("Non-Eligible VRC_AvatarDescriptors:", GestureManagerStyles.SubHeader);
 
-                            foreach (var module in nonEligible)
+                            foreach (var module in nonEligibleList)
                             {
                                 GUILayout.BeginVertical(GestureManagerStyles.EmoteError);
-                                GUILayout.Label(module.AvatarDescriptor.gameObject.name + ":");
+                                GUILayout.Label(module.Avatar.name + ":");
                                 foreach (var error in module.GetErrors()) GUILayout.Label(error, GestureManagerStyles.TextError);
                                 GUILayout.EndVertical();
                             }
@@ -149,8 +149,9 @@ namespace GestureManager.Scripts.Editor
                 var infos = version.Trim().Split('\n');
                 var lastVersion = infos[0];
                 var download = infos[1];
+                var message = $"Newer version available! ({lastVersion})\n\nIt's recommended to delete the GestureManager folder before importing the new package.";
                 if (lastVersion.Equals(Version)) EditorUtility.DisplayDialog(title, $"You have the latest version of the manager. ({lastVersion})", "Good!");
-                else if (EditorUtility.DisplayDialog(title, $"Newer version available! ({lastVersion})", "Download", "Cancel")) Application.OpenURL(download);
+                else if (EditorUtility.DisplayDialog(title, message, "Download", "Cancel")) Application.OpenURL(download);
             }
             else EditorUtility.DisplayDialog(title, "Unable to check for updates.", "Okay");
         }
@@ -205,7 +206,7 @@ namespace GestureManager.Scripts.Editor
          * Layout Builders
          */
 
-        internal static int OnCheckBoxGuiHand(GestureManager manager, GestureHand hand, int position, Func<int, int> onNone)
+        internal static int OnCheckBoxGuiHand(GestureManager manager, GestureHand hand, int position, Func<int, int> onNone, bool overrider)
         {
             var gesture = new bool[8];
             var texture = EditorGUIUtility.isProSkin ? GestureManagerStyles.PlusTexturePro : GestureManagerStyles.PlusTexture;
@@ -215,11 +216,7 @@ namespace GestureManager.Scripts.Editor
             for (var i = 1; i < 8; i++)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(manager.GetFinalGestureName(hand, i));
-                GUILayout.FlexibleSpace();
-                gesture[i] = GUILayout.Toggle(gesture[i], "");
-                if (!manager.Module.HasGestureBeenOverridden(i)) OverrideButton(texture, manager, hand, i);
-                else GUILayout.Space(35);
+                OnCheckBoxGuiHandAnimation(manager, hand, i, ref gesture[i], texture, overrider);
                 GUILayout.EndHorizontal();
             }
 
@@ -237,6 +234,16 @@ namespace GestureManager.Scripts.Editor
                     return i;
 
             return onNone(position);
+        }
+
+        private static void OnCheckBoxGuiHandAnimation(GestureManager manager, GestureHand hand, int i, ref bool gesture, Texture texture, bool overrider)
+        {
+            GUILayout.Label(manager.GetFinalGestureName(hand, i));
+            GUILayout.FlexibleSpace();
+            gesture = GUILayout.Toggle(gesture, "");
+            if (!overrider) return;
+            if (!manager.Module.HasGestureBeenOverridden(i)) OverrideButton(texture, manager, hand, i);
+            else GUILayout.Space(35);
         }
 
         private static void OverrideButton(Texture texture, GestureManager manager, GestureHand hand, int i)

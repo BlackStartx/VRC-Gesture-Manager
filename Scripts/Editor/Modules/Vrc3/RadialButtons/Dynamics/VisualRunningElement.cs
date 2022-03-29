@@ -9,11 +9,13 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons.Dynamics
     {
         public VisualRunningElement(bool active)
         {
+            pickingMode = PickingMode.Ignore;
             style.positionLeft = 25;
             style.positionTop = 25;
 
             Add(new VisualElement
             {
+                pickingMode = PickingMode.Ignore,
                 style =
                 {
                     width = 50,

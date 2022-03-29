@@ -12,7 +12,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
     public class RadialPuppet : BasePuppet
     {
         private readonly TextElement _text;
-        private readonly VisualElement _point;
+        private readonly VisualElement _arrow;
         private readonly GmgCircleElement _progress;
 
         private float Get => Control.GetSubValue(0);
@@ -22,7 +22,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
             _progress = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(96, RadialMenuUtility.Colors.ProgressRadial, RadialMenuUtility.Colors.ProgressRadial, PositionType.Absolute));
             Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.OuterBorder, PositionType.Absolute));
             Add(RadialMenuUtility.Prefabs.NewRadialText(out _text, 0, PositionType.Absolute));
-            _point = this.MyAdd(GeneratePoint());
+            _arrow = this.MyAdd(GenerateArrow());
 
             ShowValue(Get);
         }
@@ -32,7 +32,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
             var intValue = RadialMenuUtility.RadialPercentage(value, out var cValue);
             _progress.Progress = value;
             _text.text = intValue + "%";
-            _point.transform.rotation = Quaternion.Euler(0, 0, cValue * 360f);
+            _arrow.transform.rotation = Quaternion.Euler(0, 0, cValue * 360f);
         }
 
         public override void UpdateValue(string pName, float value)
@@ -65,25 +65,23 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
          * Static
          */
 
-        private static VisualElement GeneratePoint()
-        {
-            var container = new VisualElement {style = {positionType = PositionType.Absolute}};
-            var element = container.MyAdd(GenerateArrow());
-
-            element.style.borderColor = RadialMenuUtility.Colors.ProgressBorder;
-            
-            element.style.borderBottomWidth = 2f;
-            element.style.borderRightWidth = 2f;
-            element.style.borderLeftWidth = 2f;
-            element.style.borderTopWidth = 2f;
-
-            element.transform.rotation = Quaternion.Euler(0, 0, 45);
-            return container;
-        }
-
         private static VisualElement GenerateArrow()
         {
-            return new VisualElement {style = {width = 20, height = 20, backgroundColor = RadialMenuUtility.Colors.ProgressRadial, positionTop = -65, positionType = PositionType.Absolute}};
+            var container = new VisualElement { pickingMode = PickingMode.Ignore, style = { positionType = PositionType.Absolute } };
+            var element = container.MyAdd(new VisualElement
+            {
+                pickingMode = PickingMode.Ignore,
+                style =
+                {
+                    width = 20,
+                    height = 20,
+                    backgroundColor = RadialMenuUtility.Colors.ProgressRadial,
+                    positionTop = -65,
+                    positionType = PositionType.Absolute
+                }
+            }).MyBorder(2f, 0f, RadialMenuUtility.Colors.ProgressBorder);
+            element.transform.rotation = Quaternion.Euler(0, 0, 45);
+            return container;
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.Experimental.UIElements;
-using Random = System.Random;
 
 namespace GestureManager.Scripts.Core
 {

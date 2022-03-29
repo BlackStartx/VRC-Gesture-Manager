@@ -51,6 +51,23 @@ namespace GestureManager.Scripts.Core.Editor
             return scrollObject is Vector2 scroll ? scroll : new Vector2(0, 0);
         }
 
+        public static void GuiLabel((Color? color, string text) tuple) => GuiLabel(tuple.color, tuple.text);
+        
+        public static void GuiLabel((Color? color, string text) tuple, params GUILayoutOption[] options) => GuiLabel(tuple.color, tuple.text, null, options);
+
+        private static void GuiLabel(Color? color, string text, GUIStyle style = null, params GUILayoutOption[] options)
+        {
+            style = style ?? GUI.skin.label;
+            if (color != null)
+            {
+                var textColor = GUI.contentColor;
+                GUI.contentColor = color.Value;
+                GUILayout.Label(text, style, options);
+                GUI.contentColor = textColor;
+            }
+            else GUILayout.Label(text, style, options);
+        }
+
         /*
          *  Object Field!!!
          *  Object Field!!!

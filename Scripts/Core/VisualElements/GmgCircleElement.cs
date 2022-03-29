@@ -103,19 +103,19 @@ namespace GestureManager.Scripts.Core.VisualElements
         //     var h = contentRect.height;
         //
         //     vertices = new Vertex[n + 1];
-        //     vertices[0] = new Vertex {position = CR.PositionOf(0, 0, w, h), tint = _centerColor};
+        //     vertices[0] = new Vertex { position = CR.PositionOf(0, 0, w, h), tint = _centerColor };
         //     for (var i = 1; i < n + 1; i++)
         //     {
         //         var angle = _radialProgress * (i - 1) / (n - 1);
-        //         vertices[i] = new Vertex {position = CR.PositionOf(Mathf.Sin(angle), -Mathf.Cos(angle), w, h), tint = _vertexColor};
+        //         vertices[i] = new Vertex { position = CR.PositionOf(Mathf.Sin(angle), -Mathf.Cos(angle), w, h), tint = _vertexColor };
         //     }
         //
         //     indices = new ushort[n * 3];
         //     for (var i = 0; i < n - 1; i++)
         //     {
         //         indices[i * 3 + 0] = 0;
-        //         indices[i * 3 + 1] = (ushort) (i + 1);
-        //         indices[i * 3 + 2] = (ushort) (i + 2);
+        //         indices[i * 3 + 1] = (ushort)(i + 1);
+        //         indices[i * 3 + 2] = (ushort)(i + 2);
         //     }
         // }
 
@@ -127,13 +127,13 @@ namespace GestureManager.Scripts.Core.VisualElements
         //     var bh = contentRect.height - _borderWidth * 2;
         //
         //     vertices = new Vertex[n * 2 + 1];
-        //     vertices[0] = new Vertex {position = CR.PositionOf(0, 0, w, h), tint = _centerColor};
+        //     vertices[0] = new Vertex { position = CR.PositionOf(0, 0, w, h), tint = _centerColor };
         //
         //     for (var i = 1; i < n + 1; i++)
         //     {
         //         var angle = _radialProgress * (i - 1) / (n - 1);
-        //         vertices[i] = new Vertex {position = CR.PositionOf(Mathf.Sin(angle), -Mathf.Cos(angle), w, h), tint = _borderColor};
-        //         vertices[n + i] = new Vertex {position = CR.PositionOf(Mathf.Sin(angle), -Mathf.Cos(angle), bw, bh) + new Vector3(_borderWidth, _borderWidth), tint = _vertexColor};
+        //         vertices[i] = new Vertex { position = CR.PositionOf(Mathf.Sin(angle), -Mathf.Cos(angle), w, h), tint = _borderColor };
+        //         vertices[n + i] = new Vertex { position = CR.PositionOf(Mathf.Sin(angle), -Mathf.Cos(angle), bw, bh) + new Vector3(_borderWidth, _borderWidth), tint = _vertexColor };
         //     }
         //
         //     indices = new ushort[n * 6];
@@ -141,11 +141,11 @@ namespace GestureManager.Scripts.Core.VisualElements
         //     {
         //         var ixn = i + n;
         //         indices[i * 3 + 0] = 0;
-        //         indices[i * 3 + 1] = (ushort) (i + 1);
-        //         indices[i * 3 + 2] = (ushort) (i + 2);
+        //         indices[i * 3 + 1] = (ushort)(i + 1);
+        //         indices[i * 3 + 2] = (ushort)(i + 2);
         //         indices[ixn * 3 + 0] = 0;
-        //         indices[ixn * 3 + 1] = (ushort) (ixn + 1);
-        //         indices[ixn * 3 + 2] = (ushort) (ixn + 2);
+        //         indices[ixn * 3 + 1] = (ushort)(ixn + 1);
+        //         indices[ixn * 3 + 2] = (ushort)(ixn + 2);
         //     }
         // }
     }

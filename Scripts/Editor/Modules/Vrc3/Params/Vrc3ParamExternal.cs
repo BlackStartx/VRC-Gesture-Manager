@@ -25,7 +25,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
                     _value = value;
                     break;
                 case AnimatorControllerParameterType.Int:
-                    _value = (int) value;
+                    _value = (int)value;
                     break;
                 case AnimatorControllerParameterType.Bool:
                 case AnimatorControllerParameterType.Trigger:

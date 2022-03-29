@@ -29,9 +29,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
         {
             Border = RadialMenuUtility.Prefabs.NewBorder(size / 2);
             DataHolder = RadialMenuUtility.Prefabs.NewData(100, 100);
-            Texture = DataHolder.MyAdd(new VisualElement {style = {width = 50, height = 50, backgroundImage = _texture}});
+            Texture = DataHolder.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { width = 50, height = 50, backgroundImage = _texture } });
             if (_subIcon) DataHolder.Add(RadialMenuUtility.Prefabs.NewSubIcon(_subIcon));
-            DataHolder.MyAdd(new TextElement {text = _text, style = {color = TextColor, unityTextAlign = TextAnchor.MiddleCenter}});
+            DataHolder.MyAdd(new TextElement { pickingMode = PickingMode.Ignore, text = _text, style = { color = TextColor, unityTextAlign = TextAnchor.MiddleCenter } });
             CreateExtra();
         }
 

@@ -59,10 +59,7 @@ namespace GestureManager.Scripts.Extra
             return _errorList.Count == 0;
         }
 
-        public virtual bool IsInvalid()
-        {
-            return !Avatar || !AvatarAnimator || !AvatarDescriptor;
-        }
+        public virtual bool IsInvalid() => !Avatar || !AvatarAnimator || !AvatarDescriptor;
 
         public bool IsPerfectDesc() => IsValidDesc() && _warningList.Count == 0;
 

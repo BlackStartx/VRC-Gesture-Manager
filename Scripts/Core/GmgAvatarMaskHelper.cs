@@ -19,7 +19,7 @@ namespace GestureManager.Scripts.Core
 
         public static AvatarMask CreateMaskWith(string name, IEnumerable<AvatarMaskBodyPart> parts)
         {
-            var mask = new AvatarMask {name = name};
+            var mask = new AvatarMask { name = name };
             foreach (var part in BodyParts) mask.SetHumanoidBodyPartActive(part, false);
             foreach (var part in parts) mask.SetHumanoidBodyPartActive(part, true);
             return mask;
@@ -27,7 +27,7 @@ namespace GestureManager.Scripts.Core
 
         public static AvatarMask CreateMaskWithout(string name, IEnumerable<AvatarMaskBodyPart> parts)
         {
-            var mask = new AvatarMask {name = name};
+            var mask = new AvatarMask { name = name };
             foreach (var part in parts) mask.SetHumanoidBodyPartActive(part, false);
             return mask;
         }

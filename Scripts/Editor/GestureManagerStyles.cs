@@ -8,11 +8,14 @@ namespace GestureManager.Scripts.Editor
         private static GUIStyle _emoteError;
         private static GUIStyle _guiGreenButton;
         private static GUIStyle _guiHandTitle;
+        private static GUIStyle _guiDebugTitle;
         private static GUIStyle _middleStyle;
         private static GUIStyle _plusButton;
+        private static GUIStyle _header;
         private static GUIStyle _subHeader;
         private static GUIStyle _textError;
         private static GUIStyle _textWarning;
+        private static GUIStyle _textWarningHeader;
         private static GUIStyle _titleStyle;
 
         private static Texture _plusTexture;
@@ -32,6 +35,13 @@ namespace GestureManager.Scripts.Editor
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.UpperCenter,
             padding = new RectOffset(10, 10, 10, 10)
+        });
+
+        internal static GUIStyle GuiDebugTitle => _guiDebugTitle ?? (_guiDebugTitle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 12,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.UpperCenter
         });
 
         internal static GUIStyle BottomStyle => _bottomStyle ?? (_bottomStyle = new GUIStyle(GUI.skin.label)
@@ -56,31 +66,47 @@ namespace GestureManager.Scripts.Editor
             margin = new RectOffset(5, 5, 5, 5)
         });
 
+        internal static GUIStyle TextWarningHeader => _textWarningHeader ?? (_textWarningHeader = new GUIStyle(GUI.skin.label)
+        {
+            active = { textColor = Color.yellow },
+            normal = { textColor = Color.yellow },
+            alignment = TextAnchor.MiddleCenter,
+            fontSize = 14
+        });
+
         internal static GUIStyle TextWarning => _textWarning ?? (_textWarning = new GUIStyle(GUI.skin.label)
         {
-            active = {textColor = Color.yellow},
-            normal = {textColor = Color.yellow},
+            active = { textColor = Color.yellow },
+            normal = { textColor = Color.yellow },
             alignment = TextAnchor.MiddleCenter
         });
 
         internal static GUIStyle TextError => _textError ?? (_textError = new GUIStyle(GUI.skin.label)
         {
-            active = {textColor = Color.red},
-            normal = {textColor = Color.red},
+            active = { textColor = Color.red },
+            normal = { textColor = Color.red },
             fontSize = 13,
             alignment = TextAnchor.MiddleCenter
         });
 
         internal static GUIStyle GuiGreenButton => _guiGreenButton ?? (_guiGreenButton = new GUIStyle(GUI.skin.button)
         {
-            active = {textColor = Color.green},
-            normal = {textColor = Color.green},
-            hover = {textColor = Color.green},
+            active = { textColor = Color.green },
+            normal = { textColor = Color.green },
+            hover = { textColor = Color.green },
             fixedWidth = 100
         });
 
-        internal static GUIStyle SubHeader => _subHeader ?? (_subHeader = new GUIStyle(GUI.skin.label) {alignment = TextAnchor.MiddleCenter});
-        internal static GUIStyle PlusButton => _plusButton ?? (_plusButton = new GUIStyle {margin = new RectOffset(0, 20, 3, 3)});
+        internal static GUIStyle Header => _header ?? (_header = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 15,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            padding = new RectOffset(10, 10, 10, 10)
+        });
+        
+        internal static GUIStyle SubHeader => _subHeader ?? (_subHeader = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+        internal static GUIStyle PlusButton => _plusButton ?? (_plusButton = new GUIStyle { margin = new RectOffset(0, 20, 3, 3) });
 
         internal static Texture PlusTexture => _plusTexture ? _plusTexture : _plusTexture = Resources.Load<Texture>("Gm/BSX_GM_PlusSign");
         internal static Texture PlusTexturePro => _plusTexturePro ? _plusTexturePro : _plusTexturePro = Resources.Load<Texture>("Gm/BSX_GM_PlusSign[Pro]");
