@@ -17,7 +17,7 @@ There are currently no plans for updating further than Gesture Manager 3.4.
 ### Download the right UnityPackage
 For this branch there will probably be no official Git Releases.<br>
 If you wish to use this version of my tool,
-[please download it here](https://github.com/BlackStartx/VRC-Gesture-Manager/raw/Unity-2018/.releases/Gesture.Manager.3.1.(2018).unityPackage).
+[please download it here](https://github.com/BlackStartx/VRC-Gesture-Manager/raw/Unity-2018/.releases/Gesture.Manager.3.2.(2018).unityPackage).
 
 ### Import on Unity
 You can now import the UnityPackage directly in your project,
@@ -78,9 +78,7 @@ From here, you can edit your animation as you usually do, by clicking the record
 
 ### Knew Issues
 There are some issue with the RadialMenu:
-- Having more than one Inspector tab rendering the RadialMenu will cause
-  some flickering effects.
-- Editing the AnimatorControllers that your Avatar use while is controlled by the GestureManager could
+- Editing your 3.0 Avatar AnimatorControllers while your Avatar is controlled by the GestureManager could
   break the simulation and you need to restart the Play-Mode.
 
 ## How to Use (SDK 2.0)
@@ -88,7 +86,7 @@ There are some issue with the RadialMenu:
 If you're using the VRChat SDK 2.0 download the 2.0 UnityPackage from the release tab.<br>
 [[Or click here to go to the 2.0 release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v2.0)]
 
-> GestureManager 3.0 and 3.1 releases are still compatible with VRChat SDK 2.0 but using the 2.0 release is highly recommended.
+> GestureManager 3.0 and newer releases are still compatible with VRChat SDK 2.0 but using the 2.0 release is recommended.
 
 ### Import on Unity
 
