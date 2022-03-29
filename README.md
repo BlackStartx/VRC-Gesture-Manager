@@ -112,8 +112,9 @@ Thanks to every friend and person who helped or supported me during the developm
 - Stack_
 - ♡ GaNyan ♡
 - Nayu
-- Ahri~
 - Hiro N.
+- [emymin](https://github.com/emymin/)
+- Ahri~
 - [lindesu](https://github.vrlabs.dev/)
 
 And special thanks to:
