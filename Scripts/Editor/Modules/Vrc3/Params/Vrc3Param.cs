@@ -1,6 +1,5 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
@@ -13,27 +12,33 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
 
         internal Action<Vrc3Param, float> OnChange;
 
-        private float _amplifier;
-        public float NotAmplified => Get() / _amplifier;
-
-        protected Vrc3Param(string name, AnimatorControllerParameterType type, float amplifier = 1f)
+        protected Vrc3Param(string name, AnimatorControllerParameterType type)
         {
             Name = name;
             Type = type;
             HashId = Animator.StringToHash(Name);
-            _amplifier = amplifier;
         }
 
-        public void Set(IEnumerable<RadialMenu> menus, float value)
+        public void Set(ModuleVrc3 module, float value)
         {
-            var amplified = value * _amplifier;
-            if (Is(amplified)) return;
-            InternalSet(amplified);
-            OnChange?.Invoke(this, amplified);
-            foreach (var menu in menus) menu.UpdateValue(Name, amplified, value);
+            if (Is(value)) return;
+            module.OscModule.OnParameterChange(this, value);
+            InternalSet(value);
+            OnChange?.Invoke(this, value);
+            foreach (var menu in module.RadialMenus.Values) menu.UpdateValue(Name, value);
         }
 
-        public void Amplify(float amplifier) => _amplifier = amplifier;
+        private void Set(ModuleVrc3 module, bool value) => Set(module, value ? 1f : 0f);
+
+        public void Set(ModuleVrc3 module, bool? value)
+        {
+            if (value.HasValue) Set(module, value.Value);
+        }
+
+        public void Set(ModuleVrc3 module, float? value)
+        {
+            if (value.HasValue) Set(module, value.Value);
+        }
 
         public void SetOnChange(Action<Vrc3Param, float> onChange) => OnChange = onChange;
 
@@ -43,21 +48,21 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
 
         protected internal abstract void InternalSet(float value);
 
-        public void Add(IEnumerable<RadialMenu> menu, float value) => Set(menu, Get() + value);
+        public void Add(ModuleVrc3 module, float value) => Set(module, Get() + value);
 
-        public void Random(IEnumerable<RadialMenu> menu, float min, float max, float chance)
+        public void Random(ModuleVrc3 module, float min, float max, float chance)
         {
             switch (Type)
             {
-                case AnimatorControllerParameterType.Int:
-                    Set(menu, UnityEngine.Random.Range((int)min, (int)max + 1));
-                    break;
                 case AnimatorControllerParameterType.Float:
-                    Set(menu, UnityEngine.Random.Range(min, max));
+                    Set(module, UnityEngine.Random.Range(min, max));
+                    break;
+                case AnimatorControllerParameterType.Int:
+                    Set(module, UnityEngine.Random.Range((int)min, (int)max + 1));
                     break;
                 case AnimatorControllerParameterType.Bool:
                 case AnimatorControllerParameterType.Trigger:
-                    Set(menu, UnityEngine.Random.Range(0.0f, 1.0f) < chance ? 1f : 0f);
+                    Set(module, UnityEngine.Random.Range(0.0f, 1.0f) < chance);
                     break;
                 default: throw new ArgumentOutOfRangeException();
             }

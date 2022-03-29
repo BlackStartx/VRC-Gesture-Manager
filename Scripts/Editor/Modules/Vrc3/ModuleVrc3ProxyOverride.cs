@@ -14,7 +14,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
     {
         public static RuntimeAnimatorController OverrideController(RuntimeAnimatorController controller, bool overrideActive = false)
         {
-            if (!overrideActive) return controller;
+            if (!overrideActive || !controller) return controller;
             var overrideController = new AnimatorOverrideController(controller);
             overrideController.ApplyOverrides(controller.animationClips.Select(OverrideClip).Where(pair => pair.Value).ToList());
             return overrideController;

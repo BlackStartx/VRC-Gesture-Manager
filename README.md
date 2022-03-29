@@ -13,11 +13,11 @@ with Unity 2018 I've tough about updating it to a more stable and updated versio
 
 There are currently no plans for updating further than Gesture Manager 3.4.
 
-## How to Use (SDK 3.0)
+## How To Use (SDK 3.0)
 ### Download the right UnityPackage
 For this branch there will probably be no official Git Releases.<br>
 If you wish to use this version of my tool,
-[please download it here](https://github.com/BlackStartx/VRC-Gesture-Manager/raw/Unity-2018/.releases/Gesture.Manager.3.2.(2018).unityPackage).
+[please download it here](https://github.com/BlackStartx/VRC-Gesture-Manager/raw/Unity-2018/.releases/Gesture.Manager.3.4.(2018).unityPackage).
 
 ### Import on Unity
 You can now import the UnityPackage directly in your project,
@@ -37,8 +37,8 @@ the RadialMenu bellow.
 ![img.png](.markdown/3.0/TestingStart.png)
 
 ### Option Button!
-The Option button in the RadialMenu contains a lot of sub-category that helps you change parameters that
-usually are controlled by the VRChat client.
+The Option button in the RadialMenu contains a lot of sub-category that helps you change parameters usually
+controlled by the VRChat client.
 
 ![img.png](.markdown/3.0/RadialOptions.png)
 
@@ -51,7 +51,7 @@ In the **Locomotion** category you can preview animation like:
 
 ![img.png](.markdown/3.0/TestingMove.png)
 
-In the **States** category you can preview AFK and Seated animations.
+In the **States** category you can preview AFK, Seated, IK and T Pose animations.
 
 In the **Tracking** category you can change the number of Tracking Point of your Avatar as well as the
 VRMode parameter.
@@ -61,14 +61,15 @@ In the **Extra** category you can change Gesture Weights, MuteSelf, IsLocal and 
 > If a button have a gray text it means that the parameter is not used by your avatar.
 
 ### Edit-Mode Feature
-In the Option Menu you can find a button called: Edit-Mode.<br>
+In the Option Menu you can find a button called: Edit-Mode.
+
 Clicking that button will enable the Edit-Mode feature and will create a clone of your avatar
 giving him all the animation of your VRChat controller layers.
 
 ![img.png](.markdown/3.0/EditingMode.png)
 
 Since the avatar have all the animation of your animators, you can edit them by going in to the Animation tab and selecting
-your avatar from the hierarchy window.
+your avatar from the hierarchy window. (Or by clicking the blue "select your avatar" text under the RadialMenu)
 
 Once there you can select the animation you want by clicking the dropdown menu. <br>
 If you can't find it, look for the text `[Select Your Animation!]` and click it.
@@ -77,7 +78,7 @@ From here, you can edit your animation as you usually do, by clicking the record
 
 ![img.png](.markdown/3.0/Editing.png)
 
-### Debug Menu
+### Avatar Debug Menu
 
 The Debug tab of the Gesture Manager is where you can check lots of information about the current state of your avatar.
 
@@ -94,12 +95,38 @@ You can put the floating debug window wherever you want and use the Gesture Mana
 
 > The Debug Window is responsive, it will change the way content displayed inside of it depending of the width of the window.
 
-### Knew Issues
-There are some issue with the RadialMenu:
-- Editing your 3.0 Avatar AnimatorControllers while your Avatar is controlled by the GestureManager could
-  break the simulation and you need to restart the Play-Mode.
+### Osc Debug Menu
 
-## How to Use (SDK 2.0)
+In the Debug tab you can enable the integration for OSC data packages.
+
+> The port you choose must be available for being listened to.
+>
+> This mean that if VRChat is currently listening on those ports the simulation can't start.
+
+You can customize the port (and the address) directly from the OSC Debug Panel before starting the debug mode.
+
+For a correct simulation of the behaviour of your Avatar trough Unity you should start the debugger on the same port
+you use on your VRChat client, and load your custom settings from your LocalLow VRChat folder automatically with
+the button bellow.
+
+If you don't load any custom setting the simulation will start listening on a wide-range of address.
+
+This gif bellow shows the GestureManager receiving and processing data from the VRChat client itself.<br>
+(It's simply achieved by inverting the listening/receiving ports)
+
+#### Sending OSC messages
+
+You can send custom packets as well using the "Send" tab while using the OSC Debug.
+
+This can be useful to test how your application is handling OSC packets and for debugging purpose.
+
+Simply set the OSC address string and populate the message parameters with the + button on the right.<br>
+You can switch between OSC Messages and OSC bundles by clicking the "Bundle" or "Message" buttons.
+
+### Knew Issues
+♥ All the knew issues since the release of 3.0 has been addressed! ♥
+
+## How To Use (SDK 2.0)
 ### Download the right UnityPackage
 If you're using the VRChat SDK 2.0 download the 2.0 UnityPackage from the release tab.<br>
 [[Or click here to go to the 2.0 release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v2.0)]

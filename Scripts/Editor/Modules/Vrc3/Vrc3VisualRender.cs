@@ -11,8 +11,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         private int _lifeTick;
 
-        internal bool Xin(Vector2 p) => Rect.xMin < p.x && Rect.xMax > p.x;
-
         public virtual void Render(VisualElement root, Rect rect)
         {
             if (Event.current.type != EventType.Layout && !root.Contains(this)) root.Add(this);
@@ -38,12 +36,12 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             parent?.Remove(this);
         }
 
-        protected abstract bool RenderCondition(int selectedIndex);
+        protected abstract bool RenderCondition(ModuleVrc3 module, RadialMenu menu);
 
-        public void CheckCondition(int selectedIndex)
+        public void CheckCondition(ModuleVrc3 module, RadialMenu menu)
         {
             if (!_rendering) return;
-            if (!RenderCondition(selectedIndex)) StopRendering();
+            if (!RenderCondition(module, menu)) StopRendering();
         }
     }
 }

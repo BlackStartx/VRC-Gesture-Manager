@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 
 namespace GestureManager.Scripts.Editor
 {
@@ -12,14 +13,25 @@ namespace GestureManager.Scripts.Editor
         private static GUIStyle _middleStyle;
         private static GUIStyle _plusButton;
         private static GUIStyle _header;
+        private static GUIStyle _updateStyle;
+        private static GUIStyle _headerButton;
         private static GUIStyle _subHeader;
         private static GUIStyle _textError;
-        private static GUIStyle _textWarning;
         private static GUIStyle _textWarningHeader;
+        private static GUIStyle _textWarning;
         private static GUIStyle _titleStyle;
 
-        private static Texture _plusTexture;
+        private static Texture _plusTextureLgt;
         private static Texture _plusTexturePro;
+        private static Texture _editTextureLgt;
+        private static Texture _editTexturePro;
+
+        internal static GUIStyle UpdateStyle => _updateStyle ?? (_updateStyle = new GUIStyle(EditorStyles.helpBox)
+        {
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            margin = new RectOffset(0, 0, 10, 10)
+        });
 
         internal static GUIStyle TitleStyle => _titleStyle ?? (_titleStyle = new GUIStyle(GUI.skin.label)
         {
@@ -60,10 +72,18 @@ namespace GestureManager.Scripts.Editor
             padding = new RectOffset(5, 5, 5, 5)
         });
 
-        internal static GUIStyle EmoteError => _emoteError ?? (_emoteError = new GUIStyle(GUI.skin.box)
+        internal static GUIStyle EmoteError => _emoteError ?? (_emoteError = new GUIStyle(EditorStyles.helpBox)
         {
             padding = new RectOffset(5, 5, 5, 5),
             margin = new RectOffset(5, 5, 5, 5)
+        });
+
+        internal static GUIStyle TextError => _textError ?? (_textError = new GUIStyle(GUI.skin.label)
+        {
+            active = { textColor = Color.red },
+            normal = { textColor = Color.red },
+            fontSize = 13,
+            alignment = TextAnchor.MiddleCenter
         });
 
         internal static GUIStyle TextWarningHeader => _textWarningHeader ?? (_textWarningHeader = new GUIStyle(GUI.skin.label)
@@ -78,14 +98,6 @@ namespace GestureManager.Scripts.Editor
         {
             active = { textColor = Color.yellow },
             normal = { textColor = Color.yellow },
-            alignment = TextAnchor.MiddleCenter
-        });
-
-        internal static GUIStyle TextError => _textError ?? (_textError = new GUIStyle(GUI.skin.label)
-        {
-            active = { textColor = Color.red },
-            normal = { textColor = Color.red },
-            fontSize = 13,
             alignment = TextAnchor.MiddleCenter
         });
 
@@ -104,12 +116,20 @@ namespace GestureManager.Scripts.Editor
             alignment = TextAnchor.MiddleCenter,
             padding = new RectOffset(10, 10, 10, 10)
         });
-        
+
+        public static GUIStyle HeaderButton => _headerButton ?? (_headerButton = new GUIStyle(GUI.skin.button)
+        {
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            margin = new RectOffset(0, 10, 12, 0)
+        });
+
         internal static GUIStyle SubHeader => _subHeader ?? (_subHeader = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
         internal static GUIStyle PlusButton => _plusButton ?? (_plusButton = new GUIStyle { margin = new RectOffset(0, 20, 3, 3) });
 
-        internal static Texture PlusTexture => _plusTexture ? _plusTexture : _plusTexture = Resources.Load<Texture>("Gm/BSX_GM_PlusSign");
-        internal static Texture PlusTexturePro => _plusTexturePro ? _plusTexturePro : _plusTexturePro = Resources.Load<Texture>("Gm/BSX_GM_PlusSign[Pro]");
+        internal static Texture PlusTexture => EditorGUIUtility.isProSkin ? PlusTexturePro : PlusTextureLgt;
+        private static Texture PlusTextureLgt => _plusTextureLgt ? _plusTextureLgt : _plusTextureLgt = Resources.Load<Texture>("Gm/BSX_GM_PlusSign");
+        private static Texture PlusTexturePro => _plusTexturePro ? _plusTexturePro : _plusTexturePro = Resources.Load<Texture>("Gm/BSX_GM_PlusSign[Pro]");
 
         public static class Data
         {

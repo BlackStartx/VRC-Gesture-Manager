@@ -20,6 +20,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
         private readonly int _handGestureRight = Animator.StringToHash("HandGestureRight");
         private readonly int _emoteHash = Animator.StringToHash("Emote");
 
+        private int emote;
+
+        private RuntimeAnimatorController _avatarWasUsing;
+
         private ControllerType _usingType;
         private ControllerType _notUsedType;
 
@@ -32,12 +36,16 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
         private Dictionary<string, bool> _hasBeenOverridden;
 
         private AnimationClip _selectingCustomAnim;
-        private GmgLayoutHelper.GmgToolbarHeader _toolBar;
+        private GmgLayoutHelper.Toolbar _toolBar;
 
-        public override bool LateBoneUpdate => true;
         public override bool RequiresConstantRepaint => false;
         private RuntimeAnimatorController StandingControllerPreset => _standingControllerPreset ? _standingControllerPreset : _standingControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/StandingEmoteTestingTemplate");
         private RuntimeAnimatorController SeatedControllerPreset => _seatedControllerPreset ? _seatedControllerPreset : _seatedControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/SeatedEmoteTestingTemplate");
+
+        private Dictionary<HumanBodyBones, Quaternion> _lastBoneQuaternions;
+
+        private int _controlDelay;
+        private static IEnumerable<HumanBodyBones> Bones => Enum.GetValues(typeof(HumanBodyBones)).Cast<HumanBodyBones>();
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
         private readonly AnimationBind[] _gestureBinds =
@@ -64,23 +72,113 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             new AnimationBind("EMOTE8", GmData.EmoteStandingName[7], GmData.EmoteSeatedName[7])
         };
 
+        /**
+         *     This dictionary is needed just because I hate the original animation names.
+         *     It will just translate the name of the original animation to the my version of the name. 
+         */
+        private Dictionary<string, string> _myTranslateDictionary;
+
+        private Dictionary<string, string> TranslateDictionary => _myTranslateDictionary ?? (_myTranslateDictionary = new Dictionary<string, string>
+        {
+            { _gestureBinds[1].GetOriginalName(), _gestureBinds[1].GetMyName(_usingType) },
+            { _gestureBinds[2].GetOriginalName(), _gestureBinds[2].GetMyName(_usingType) },
+            { _gestureBinds[3].GetOriginalName(), _gestureBinds[3].GetMyName(_usingType) },
+            { _gestureBinds[4].GetOriginalName(), _gestureBinds[4].GetMyName(_usingType) },
+            { _gestureBinds[5].GetOriginalName(), _gestureBinds[5].GetMyName(_usingType) },
+            { _gestureBinds[6].GetOriginalName(), _gestureBinds[6].GetMyName(_usingType) },
+            { _gestureBinds[7].GetOriginalName(), _gestureBinds[7].GetMyName(_usingType) },
+
+            { _emoteBinds[0].GetOriginalName(), _emoteBinds[0].GetMyName(_usingType) },
+            { _emoteBinds[1].GetOriginalName(), _emoteBinds[1].GetMyName(_usingType) },
+            { _emoteBinds[2].GetOriginalName(), _emoteBinds[2].GetMyName(_usingType) },
+            { _emoteBinds[3].GetOriginalName(), _emoteBinds[3].GetMyName(_usingType) },
+            { _emoteBinds[4].GetOriginalName(), _emoteBinds[4].GetMyName(_usingType) },
+            { _emoteBinds[5].GetOriginalName(), _emoteBinds[5].GetMyName(_usingType) },
+            { _emoteBinds[6].GetOriginalName(), _emoteBinds[6].GetMyName(_usingType) },
+            { _emoteBinds[7].GetOriginalName(), _emoteBinds[7].GetMyName(_usingType) }
+        });
+
+        private IEnumerable<HumanBodyBones> _whiteListedControlBones;
+        private IEnumerable<HumanBodyBones> WhiteListedControlBones => _whiteListedControlBones ?? (_whiteListedControlBones = Bones.Where(bones => !_blackListedControlBones.Contains(bones)));
+
+        private readonly List<HumanBodyBones> _blackListedControlBones = new List<HumanBodyBones>
+        {
+            // Left
+            HumanBodyBones.LeftThumbDistal,
+            HumanBodyBones.LeftThumbIntermediate,
+            HumanBodyBones.LeftThumbProximal,
+
+            HumanBodyBones.LeftIndexDistal,
+            HumanBodyBones.LeftIndexIntermediate,
+            HumanBodyBones.LeftIndexProximal,
+
+            HumanBodyBones.LeftMiddleDistal,
+            HumanBodyBones.LeftMiddleIntermediate,
+            HumanBodyBones.LeftMiddleProximal,
+
+            HumanBodyBones.LeftRingDistal,
+            HumanBodyBones.LeftRingIntermediate,
+            HumanBodyBones.LeftRingProximal,
+
+            HumanBodyBones.LeftLittleDistal,
+            HumanBodyBones.LeftLittleIntermediate,
+            HumanBodyBones.LeftLittleProximal,
+
+            // Right
+            HumanBodyBones.RightThumbDistal,
+            HumanBodyBones.RightThumbIntermediate,
+            HumanBodyBones.RightThumbProximal,
+
+            HumanBodyBones.RightIndexDistal,
+            HumanBodyBones.RightIndexIntermediate,
+            HumanBodyBones.RightIndexProximal,
+
+            HumanBodyBones.RightMiddleDistal,
+            HumanBodyBones.RightMiddleIntermediate,
+            HumanBodyBones.RightMiddleProximal,
+
+            HumanBodyBones.RightRingDistal,
+            HumanBodyBones.RightRingIntermediate,
+            HumanBodyBones.RightRingProximal,
+
+            HumanBodyBones.RightLittleDistal,
+            HumanBodyBones.RightLittleIntermediate,
+            HumanBodyBones.RightLittleProximal,
+
+            // ???
+            HumanBodyBones.LastBone
+        };
+
         public ModuleVrc2(GestureManager manager, VRC_AvatarDescriptor avatarDescriptor) : base(manager, avatarDescriptor)
         {
             _avatarDescriptor = avatarDescriptor;
         }
 
-        protected override List<string> CheckWarnings()
+        public override void Update()
         {
-            var warningList = base.CheckWarnings();
-            if (AvatarAnimator != null && !AvatarAnimator.isHuman) warningList.Add("- The avatar has no humanoid rig!\n(Simulation could not match in-app)");
-            return warningList;
+            FetchLastBoneRotation();
+            AvatarAnimator.SetInteger(_handGestureLeft, Manager.OnCustomAnimation || emote != 0 ? 8 : Left);
+            AvatarAnimator.SetInteger(_handGestureRight, Manager.OnCustomAnimation || emote != 0 ? 8 : Right);
+            AvatarAnimator.SetInteger(_emoteHash, Manager.OnCustomAnimation ? 9 : emote);
         }
 
-        protected override List<string> CheckErrors()
+        public override void LateUpdate()
         {
-            var errorList = base.CheckErrors();
-            if (!_avatarDescriptor.CustomSittingAnims && !_avatarDescriptor.CustomStandingAnims) errorList.Add("- The Descriptor doesn't have any kind of controller!");
-            return errorList;
+            if (emote != 0 || Manager.OnCustomAnimation) return;
+
+            foreach (var bodyBone in WhiteListedControlBones)
+            {
+                var boneTransform = AvatarAnimator.GetBoneTransform(bodyBone);
+                try
+                {
+                    var boneQuaternion = _lastBoneQuaternions[bodyBone];
+                    boneTransform.localRotation = new Quaternion(boneQuaternion.x, boneQuaternion.y, boneQuaternion.z, boneQuaternion.w);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
         }
 
         public override void InitForAvatar()
@@ -91,25 +189,99 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
 
         public override void Unlink()
         {
+            if (!AvatarAnimator) return;
+            AvatarAnimator.runtimeAnimatorController = _avatarWasUsing;
+            _avatarWasUsing = null;
         }
 
-        public override void SetValues(bool onCustomAnimation, int left, int right, int emote)
+        public override void EditorHeader()
         {
-            AvatarAnimator.SetInteger(_handGestureLeft, onCustomAnimation || emote != 0 ? 8 : left);
-            AvatarAnimator.SetInteger(_handGestureRight, onCustomAnimation || emote != 0 ? 8 : right);
-            AvatarAnimator.SetInteger(_emoteHash, onCustomAnimation ? 9 : emote);
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label("Using Override: " + GetOverrideController().name + " [" + _usingType + "]");
+                GUI.enabled = CanSwitchController();
+                if (GUILayout.Button("Switch to " + _notUsedType.ToString().ToLower() + "!")) SwitchType();
+                GUI.enabled = true;
+            }
         }
 
-        public override void Update()
+        public override void EditorContent(object editor, VisualElement element)
         {
+            GUILayout.Space(15);
+
+            GmgLayoutHelper.MyToolbar(ref _toolBar, new (string, Action)[]
+            {
+                ("Gestures", () =>
+                {
+                    if (emote != 0 || Manager.OnCustomAnimation)
+                    {
+                        GUILayout.BeginHorizontal(GestureManagerStyles.EmoteError);
+                        GUILayout.Label("Gesture doesn't work while you're playing an emote!");
+                        if (GUILayout.Button("Stop!", GestureManagerStyles.GuiGreenButton)) StopCurrentEmote();
+
+                        GUILayout.EndHorizontal();
+                    }
+
+                    GUILayout.BeginHorizontal();
+
+                    GUILayout.BeginVertical();
+                    GUILayout.Label("Left Hand", GestureManagerStyles.GuiHandTitle);
+                    GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Left, Left, true);
+                    GUILayout.EndVertical();
+
+                    GUILayout.BeginVertical();
+                    GUILayout.Label("Right Hand", GestureManagerStyles.GuiHandTitle);
+                    GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Right, Right, true);
+                    GUILayout.EndVertical();
+
+                    GUILayout.EndHorizontal();
+                }),
+                ("Emotes", () =>
+                {
+                    GUILayout.Label("Emotes", GestureManagerStyles.GuiHandTitle);
+
+                    OnEmoteButton(1, OnEmoteStart, OnEmoteStop);
+                    OnEmoteButton(2, OnEmoteStart, OnEmoteStop);
+                    OnEmoteButton(3, OnEmoteStart, OnEmoteStop);
+                    OnEmoteButton(4, OnEmoteStart, OnEmoteStop);
+                    OnEmoteButton(5, OnEmoteStart, OnEmoteStop);
+                    OnEmoteButton(6, OnEmoteStart, OnEmoteStop);
+                    OnEmoteButton(7, OnEmoteStart, OnEmoteStop);
+                    OnEmoteButton(8, OnEmoteStart, OnEmoteStop);
+                }),
+                ("Test Animation", () =>
+                {
+                    GUILayout.Label("Force animation.", GestureManagerStyles.GuiHandTitle);
+
+                    GUILayout.BeginHorizontal();
+                    _selectingCustomAnim = GmgLayoutHelper.ObjectField("Animation: ", _selectingCustomAnim, Manager.SetCustomAnimation);
+
+                    GUI.enabled = _selectingCustomAnim;
+                    if (Manager.OnCustomAnimation && emote == 0)
+                    {
+                        if (GUILayout.Button("Stop", GestureManagerStyles.GuiGreenButton)) Manager.StopCustomAnimation();
+                    }
+                    else
+                    {
+                        if (GUILayout.Button("Play", GUILayout.Width(100)))
+                        {
+                            emote = 0;
+                            Manager.PlayCustomAnimation(_selectingCustomAnim);
+                        }
+                    }
+
+                    GUI.enabled = true;
+
+                    GUILayout.EndHorizontal();
+                })
+            });
         }
 
-        public override AnimationClip GetEmoteByIndex(int emoteIndex)
-        {
-            return _myRuntimeOverrideController[_emoteBinds[emoteIndex].GetMyName(_usingType)];
-        }
+        protected override void OnNewLeft(int left) => Left = left;
 
-        public override AnimationClip GetFinalGestureByIndex(GestureHand hand, int gestureIndex)
+        protected override void OnNewRight(int right) => Right = right;
+
+        public override AnimationClip GetFinalGestureByIndex(int gestureIndex)
         {
             return _myRuntimeOverrideController[_gestureBinds[gestureIndex].GetMyName(_usingType)];
         }
@@ -131,107 +303,84 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             SetupOverride(_usingType, false);
         }
 
-        public override void EditorHeader()
+        public override bool IsInvalid() => base.IsInvalid() || !Avatar.activeInHierarchy;
+
+        protected override List<string> CheckWarnings()
         {
-            GUILayout.Label("Using Override: " + GetOverrideController().name + " [" + _usingType + "]");
-            GUI.enabled = CanSwitchController();
-            if (GUILayout.Button("Switch to " + _notUsedType.ToString().ToLower() + "!")) SwitchType();
-            GUI.enabled = true;
+            var warningList = base.CheckWarnings();
+            if (AvatarAnimator != null && !AvatarAnimator.isHuman) warningList.Add("- The avatar has no humanoid rig!\n(Simulation could not match in-app)");
+            return warningList;
         }
 
-        public override void EditorContent(object editor, VisualElement element)
+        protected override List<string> CheckErrors()
         {
-            GUILayout.Space(15);
+            var errorList = base.CheckErrors();
+            if (!_avatarDescriptor.CustomSittingAnims && !_avatarDescriptor.CustomStandingAnims) errorList.Add("- The Descriptor doesn't have any kind of controller!");
+            return errorList;
+        }
 
-            GmgLayoutHelper.MyToolbar(ref _toolBar, new[]
+        private AnimationClip GetEmoteByIndex(int emoteIndex) => _myRuntimeOverrideController[_emoteBinds[emoteIndex].GetMyName(_usingType)];
+
+        private void OnEmoteButton(int current, Action<int> play, Action stop)
+        {
+            using (new GUILayout.HorizontalScope())
             {
-                new GmgLayoutHelper.GmgToolbarRow("Gestures", () =>
-                {
-                    if (Manager.emote != 0 || Manager.OnCustomAnimation)
-                    {
-                        GUILayout.BeginHorizontal(GestureManagerStyles.EmoteError);
-                        GUILayout.Label("Gesture doesn't work while you're playing an emote!");
-                        if (GUILayout.Button("Stop!", GestureManagerStyles.GuiGreenButton)) StopCurrentEmote();
-
-                        GUILayout.EndHorizontal();
-                    }
-
-                    GUILayout.BeginHorizontal();
-
-                    GUILayout.BeginVertical();
-                    GUILayout.Label("Left Hand", GestureManagerStyles.GuiHandTitle);
-                    Manager.left = GestureManagerEditor.OnCheckBoxGuiHand(Manager, GestureHand.Left, Manager.left, position => 0, true);
-                    GUILayout.EndVertical();
-
-                    GUILayout.BeginVertical();
-                    GUILayout.Label("Right Hand", GestureManagerStyles.GuiHandTitle);
-                    Manager.right = GestureManagerEditor.OnCheckBoxGuiHand(Manager, GestureHand.Right, Manager.right, position => 0, true);
-                    GUILayout.EndVertical();
-
-                    GUILayout.EndHorizontal();
-                }),
-                new GmgLayoutHelper.GmgToolbarRow("Emotes", () =>
-                {
-                    GUILayout.Label("Emotes", GestureManagerStyles.GuiHandTitle);
-
-                    GestureManagerEditor.OnEmoteButton(Manager, 1, OnEmoteStart, OnEmoteStop);
-                    GestureManagerEditor.OnEmoteButton(Manager, 2, OnEmoteStart, OnEmoteStop);
-                    GestureManagerEditor.OnEmoteButton(Manager, 3, OnEmoteStart, OnEmoteStop);
-                    GestureManagerEditor.OnEmoteButton(Manager, 4, OnEmoteStart, OnEmoteStop);
-                    GestureManagerEditor.OnEmoteButton(Manager, 5, OnEmoteStart, OnEmoteStop);
-                    GestureManagerEditor.OnEmoteButton(Manager, 6, OnEmoteStart, OnEmoteStop);
-                    GestureManagerEditor.OnEmoteButton(Manager, 7, OnEmoteStart, OnEmoteStop);
-                    GestureManagerEditor.OnEmoteButton(Manager, 8, OnEmoteStart, OnEmoteStop);
-                }),
-                new GmgLayoutHelper.GmgToolbarRow("Test Animation", () =>
-                {
-                    GUILayout.Label("Force animation.", GestureManagerStyles.GuiHandTitle);
-
-                    GUILayout.BeginHorizontal();
-                    _selectingCustomAnim = GmgLayoutHelper.ObjectField("Animation: ", _selectingCustomAnim, Manager.SetCustomAnimation);
-
-                    GUI.enabled = _selectingCustomAnim;
-                    if (Manager.OnCustomAnimation && Manager.emote == 0)
-                    {
-                        if (GUILayout.Button("Stop", GestureManagerStyles.GuiGreenButton)) Manager.StopCustomAnimation();
-                    }
-                    else
-                    {
-                        if (GUILayout.Button("Play", GUILayout.Width(100)))
-                        {
-                            Manager.emote = 0;
-                            Manager.PlayCustomAnimation(_selectingCustomAnim);
-                        }
-                    }
-
-                    GUI.enabled = true;
-
-                    GUILayout.EndHorizontal();
-                })
-            });
+                GUILayout.Label(GetEmoteByIndex(current - 1).name);
+                if (emote == current && GUILayout.Button("Stop", GestureManagerStyles.GuiGreenButton)) stop();
+                if (emote != current && GUILayout.Button("Play", GUILayout.Width(100))) play(current);
+            }
         }
 
         private void OnEmoteStart(int emoteIndex)
         {
-            Manager.emote = emoteIndex;
+            emote = emoteIndex;
             Manager.PlayCustomAnimation(GetEmoteByIndex(emoteIndex - 1));
         }
 
         private void OnEmoteStop()
         {
-            Manager.emote = 0;
+            emote = 0;
             Manager.StopCustomAnimation();
         }
 
         private void StopCurrentEmote()
         {
-            if (Manager.emote != 0) OnEmoteStop();
+            if (emote != 0) OnEmoteStop();
             if (Manager.OnCustomAnimation) Manager.StopCustomAnimation();
+        }
+
+        private void FetchLastBoneRotation()
+        {
+            if (emote != 0 || Manager.OnCustomAnimation)
+            {
+                _controlDelay = 5;
+                return;
+            }
+
+            if (_controlDelay > 0)
+            {
+                _controlDelay--;
+                return;
+            }
+
+            _lastBoneQuaternions = new Dictionary<HumanBodyBones, Quaternion>();
+            foreach (var bodyBone in WhiteListedControlBones)
+            {
+                var boneTransform = AvatarAnimator.GetBoneTransform(bodyBone);
+                try
+                {
+                    _lastBoneQuaternions[bodyBone] = boneTransform.localRotation;
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
         }
 
         private void SetupOverride(ControllerType controllerType, bool saveController)
         {
-            Manager.controlDelay = 4;
+            _controlDelay = 4;
 
             var controllerPreset = controllerType == ControllerType.Standing ? StandingControllerPreset : SeatedControllerPreset;
             _usingType = controllerType == ControllerType.Standing ? ControllerType.Standing : ControllerType.Seated;
@@ -239,20 +388,19 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             _originalUsingOverrideController = controllerType == ControllerType.Standing ? _avatarDescriptor.CustomStandingAnims : _avatarDescriptor.CustomSittingAnims;
             _myRuntimeOverrideController = new AnimatorOverrideController(controllerPreset);
 
-            GenerateDictionary();
+            _myTranslateDictionary = null;
 
             var finalOverride = new List<KeyValuePair<AnimationClip, AnimationClip>>
             {
                 new KeyValuePair<AnimationClip, AnimationClip>(_myRuntimeOverrideController["[EXTRA] CustomAnimation"], Manager.customAnim)
             };
 
-
             var validOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
             foreach (var pair in GmgAnimatorControllerHelper.GetOverrides(_originalUsingOverrideController).Where(keyValuePair => keyValuePair.Value))
             {
                 try
                 {
-                    validOverrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(_myRuntimeOverrideController[_myTranslateDictionary[pair.Key.name]], pair.Value));
+                    validOverrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(_myRuntimeOverrideController[TranslateDictionary[pair.Key.name]], pair.Value));
                 }
                 catch (Exception)
                 {
@@ -267,61 +415,18 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
 
             _myRuntimeOverrideController.ApplyOverrides(finalOverride);
 
-            if (saveController) Manager.avatarWasUsing = AvatarAnimator.runtimeAnimatorController;
+            if (saveController) _avatarWasUsing = AvatarAnimator.runtimeAnimatorController;
 
             AvatarAnimator.Rebind();
             AvatarAnimator.runtimeAnimatorController = _myRuntimeOverrideController;
             AvatarAnimator.runtimeAnimatorController.name = controllerPreset.name;
         }
 
-        private AnimatorOverrideController GetOverrideController()
-        {
-            return _originalUsingOverrideController;
-        }
+        private AnimatorOverrideController GetOverrideController() => _originalUsingOverrideController;
 
-        private void SwitchType()
-        {
-            SetupOverride(_notUsedType, false);
-        }
+        private void SwitchType() => SetupOverride(_notUsedType, false);
 
-        private bool CanSwitchController()
-        {
-            return _notUsedType == ControllerType.Seated ? _avatarDescriptor.CustomSittingAnims : _avatarDescriptor.CustomStandingAnims;
-        }
-
-        /**
-         *     This dictionary is needed just because I hate the original animation names.
-         *     It will just translate the name of the original animation to the my version of the name. 
-         */
-        private Dictionary<string, string> _myTranslateDictionary;
-
-        private void GenerateDictionary()
-        {
-            _myTranslateDictionary = new Dictionary<string, string>
-            {
-                { _gestureBinds[1].GetOriginalName(), _gestureBinds[1].GetMyName(_usingType) },
-                { _gestureBinds[2].GetOriginalName(), _gestureBinds[2].GetMyName(_usingType) },
-                { _gestureBinds[3].GetOriginalName(), _gestureBinds[3].GetMyName(_usingType) },
-                { _gestureBinds[4].GetOriginalName(), _gestureBinds[4].GetMyName(_usingType) },
-                { _gestureBinds[5].GetOriginalName(), _gestureBinds[5].GetMyName(_usingType) },
-                { _gestureBinds[6].GetOriginalName(), _gestureBinds[6].GetMyName(_usingType) },
-                { _gestureBinds[7].GetOriginalName(), _gestureBinds[7].GetMyName(_usingType) },
-
-                { _emoteBinds[0].GetOriginalName(), _emoteBinds[0].GetMyName(_usingType) },
-                { _emoteBinds[1].GetOriginalName(), _emoteBinds[1].GetMyName(_usingType) },
-                { _emoteBinds[2].GetOriginalName(), _emoteBinds[2].GetMyName(_usingType) },
-                { _emoteBinds[3].GetOriginalName(), _emoteBinds[3].GetMyName(_usingType) },
-                { _emoteBinds[4].GetOriginalName(), _emoteBinds[4].GetMyName(_usingType) },
-                { _emoteBinds[5].GetOriginalName(), _emoteBinds[5].GetMyName(_usingType) },
-                { _emoteBinds[6].GetOriginalName(), _emoteBinds[6].GetMyName(_usingType) },
-                { _emoteBinds[7].GetOriginalName(), _emoteBinds[7].GetMyName(_usingType) }
-            };
-        }
-
-        public override bool IsInvalid()
-        {
-            return base.IsInvalid() || !Avatar.activeInHierarchy;
-        }
+        private bool CanSwitchController() => _notUsedType == ControllerType.Seated ? _avatarDescriptor.CustomSittingAnims : _avatarDescriptor.CustomStandingAnims;
     }
 
     public enum ControllerType

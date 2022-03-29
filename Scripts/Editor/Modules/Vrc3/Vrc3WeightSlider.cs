@@ -4,7 +4,6 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Experimental.UIElements;
 using UnityEngine.Experimental.UIElements.StyleEnums;
-using UnityEngine.Experimental.UIElements.StyleSheets;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3
 {
@@ -33,6 +32,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private bool _out;
         private float _weight = 1f;
 
+        private bool Xin(Vector2 p) => Rect.xMin < p.x && Rect.xMax > p.x;
+
         public Vrc3WeightSlider(Vrc3WeightController controller, string target)
         {
             _controller = controller;
@@ -40,7 +41,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             style.justifyContent = Justify.Center;
             style.positionType = PositionType.Absolute;
-            pickingMode = pickingMode = PickingMode.Ignore;
+            pickingMode = PickingMode.Ignore;
 
             CreateWeightController();
         }
@@ -69,6 +70,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             _textHolder.style.width = style.width;
 
             HandleFade(Event.current.mousePosition);
+            if (!GUI.enabled) return;
             if (Drag) Update(Event.current.mousePosition);
             SetWeight(_controller.Module.GetParam(_target)?.Get() ?? 0f);
 
@@ -85,7 +87,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             UpdatePosition(Event.current.mousePosition, false);
         }
 
-        protected override bool RenderCondition(int selectedIndex) => selectedIndex == 0;
+        protected override bool RenderCondition(ModuleVrc3 module, RadialMenu menu) => menu.ToolBar.Selected == 0;
 
         private void Update(Vector2 mousePosition)
         {
@@ -99,7 +101,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             _out = outer;
             var position = mousePosition.x - layout.x;
             var weight = Mathf.Clamp(position / layout.width, 0f, 1f);
-            _controller.Module.GetParam(_target)?.Set(_controller.Module.RadialMenus.Values, weight);
+            _controller.Module.GetParam(_target)?.Set(_controller.Module, weight);
             _afk = 5;
         }
 

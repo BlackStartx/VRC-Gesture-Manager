@@ -11,6 +11,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
 {
     public class RadialMenuControl : RadialMenuDynamic
     {
+        private readonly float? _amplify;
         private readonly RadialMenu _menu;
         private readonly Vrc3Param _parameter;
         private readonly Vrc3Param[] _subParameters;
@@ -26,9 +27,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
             _subParameters = control.subParameters == null ? Array.Empty<Vrc3Param>() : control.subParameters.Select(parameter => menu.GetParam(parameter.name)).ToArray();
         }
 
-        public RadialMenuControl(RadialMenu menu, string name, Texture2D icon, ControlType type, float activeValue, Vrc3Param param, Vrc3Param[] subParams, VRCExpressionsMenu subMenu, VRCExpressionsMenu.Control.Label[] subLabels) : base(name, icon, type, activeValue)
+        public RadialMenuControl(RadialMenu menu, string name, Texture2D icon, ControlType type, float activeValue, Vrc3Param param, Vrc3Param[] subParams, VRCExpressionsMenu subMenu, VRCExpressionsMenu.Control.Label[] subLabels, float? amplify = null) : base(name, icon, type, activeValue)
         {
             _menu = menu;
+            _amplify = amplify;
             _subMenu = subMenu;
             _parameter = param;
             _subLabels = subLabels;
@@ -86,19 +88,23 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
             }
         }
 
+        private float AmplifiedValue(float value) => _amplify.HasValue ? value * _amplify.Value : value;
+
+        internal float NonAmplifiedValue(float value) => _amplify.HasValue ? value / _amplify.Value : value;
+
         internal void SetControlValue() => SetValue(ActiveValue);
 
-        internal void SetValue(float value) => _parameter?.Set(_menu.RadialMenus, value);
+        internal void SetValue(float value) => _parameter?.Set(_menu.Module, AmplifiedValue(value));
 
-        internal void SetSubValue(int index, float value) => _subParameters[index]?.Set(_menu.RadialMenus, value);
+        internal void SetSubValue(int index, float value) => _subParameters[index]?.Set(_menu.Module, AmplifiedValue(value));
 
         public VRCExpressionsMenu.Control.Label[] GetSubLabels() => _subLabels;
 
         internal string GetSubParameterName(int index) => _subParameters[index].Name;
 
-        protected override float GetValue() => _parameter?.Get() ?? 0;
+        protected override float GetValue() => NonAmplifiedValue(_parameter?.Get() ?? 0);
 
-        internal override float GetSubValue(int index) => _subParameters[index]?.NotAmplified ?? 0;
+        internal override float GetSubValue(int index) => NonAmplifiedValue(_subParameters[index]?.Get() ?? 0);
     }
 }
 #endif

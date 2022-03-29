@@ -7,26 +7,42 @@ namespace GestureManager.Scripts.Extra
 {
     public abstract class ModuleBase
     {
+        private readonly VRC_AvatarDescriptor _avatarDescriptor;
+
         private List<string> _errorList = new List<string>();
         private List<string> _warningList = new List<string>();
 
-        protected readonly GestureManager Manager;
-        public readonly VRC_AvatarDescriptor AvatarDescriptor;
-
         public readonly GameObject Avatar;
         public readonly Animator AvatarAnimator;
+        public readonly GestureManager Manager;
 
-        public abstract bool LateBoneUpdate { get; }
         public abstract bool RequiresConstantRepaint { get; }
+
+        protected int Right, Left;
 
         protected ModuleBase(GestureManager manager, VRC_AvatarDescriptor avatarDescriptor)
         {
-            Manager = manager;
-            AvatarDescriptor = avatarDescriptor;
+            _avatarDescriptor = avatarDescriptor;
 
+            Manager = manager;
             Avatar = avatarDescriptor.gameObject;
             AvatarAnimator = Avatar.GetComponent<Animator>();
         }
+
+        public abstract void Update();
+        public abstract void LateUpdate();
+        public abstract void InitForAvatar();
+        public abstract void Unlink();
+        public abstract void EditorHeader();
+        public abstract void EditorContent(object editor, VisualElement element);
+        protected abstract void OnNewLeft(int left);
+        protected abstract void OnNewRight(int right);
+        public abstract AnimationClip GetFinalGestureByIndex(int gestureIndex);
+        public abstract Animator OnCustomAnimationPlay(AnimationClip clip);
+        public abstract bool HasGestureBeenOverridden(int gesture);
+        public abstract void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation);
+
+        public virtual bool IsInvalid() => !Avatar || !AvatarAnimator || !_avatarDescriptor;
 
         protected virtual List<string> CheckWarnings() => new List<string>();
 
@@ -37,20 +53,9 @@ namespace GestureManager.Scripts.Extra
             if (!Avatar) errors.Add("- The GameObject has been deleted!");
             else if (!Avatar.activeInHierarchy) errors.Add("- The GameObject is disabled!");
             if (!AvatarAnimator) errors.Add("- The model doesn't have any animator!");
+            if (!_avatarDescriptor) errors.Add("- The VRC_AvatarDescriptor has been deleted!");
             return errors;
         }
-
-        public abstract void Update();
-        public abstract void InitForAvatar();
-        public abstract void Unlink();
-        public abstract AnimationClip GetEmoteByIndex(int emoteIndex);
-        public abstract AnimationClip GetFinalGestureByIndex(GestureHand hand, int gestureIndex);
-        public abstract Animator OnCustomAnimationPlay(AnimationClip clip);
-        public abstract void EditorHeader();
-        public abstract void EditorContent(object editor, VisualElement element);
-        public abstract void SetValues(bool onCustomAnimation, int left, int right, int emote);
-        public abstract bool HasGestureBeenOverridden(int gesture);
-        public abstract void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation);
 
         public bool IsValidDesc()
         {
@@ -59,7 +64,11 @@ namespace GestureManager.Scripts.Extra
             return _errorList.Count == 0;
         }
 
-        public virtual bool IsInvalid() => !Avatar || !AvatarAnimator || !AvatarDescriptor;
+        public void OnNewHand(GestureHand hand, int i)
+        {
+            if (hand == GestureHand.Left) OnNewLeft(i);
+            else OnNewRight(i);
+        }
 
         public bool IsPerfectDesc() => IsValidDesc() && _warningList.Count == 0;
 
