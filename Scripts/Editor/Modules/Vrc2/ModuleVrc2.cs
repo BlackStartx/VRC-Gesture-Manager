@@ -7,6 +7,7 @@ using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Extra;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Experimental.UIElements;
 using VRCSDK2;
 using GmData = GestureManager.Scripts.Editor.GestureManagerStyles.Data;
 
@@ -147,7 +148,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             GUI.enabled = true;
         }
 
-        public override void EditorContent()
+        public override void EditorContent(VisualElement element)
         {
             GUILayout.Space(15);
 

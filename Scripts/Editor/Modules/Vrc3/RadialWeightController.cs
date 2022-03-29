@@ -2,7 +2,6 @@
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
-using VRC.SDK3.Avatars.Components;
 using VRC.SDKBase;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3

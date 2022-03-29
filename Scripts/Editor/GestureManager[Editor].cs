@@ -2,27 +2,33 @@
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using GestureManager.Scripts.Core;
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Editor.Modules;
 using GestureManager.Scripts.Extra;
 using UnityEditor;
+using UnityEditor.Experimental.UIElements;
 using UnityEngine;
+using UnityEngine.Experimental.UIElements;
 
 namespace GestureManager.Scripts.Editor
 {
     [CustomEditor(typeof(GestureManager))]
     public class GestureManagerEditor : UnityEditor.Editor
     {
+        private GestureManager Manager => target as GestureManager;
         public override bool RequiresConstantRepaint() => Manager.Module?.RequiresConstantRepaint ?? false;
 
-        private GestureManager Manager => target as GestureManager;
+        private EditorWindow _inspector;
+        private EditorWindow Inspector => _inspector ? _inspector : _inspector = GmgLayoutHelper.GetCustomEditorInspectorWindow(this);
 
-        private const string Version = "3.0.0";
+        private VisualElement _root;
+        private VisualElement Root => _root ?? (_root = Inspector.GetRootVisualContainer());
+
+        private const string Version = "3.1.0";
         private const string BsxName = "BlackStartx";
         private const string Discord = "BlackStartx#6593";
 
-        private const string VersionURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.v3rsion";
+        private const string VersionURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/Unity-2018/.v3rsion";
         private const string DiscordURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.discord";
 
         private void OnEnable()
@@ -35,7 +41,7 @@ namespace GestureManager.Scripts.Editor
 
         public override void OnInspectorGUI()
         {
-            GUILayout.Label("Gesture Manager 3.0", GestureManagerStyles.TitleStyle);
+            GUILayout.Label("Gesture Manager 3.1 (2018)", GestureManagerStyles.TitleStyle);
 
             if (Manager.Module != null)
             {
@@ -53,13 +59,13 @@ namespace GestureManager.Scripts.Editor
                 });
 
                 if (Manager.Module == null) return;
+                Root.style.positionTop = -GmgLayoutHelper.GetScroll(Inspector).y + 22;
 
                 GUILayout.BeginHorizontal();
                 Manager.Module.EditorHeader();
                 GUILayout.EndHorizontal();
 
-                GizmosButton(false);
-                Manager.Module.EditorContent();
+                Manager.Module.EditorContent(Root);
             }
             else
             {
@@ -170,31 +176,6 @@ namespace GestureManager.Scripts.Editor
                 .ToList();
         }
 
-        private static void GizmosButton(bool show)
-        {
-            if (!show) return;
-            var isHidden = GmgGizmosHelper.HavePreset(GestureManager.GizmosState);
-            if (GUILayout.Button(isHidden ? "Show Gizmos" : "Hide Gizmos")) SetGizmos(isHidden);
-        }
-
-        private static void SetGizmos(bool isHidden)
-        {
-            if (isHidden) ShowGizmos();
-            else HideGizmos();
-        }
-
-        private static void ShowGizmos()
-        {
-            GmgGizmosHelper.LoadPreset(GestureManager.GizmosState);
-            GmgGizmosHelper.DeletePreset(GestureManager.GizmosState);
-        }
-
-        private static void HideGizmos()
-        {
-            GmgGizmosHelper.SavePreset(GestureManager.GizmosState);
-            GmgGizmosHelper.DisableAllGizmos();
-        }
-
         private static void DiscordPopup(string discord)
         {
             if (EditorUtility.DisplayDialog("It's me!", discord, "Copy To Clipboard!", "Ok!"))
@@ -229,10 +210,11 @@ namespace GestureManager.Scripts.Editor
             for (var i = 1; i < 8; i++)
             {
                 GUILayout.BeginHorizontal();
-                gesture[i] = EditorGUILayout.Toggle(manager.GetFinalGestureName(hand, i), gesture[i]);
-                if (!manager.Module.HasGestureBeenOverridden(i))
-                    if (GUILayout.Button(texture, GestureManagerStyles.PlusButton, GUILayout.Width(15), GUILayout.Height(15)))
-                        RequestGestureDuplication(manager, hand, i);
+                GUILayout.Label(manager.GetFinalGestureName(hand, i));
+                GUILayout.FlexibleSpace();
+                gesture[i] = GUILayout.Toggle(gesture[i], "");
+                if (!manager.Module.HasGestureBeenOverridden(i)) OverrideButton(texture, manager, hand, i);
+                else GUILayout.Space(35);
                 GUILayout.EndHorizontal();
             }
 
@@ -250,6 +232,12 @@ namespace GestureManager.Scripts.Editor
                     return i;
 
             return onNone(position);
+        }
+
+        private static void OverrideButton(Texture texture, GestureManager manager, GestureHand hand, int i)
+        {
+            if (GUILayout.Button(texture, GestureManagerStyles.PlusButton, GUILayout.Width(15), GUILayout.Height(15)))
+                RequestGestureDuplication(manager, hand, i);
         }
 
         internal static void OnEmoteButton(GestureManager manager, int emote)

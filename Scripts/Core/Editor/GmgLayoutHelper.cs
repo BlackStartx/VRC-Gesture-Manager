@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Experimental.UIElements;
 
 namespace GestureManager.Scripts.Core.Editor
 {
@@ -17,6 +17,9 @@ namespace GestureManager.Scripts.Core.Editor
      */
     public static class GmgLayoutHelper
     {
+        private static FieldInfo _scrollField;
+        private static FieldInfo ScrollField(EditorWindow window) => _scrollField ?? (_scrollField = window.GetType().GetField("m_ScrollPosition", BindingFlags.Instance | BindingFlags.NonPublic));
+
         public static void MyToolbar(ref GmgToolbarHeader id, GmgToolbarRow[] rows)
         {
             if (id == null) id = new GmgToolbarHeader(rows);
@@ -26,14 +29,26 @@ namespace GestureManager.Scripts.Core.Editor
             id.ShowSelected();
         }
 
-        public static EditorWindow GetInspectorWindow()
+        private static IEnumerable<EditorWindow> GetInspectorWindows()
         {
-            return EditorWindow.GetWindow(Assembly.GetAssembly(typeof(EditorWindow)).GetType("UnityEditor.InspectorWindow"));
+            return Resources.FindObjectsOfTypeAll<EditorWindow>().Where(window => window.titleContent.text == "Inspector");
         }
 
-        public static VisualElement GetEditorWindowElementRoot(EditorWindow e)
+        public static EditorWindow GetCustomEditorInspectorWindow(UnityEditor.Editor editor)
         {
-            return (VisualElement) e.GetType().GetProperty("rootVisualContainer", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(e);
+            foreach (var inspectorWindow in GetInspectorWindows())
+            {
+                var trackerObject = inspectorWindow.GetType().GetProperty("tracker", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(inspectorWindow);
+                if (trackerObject?.GetType().GetProperty("activeEditors")?.GetValue(trackerObject) is UnityEditor.Editor[] editors && editors.Contains(editor)) return inspectorWindow;
+            }
+
+            return null;
+        }
+
+        public static Vector2 GetScroll(EditorWindow inspector)
+        {
+            var scrollObject = ScrollField(inspector)?.GetValue(inspector);
+            return scrollObject is Vector2 scroll ? scroll : new Vector2(0, 0);
         }
 
         /*
@@ -67,10 +82,10 @@ namespace GestureManager.Scripts.Core.Editor
             EditorGUI.DrawRect(rect, new Color(0.5f, 0.5f, 0.5f, 1));
         }
 
-        public static Rect GetLastRect(Rect lastRect)
+        public static Rect GetLastRect(ref Rect lastRect)
         {
             if (Event.current.type == EventType.Layout || Event.current.type == EventType.Used) return lastRect;
-            return GUILayoutUtility.GetLastRect();
+            return lastRect = GUILayoutUtility.GetLastRect();
         }
 
         /*

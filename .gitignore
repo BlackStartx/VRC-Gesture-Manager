@@ -33,5 +33,4 @@ sysinfo.txt
 
 # Builds
 *.apk
-*.unitypackage
 .version

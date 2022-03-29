@@ -18,7 +18,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base
             holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 135));
             holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 225));
             holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 315));
-            Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.Inner, RadialMenuUtility.Colors.OuterBorder, PositionType.Absolute));
+            Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.OuterBorder, PositionType.Absolute));
             _labels = control.GetSubLabels();
         }
 

@@ -1,11 +1,12 @@
 ﻿#if VRC_SDK_VRCSDK3
 using GestureManager.Scripts.Core.Editor;
+using GestureManager.Scripts.Core.VisualElements;
 using UnityEngine;
 using UnityEngine.Experimental.UIElements;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3
 {
-    public class RadialCursor : VisualElement
+    public class RadialCursor : GmgCircleElement
     {
         private float _clamp;
         private float _clampReset;
@@ -15,8 +16,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         public RadialCursor(int size)
         {
             RadialMenuUtility.Prefabs.SetCircle(this, size, RadialMenuUtility.Colors.Cursor, RadialMenuUtility.Colors.CursorBorder)
-                .MyAdd(RadialMenuUtility.Prefabs.NewCircle((int) (size / 1.5f), Color.clear, RadialMenuUtility.Colors.CursorBorder))
-                .Add(RadialMenuUtility.Prefabs.NewCircle((int) (size / 4f), Color.clear, RadialMenuUtility.Colors.CursorBorder));
+                .MyAdd(RadialMenuUtility.Prefabs.NewCircle((int) (size / 1.5f), RadialMenuUtility.Colors.Cursor, RadialMenuUtility.Colors.CursorBorder))
+                .Add(RadialMenuUtility.Prefabs.NewCircle((int) (size / 4f), RadialMenuUtility.Colors.Cursor, RadialMenuUtility.Colors.CursorBorder));
         }
 
         /*
@@ -38,14 +39,13 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             if (referenceLayout != null && referenceLayout != parent) SetParent(referenceLayout);
         }
 
-        public void Update(Vector2 mousePosition)
+        public void Update(Vector2 mouse)
         {
-            var vector = mousePosition - parent.worldBound.center;
-            if (vector.magnitude < _clampReset) SetCursorPosition(vector);
+            if (mouse.magnitude < _clampReset) SetCursorPosition(mouse);
             else SetCursorPosition(0, 0);
         }
 
-        private float GetAngle() => GetAngle(new Vector2(style.positionLeft, style.positionTop));
+        private float GetAngle() => GetAngle(new Vector2(style.positionLeft.value, style.positionTop.value));
 
         private static float GetAngle(Vector2 vector)
         {
@@ -61,7 +61,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             radial = -1;
             if (Event.current.type == EventType.Layout) return false;
 
-            mouse -= parent.worldBound.center;
             if (mouse.magnitude < _min) return false;
 
             radial = GetAngle(mouse) / 360f;
@@ -73,7 +72,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             axis = Vector2.zero;
             if (Event.current.type == EventType.Layout) return false;
 
-            mouse -= parent.worldBound.center;
             axis = Vector2.ClampMagnitude(new Vector2(mouse.x / range, -mouse.y / range), 1);
             return true;
         }
@@ -98,7 +96,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             var angle = GetAngle();
             var counter = 0;
-            foreach (var borderElement in borderHolder)
+            foreach (var borderElement in borderHolder.Children())
             {
                 var borderAngle = (borderElement.transform.rotation.eulerAngles.z + 90) % 360;
                 if (angle < borderAngle) return counter;

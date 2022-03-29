@@ -6,13 +6,13 @@ using System.Linq;
 using GestureManager.Scripts.Core;
 using UnityEngine;
 using UnityEngine.Experimental.UIElements;
-using UnityEngine.Experimental.UIElements.StyleEnums;
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Editor.Modules.Vrc3.Params;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base;
 using UnityEditor;
 using UnityEngine.Animations;
+using UnityEngine.Experimental.UIElements.StyleEnums;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3
@@ -45,7 +45,13 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             "lindesu",
         };
 
-        private static Vector2 ExternalPosition => Event.current.mousePosition + new Vector2(0, 20);
+        private Vector2 ExternalPosition()
+        {
+            const float hSize = Size / 2;
+            var vector2 = Event.current.mousePosition - new Vector2(style.positionLeft.value + hSize, style.positionTop.value + hSize);
+            vector2 -= new Vector2(_cursor.parent.style.positionLeft.value, _cursor.parent.style.positionTop.value);
+            return vector2;
+        }
 
         private readonly Dictionary<string, Vrc3Param> _paramType = new Dictionary<string, Vrc3Param>();
 
@@ -70,13 +76,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             _module = module;
             _cursor = new RadialCursor(CursorSize);
             CreateRadial();
-        }
-
-        protected override void DoRepaint(IStylePainter painter)
-        {
-            base.DoRepaint(painter);
-            if (_lifeTick > 0) _lifeTick--;
-            visible = _lifeTick != 0;
         }
 
         /*
@@ -105,18 +104,25 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
          * Core
          */
 
-        public int Render(Rect position)
+        public int Render(VisualElement root, Rect rect)
         {
-            if (!_inspectorWindow) RecreateRadial();
+            _lifeTick = 2;
+            if (Event.current.type != EventType.Layout && !root.Contains(this)) root.Add(this);
             if (Event.current.type == EventType.MouseUp) OnRadialClickEnd(null);
 
-            layout = position;
-            visible = true;
-            _lifeTick = 2;
+            style.positionLeft = (rect.width - Size) / 2;
+            style.positionTop = rect.y;
 
             HandleExternalInput();
 
-            return _module.Debug.State ? DebugRender(position) : 0;
+            return _module.Debug.State ? DebugRender(rect) : 0;
+        }
+
+        protected override void DoRepaint(IStylePainter painter)
+        {
+            base.DoRepaint(painter);
+            if (_lifeTick > 0) _lifeTick--;
+            if (_lifeTick == 0) parent?.Remove(this);
         }
 
         /*
@@ -134,7 +140,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             _puppet.style.positionLeft = _cursor.style.positionLeft;
             _puppet.style.positionTop = _cursor.style.positionTop;
             _cursor.SetData(20F, float.MaxValue, (int) (InnerSize / 2f), (int) (Size / 2f), _puppet);
-            _cursor.Update(ExternalPosition);
+            _cursor.Update(ExternalPosition());
             _puppet.AfterCursor();
         }
 
@@ -346,38 +352,23 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         {
             style.alignItems = Align.Center;
             style.justifyContent = Justify.Center;
+            style.positionType = PositionType.Absolute;
             this.OnClickUpEvent(OnRadialClickEnd);
 
-            _radial = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(Size, RadialMenuUtility.Colors.Cursor, RadialMenuUtility.Colors.CursorBorder));
+            _radial = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(Size, RadialMenuUtility.Colors.RadialCenter, RadialMenuUtility.Colors.RadialMiddle, RadialMenuUtility.Colors.RadialBorder));
             _radial.OnClickDownEvent(OnRadialClickStart);
 
             _borderHolder = _radial.MyAdd(new VisualElement {style = {positionType = PositionType.Absolute}});
-            _radial.MyAdd(RadialMenuUtility.Prefabs.NewCircle((int) InnerSize, RadialMenuUtility.Colors.Inner, RadialMenuUtility.Colors.OuterBorder, PositionType.Absolute));
+            _radial.MyAdd(RadialMenuUtility.Prefabs.NewCircle((int) InnerSize, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.OuterBorder, PositionType.Absolute));
 
             _dataHolder = _radial.MyAdd(new VisualElement {style = {positionType = PositionType.Absolute}});
             _puppetHolder = _radial.MyAdd(new VisualElement {style = {positionType = PositionType.Absolute}});
             _radial.MyAdd(_cursor);
 
             _cursor.SetData(Clamp, ClampReset, (int) (InnerSize / 2f), (int) (Size / 2f), _radial);
-
-            InjectRadial();
         }
-
-        private void InjectRadial() => InjectRadial(GmgLayoutHelper.GetInspectorWindow());
 
         public void ForgetParams() => _paramType.Clear();
-
-        private void InjectRadial(EditorWindow inspector)
-        {
-            _inspectorWindow = inspector;
-            GmgLayoutHelper.GetEditorWindowElementRoot(_inspectorWindow).Add(this);
-        }
-
-        private void RecreateRadial()
-        {
-            RemoveFromHierarchy();
-            InjectRadial();
-        }
 
         private void SetButtons(int count, Func<int, RadialMenuItem> create) => SetButtons((from index in Enumerable.Range(0, count) select create(index)).ToArray());
 
@@ -412,9 +403,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         {
             if (Event.current.type == EventType.Layout) return;
 
-            var mousePosition = ExternalPosition;
-            _cursor.Update(mousePosition);
-            _puppet?.Update(mousePosition, _cursor);
+            var mouseVector = ExternalPosition();
+            _cursor.Update(mouseVector);
+            _puppet?.Update(mouseVector, _cursor);
         }
 
         internal void UpdateValue(string pName, float value)

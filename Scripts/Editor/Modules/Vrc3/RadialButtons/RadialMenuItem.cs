@@ -28,7 +28,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
         public void Create(float size)
         {
             Border = RadialMenuUtility.Prefabs.NewBorder(size / 2);
-            DataHolder = RadialMenuUtility.Prefabs.NewData();
+            DataHolder = RadialMenuUtility.Prefabs.NewData(100, 100);
             Texture = DataHolder.MyAdd(new VisualElement {style = {width = 50, height = 50, backgroundImage = _texture}});
             if (_subIcon) DataHolder.Add(RadialMenuUtility.Prefabs.NewSubIcon(_subIcon));
             DataHolder.MyAdd(new TextElement {text = _text, style = {color = TextColor, unityTextAlign = TextAnchor.MiddleCenter}});

@@ -10,8 +10,6 @@ namespace GestureManager.Scripts
     {
         [SerializeField] private int instanceId;
 
-        public const string GizmosState = "Gesture Manager";
-
         public static Dictionary<GameObject, ModuleBase> ControlledAvatars = new Dictionary<GameObject, ModuleBase>();
 
         public int right, left, emote;
