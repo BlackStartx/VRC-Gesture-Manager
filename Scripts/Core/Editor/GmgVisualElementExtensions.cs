@@ -1,4 +1,6 @@
 ﻿using GestureManager.Scripts.Core.VisualElements;
+using UnityEditor;
+using UnityEditor.Experimental.UIElements;
 using UnityEngine;
 using UnityEngine.Experimental.UIElements;
 
@@ -42,6 +44,15 @@ namespace GestureManager.Scripts.Core.Editor
         {
             visualElement.RegisterCallback(action);
             return visualElement;
+        }
+
+        public static void MySetAntiAliasing(this EditorWindow window, int antiAliasing)
+        {
+            if (!window || window.GetAntiAliasing() == antiAliasing) return;
+
+            window.SetAntiAliasing(antiAliasing);
+            // Dumb workaround method to trigger the internal MakeParentsSettingsMatchMe() method on the EditorWindow.
+            window.minSize = window.minSize;
         }
     }
 }

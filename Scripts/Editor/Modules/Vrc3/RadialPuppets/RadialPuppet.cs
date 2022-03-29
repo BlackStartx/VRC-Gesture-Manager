@@ -19,7 +19,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
 
         public RadialPuppet(RadialMenuControl control) : base(100, control)
         {
-            _progress = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(96, Color.clear, RadialMenuUtility.Colors.ProgressRadial, PositionType.Absolute));
+            _progress = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(96, RadialMenuUtility.Colors.ProgressRadial, RadialMenuUtility.Colors.ProgressRadial, PositionType.Absolute));
             Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.OuterBorder, PositionType.Absolute));
             Add(RadialMenuUtility.Prefabs.NewRadialText(out _text, 0, PositionType.Absolute));
             _point = this.MyAdd(GeneratePoint());

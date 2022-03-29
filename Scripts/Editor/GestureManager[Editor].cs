@@ -24,7 +24,9 @@ namespace GestureManager.Scripts.Editor
         private VisualElement _root;
         private VisualElement Root => _root ?? (_root = Inspector.GetRootVisualContainer());
 
-        private const string Version = "3.1.0";
+        private const int AntiAliasing = 4;
+        
+        private const string Version = "3.2.0";
         private const string BsxName = "BlackStartx";
         private const string Discord = "BlackStartx#6593";
 
@@ -41,7 +43,7 @@ namespace GestureManager.Scripts.Editor
 
         public override void OnInspectorGUI()
         {
-            GUILayout.Label("Gesture Manager 3.1 (2018)", GestureManagerStyles.TitleStyle);
+            GUILayout.Label("Gesture Manager 3.2 (2018)", GestureManagerStyles.TitleStyle);
 
             if (Manager.Module != null)
             {
@@ -65,7 +67,7 @@ namespace GestureManager.Scripts.Editor
                 Manager.Module.EditorHeader();
                 GUILayout.EndHorizontal();
 
-                Manager.Module.EditorContent(Root);
+                Manager.Module.EditorContent(this, Root);
             }
             else
             {
@@ -85,10 +87,13 @@ namespace GestureManager.Scripts.Editor
 
                             foreach (var module in eligible)
                             {
-                                EditorGUILayout.BeginHorizontal(new GUIStyle(GUI.skin.box));
+                                GUILayout.BeginVertical(GUI.skin.box);
+                                EditorGUILayout.BeginHorizontal();
                                 GUILayout.Label(module.AvatarDescriptor.gameObject.name + ":", GUILayout.Width(Screen.width - 131));
                                 if (GUILayout.Button("Set As Avatar", GUILayout.Width(100))) Manager.SetModule(module);
                                 GUILayout.EndHorizontal();
+                                foreach (var warning in module.GetWarnings()) GUILayout.Label(warning, GestureManagerStyles.TextWarning);
+                                GUILayout.EndVertical();
                             }
 
                             if (eligible.Count != 0 && nonEligible.Count != 0) GUILayout.Label("Non-Eligible VRC_AvatarDescriptors:", GestureManagerStyles.SubHeader);
@@ -165,7 +170,7 @@ namespace GestureManager.Scripts.Editor
         private ModuleBase GetValidDescriptor()
         {
             CheckActiveDescriptors();
-            return Manager.LastCheckedActiveDescriptors.FirstOrDefault(module => module.IsValidDesc());
+            return Manager.LastCheckedActiveDescriptors.FirstOrDefault(module => module.IsPerfectDesc());
         }
 
         private void CheckActiveDescriptors()
@@ -240,22 +245,15 @@ namespace GestureManager.Scripts.Editor
                 RequestGestureDuplication(manager, hand, i);
         }
 
-        internal static void OnEmoteButton(GestureManager manager, int emote)
+        internal static void OnEmoteButton(GestureManager manager, int emote, Action<int> play, Action stop)
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label(manager.GetEmoteName(emote - 1));
             if (manager.emote == emote)
             {
-                if (GUILayout.Button("Stop", GestureManagerStyles.GuiGreenButton)) manager.OnEmoteStop();
+                if (GUILayout.Button("Stop", GestureManagerStyles.GuiGreenButton)) stop();
             }
-            else
-            {
-                if (GUILayout.Button("Play", GUILayout.Width(100)))
-                {
-                    manager.StopCurrentEmote();
-                    manager.OnEmoteStart(emote);
-                }
-            }
+            else if (GUILayout.Button("Play", GUILayout.Width(100))) play(emote);
 
             GUILayout.EndHorizontal();
         }

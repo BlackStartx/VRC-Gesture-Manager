@@ -66,7 +66,7 @@ namespace GestureManager.Scripts.Core.Editor
         {
             var oldObject = unityObject;
 
-            unityObject = (T) (label != null ? EditorGUILayout.ObjectField(label, unityObject, typeof(T), true, null) : EditorGUILayout.ObjectField(unityObject, typeof(T), true, null));
+            unityObject = (T)(label != null ? EditorGUILayout.ObjectField(label, unityObject, typeof(T), true, null) : EditorGUILayout.ObjectField(unityObject, typeof(T), true, null));
             if (oldObject == unityObject) return unityObject;
             if (!oldObject) onObjectSet(unityObject);
             else if (!unityObject) onObjectRemove(oldObject);

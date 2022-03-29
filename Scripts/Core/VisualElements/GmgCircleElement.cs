@@ -1,7 +1,6 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.Experimental.UIElements;
-using UnityEngine.Experimental.UIElements.StyleSheets;
 using CR = GestureManager.Scripts.Core.GmgVisualMesh.CenterRelative;
 
 namespace GestureManager.Scripts.Core.VisualElements
@@ -15,7 +14,6 @@ namespace GestureManager.Scripts.Core.VisualElements
 
         public float Progress
         {
-            get => _progress;
             set
             {
                 if (Math.Abs(_progress - value) < Tolerance) return;
@@ -29,7 +27,6 @@ namespace GestureManager.Scripts.Core.VisualElements
 
         public float BorderWidth
         {
-            get => _borderWidth;
             set
             {
                 if (Math.Abs(_borderWidth - value) < Tolerance) return;
@@ -48,7 +45,6 @@ namespace GestureManager.Scripts.Core.VisualElements
 
         public Color BorderColor
         {
-            get => style.borderColor;
             set
             {
                 if (style.borderColor == value) return;
@@ -61,7 +57,6 @@ namespace GestureManager.Scripts.Core.VisualElements
 
         public Color VertexColor
         {
-            get => style.backgroundColor;
             set
             {
                 if (style.backgroundColor == value) return;
@@ -74,7 +69,6 @@ namespace GestureManager.Scripts.Core.VisualElements
 
         public Color CenterColor
         {
-            get => _centerColor;
             set
             {
                 if (_centerColor == value) return;

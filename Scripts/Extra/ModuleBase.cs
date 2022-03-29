@@ -8,6 +8,7 @@ namespace GestureManager.Scripts.Extra
     public abstract class ModuleBase
     {
         private List<string> _errorList = new List<string>();
+        private List<string> _warningList = new List<string>();
 
         protected readonly GestureManager Manager;
         public readonly VRC_AvatarDescriptor AvatarDescriptor;
@@ -27,6 +28,8 @@ namespace GestureManager.Scripts.Extra
             AvatarAnimator = Avatar.GetComponent<Animator>();
         }
 
+        protected virtual List<string> CheckWarnings() => new List<string>();
+
         protected virtual List<string> CheckErrors()
         {
             var errors = new List<string>();
@@ -42,9 +45,9 @@ namespace GestureManager.Scripts.Extra
         public abstract void Unlink();
         public abstract AnimationClip GetEmoteByIndex(int emoteIndex);
         public abstract AnimationClip GetFinalGestureByIndex(GestureHand hand, int gestureIndex);
-        public abstract void OnCustomAnimationChange();
+        public abstract Animator OnCustomAnimationPlay(AnimationClip clip);
         public abstract void EditorHeader();
-        public abstract void EditorContent(VisualElement element);
+        public abstract void EditorContent(object editor, VisualElement element);
         public abstract void SetValues(bool onCustomAnimation, int left, int right, int emote);
         public abstract bool HasGestureBeenOverridden(int gesture);
         public abstract void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation);
@@ -52,6 +55,7 @@ namespace GestureManager.Scripts.Extra
         public bool IsValidDesc()
         {
             _errorList = CheckErrors();
+            _warningList = CheckWarnings();
             return _errorList.Count == 0;
         }
 
@@ -60,9 +64,10 @@ namespace GestureManager.Scripts.Extra
             return !Avatar || !AvatarAnimator || !AvatarDescriptor;
         }
 
-        public IEnumerable<string> GetErrors()
-        {
-            return _errorList;
-        }
+        public bool IsPerfectDesc() => IsValidDesc() && _warningList.Count == 0;
+
+        public IEnumerable<string> GetErrors() => _errorList;
+
+        public IEnumerable<string> GetWarnings() => _warningList;
     }
 }

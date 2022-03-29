@@ -11,7 +11,6 @@ using GestureManager.Scripts.Editor.Modules.Vrc3.Params;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base;
 using UnityEditor;
-using UnityEngine.Animations;
 using UnityEngine.Experimental.UIElements.StyleEnums;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
@@ -53,13 +52,15 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             return vector2;
         }
 
-        private readonly Dictionary<string, Vrc3Param> _paramType = new Dictionary<string, Vrc3Param>();
-
         private readonly List<RadialPage> _menuPath = new List<RadialPage>();
 
         private VRCExpressionsMenu _menu;
+        internal IEnumerable<RadialMenu> RadialMenus => _module.RadialMenus.Values;
+        
+        internal Rect Rect;
 
         private BasePuppet _puppet;
+        private RadialDescription _radialDescription;
 
         private VisualElement _borderHolder;
         private VisualElement _dataHolder;
@@ -126,7 +127,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         }
 
         /*
-         * PopUp
+         * Puppets
          */
 
         internal void OpenPuppet(BasePuppet puppet)
@@ -157,6 +158,31 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         }
 
         /*
+         * Radial Descriptions
+         */
+
+        private void RemoveRadialDescription() => _radialDescription = null;
+
+        private void SetRadialDescription(string text, string link, string url) => _radialDescription = new RadialDescription(text, link, url);
+
+        public void ShowRadialDescription()
+        {
+            if (_radialDescription == null) return;
+            
+            GUILayout.Space(10);
+            GUILayout.BeginHorizontal(GestureManagerStyles.EmoteError);
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(_radialDescription.Text);
+
+            var guiStyle = EditorGUIUtility.isProSkin ? ModuleVrc3Styles.UrlPro : ModuleVrc3Styles.Url;
+            if (GUILayout.Button(_radialDescription.Link, guiStyle)) Application.OpenURL(_radialDescription.Url);
+            EditorGUIUtility.AddCursorRect(GUILayoutUtility.GetLastRect(), MouseCursor.Link);
+            GUILayout.FlexibleSpace();
+
+            GUILayout.EndHorizontal();
+        }
+
+        /*
          * Menu Prefabs
          */
 
@@ -165,10 +191,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             _menuPath.Clear();
             var buttons = new RadialMenuItem[3];
 
-            if (!_module.Editing.State) buttons[0] = new RadialMenuButton(OptionMainMenuPrefab, "Options", ModuleVrc3Styles.Option);
-            else buttons[0] = RadialMenuUtility.Buttons.ToggleFromParam(this, "Exit Edit-Mode", _module.Editing);
+            if (!_module.DummyAvatar) buttons[0] = new RadialMenuButton(OptionMainMenuPrefab, "Options", ModuleVrc3Styles.Option);
+            else buttons[0] = RadialMenuUtility.Buttons.ToggleFromParam(this, _module.ExitDummyText, _module.Dummy);
 
-            if (_module.Editing.State || !_menu) buttons[1] = new RadialMenuButton(_module.NoExpressionRefresh, "Expressions", ModuleVrc3Styles.NoExpressions, Color.gray);
+            if (_module.DummyAvatar || !_menu) buttons[1] = new RadialMenuButton(_module.NoExpressionRefresh, "Expressions", ModuleVrc3Styles.NoExpressions, Color.gray);
             else buttons[1] = new RadialMenuButton(ExpressionsMenu, "Expressions", ModuleVrc3Styles.Expressions);
 
             buttons[2] = new RadialMenuButton(SupporterMenuPrefab, "Thanks to...", ModuleVrc3Styles.Emojis);
@@ -182,7 +208,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             {
                 new RadialMenuButton(OptionExtraMenuPrefab, "Extra", ModuleVrc3Styles.Option),
                 new RadialMenuButton(OptionTrackingMenuPrefab, "Tracking", ModuleVrc3Styles.Option),
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "Edit-Mode", _module.Editing),
+                new RadialMenuButton(_module.EnableEditMode, "Edit-Mode", ModuleVrc3Styles.Default),
                 new RadialMenuButton(OptionStatesMenuPrefab, "States", ModuleVrc3Styles.Option),
                 new RadialMenuButton(OptionLocomotionMenuPrefab, "Locomotion", ModuleVrc3Styles.Option),
             });
@@ -211,7 +237,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 RadialMenuUtility.Buttons.ParamStateToggle(this, "4-Point VR", param, 4f),
                 RadialMenuUtility.Buttons.ParamStateToggle(this, "Full Body", param, 6f),
             });
-            _module.SetRadialDescription("If you don't know what those are you can check the", "documentation!", TrackingDocumentationUrl);
+            SetRadialDescription("If you don't know what those are you can check the", "documentation!", TrackingDocumentationUrl);
         }
 
         private void OptionStatesMenuPrefab()
@@ -315,37 +341,19 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         {
             var param = _menuPath[index].Param;
             _menuPath.RemoveAt(index);
-            param?.Set(this, 0);
+            param?.Set(RadialMenus, 0);
         }
 
         /*
          * Radial Stuff
          */
 
-        public Vrc3Param GetParam(string pName)
-        {
-            if (pName == null) return null;
-            _paramType.TryGetValue(pName, out var param);
-            return param;
-        }
+        public Vrc3Param GetParam(string pName) => _module.GetParam(pName);
 
-        public void Set(Animator animator, VRCExpressionsMenu menu, VRCExpressionParameters parameters, IEnumerable<AnimatorControllerPlayable> animatorControllerPlayables)
+        public void Set(VRCExpressionsMenu menu)
         {
             _menu = menu;
             MainMenuPrefab();
-
-            _paramType.Clear();
-            foreach (var controller in animatorControllerPlayables)
-            foreach (var parameter in RadialMenuUtility.GetParameters(controller))
-                _paramType[parameter.name] = RadialMenuUtility.CreateParamFromController(animator, parameter, controller);
-
-            if (!parameters) return;
-            foreach (var parameter in parameters.parameters)
-                if (!_paramType.ContainsKey(parameter.name))
-                    _paramType[parameter.name] = RadialMenuUtility.CreateParamFromNothing(parameter);
-
-            foreach (var parameter in parameters.parameters)
-                _paramType[parameter.name].InternalSet(parameter.defaultValue);
         }
 
         private void CreateRadial()
@@ -368,13 +376,11 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             _cursor.SetData(Clamp, ClampReset, (int) (InnerSize / 2f), (int) (Size / 2f), _radial);
         }
 
-        public void ForgetParams() => _paramType.Clear();
-
         private void SetButtons(int count, Func<int, RadialMenuItem> create) => SetButtons((from index in Enumerable.Range(0, count) select create(index)).ToArray());
 
         private void SetButtons(RadialMenuItem[] buttons)
         {
-            _module.RemoveRadialDescription();
+            RemoveRadialDescription();
             _buttons = buttons;
 
             _borderHolder.Clear();
@@ -437,11 +443,11 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private int DebugRender(Rect rect)
         {
             const int size = 22;
-            var list = _paramType.BatchTwo().ToList();
+            var list = _module.Params.BatchTwo().ToList();
             var intHeight = size * (list.Count + 1);
 
             GUILayout.BeginArea(new Rect(rect.x, rect.y, rect.width, intHeight));
-            DebugPair($"[DEBUG ({_paramType.Count})]", $"[({_paramType.Count}) DEBUG]", ModuleVrc3Styles.DebugHeader);
+            DebugPair($"[DEBUG ({_module.Params.Count})]", $"[({_module.Params.Count}) DEBUG]", ModuleVrc3Styles.DebugHeader);
             foreach (var (lPair, rPair, isRight) in list) DebugPair(lPair.Value, isRight ? rPair.Value : null);
             GUILayout.EndArea();
             return intHeight;

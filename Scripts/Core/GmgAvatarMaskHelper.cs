@@ -32,6 +32,6 @@ namespace GestureManager.Scripts.Core
             return mask;
         }
 
-        public static AvatarMask CreateEmptyMask(string name) => CreateMaskWith(name, new AvatarMaskBodyPart[0]);
+        public static AvatarMask CreateEmptyMask(string name) => CreateMaskWith(name, Array.Empty<AvatarMaskBodyPart>());
     }
 }
