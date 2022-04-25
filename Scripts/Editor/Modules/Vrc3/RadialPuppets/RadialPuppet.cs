@@ -18,9 +18,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
 
         public RadialPuppet(RadialMenuControl control) : base(100, control)
         {
-            _progress = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(96, RadialMenuUtility.Colors.ProgressRadial, RadialMenuUtility.Colors.ProgressRadial, Position.Absolute));
-            Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.OuterBorder, Position.Absolute));
-            Add(RadialMenuUtility.Prefabs.NewRadialText(out _text, 0, Position.Absolute));
+            _progress = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(96, RadialMenuUtility.Colors.ProgressRadial, RadialMenuUtility.Colors.ProgressRadial, UnityEngine.UIElements.Position.Absolute));
+            Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.OuterBorder, UnityEngine.UIElements.Position.Absolute));
+            Add(RadialMenuUtility.Prefabs.NewRadialText(out _text, 0, UnityEngine.UIElements.Position.Absolute));
             _arrow = this.MyAdd(GenerateArrow());
 
             ShowValue(Get);
@@ -66,7 +66,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
 
         private static VisualElement GenerateArrow()
         {
-            var container = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } };
+            var container = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UnityEngine.UIElements.Position.Absolute } };
             var element = container.MyAdd(new VisualElement
             {
                 pickingMode = PickingMode.Ignore,
@@ -76,7 +76,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
                     height = 20,
                     backgroundColor = RadialMenuUtility.Colors.ProgressRadial,
                     top = -65,
-                    position = Position.Absolute
+                    position = UnityEngine.UIElements.Position.Absolute
                 }
             }).MyBorder(2f, 0f, RadialMenuUtility.Colors.ProgressBorder);
             element.transform.rotation = Quaternion.Euler(0, 0, 45);

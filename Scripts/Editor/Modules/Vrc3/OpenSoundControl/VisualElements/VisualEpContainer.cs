@@ -9,7 +9,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElem
     {
         private readonly Dictionary<EndpointControl, VisualElement> _elements = new Dictionary<EndpointControl, VisualElement>();
 
-        public VisualEpContainer() => style.position = Position.Absolute;
+        public VisualEpContainer() => style.position = UnityEngine.UIElements.Position.Absolute;
 
         protected override bool RenderCondition(ModuleVrc3 module, RadialMenu menu)
         {

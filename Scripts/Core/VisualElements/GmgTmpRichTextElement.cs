@@ -89,7 +89,7 @@ namespace GestureManager.Scripts.Core.VisualElements
         public GmgTmpRichTextElement()
         {
             Add(new TextElement { pickingMode = PickingMode.Ignore, text = "" });
-            Add(_textHolder = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } });
+            Add(_textHolder = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UnityEngine.UIElements.Position.Absolute } });
             style.alignItems = Align.Center;
             _textHolder.style.alignItems = Align.Center;
         }

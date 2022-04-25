@@ -36,7 +36,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElem
         {
             style =
             {
-                position = Position.Absolute,
+                position = UnityEngine.UIElements.Position.Absolute,
                 width = InnerSize,
                 height = InnerSize
             }

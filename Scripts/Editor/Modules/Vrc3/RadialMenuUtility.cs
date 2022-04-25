@@ -51,7 +51,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         width = size,
                         height = 2,
                         backgroundColor = Colors.RadialBorder,
-                        position = Position.Absolute
+                        position = UnityEngine.UIElements.Position.Absolute
                     }
                 };
             }
@@ -77,7 +77,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         left = x - hSize,
                         top = y - hSize,
                         backgroundImage = icon,
-                        position = Position.Absolute
+                        position = UnityEngine.UIElements.Position.Absolute
                     }
                 }.With(new TextElement
                 {
@@ -105,20 +105,20 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         left = -width / 2,
                         top = -height / 2 - 10,
                         backgroundColor = Color.clear,
-                        position = Position.Absolute,
+                        position = UnityEngine.UIElements.Position.Absolute,
                         alignItems = Align.Center,
                         justifyContent = Justify.Center
                     }
                 };
             }
 
-            internal static GmgCircleElement NewCircle(float size, Color color, Color border, Position position = default) => SetCircle(new GmgCircleElement(), size, color, color, border, position);
+            internal static GmgCircleElement NewCircle(float size, Color color, Color border, UnityEngine.UIElements.Position position = default) => SetCircle(new GmgCircleElement(), size, color, color, border, position);
 
-            internal static GmgCircleElement NewCircle(float size, Color centerColor, Color color, Color border, Position position = default) => SetCircle(new GmgCircleElement(), size, centerColor, color, border, position);
+            internal static GmgCircleElement NewCircle(float size, Color centerColor, Color color, Color border, UnityEngine.UIElements.Position position = default) => SetCircle(new GmgCircleElement(), size, centerColor, color, border, position);
 
-            internal static GmgCircleElement SetCircle(GmgCircleElement element, float size, Color color, Color border, Position position = default) => SetCircle(element, size, color, color, border, position);
+            internal static GmgCircleElement SetCircle(GmgCircleElement element, float size, Color color, Color border, UnityEngine.UIElements.Position position = default) => SetCircle(element, size, color, color, border, position);
 
-            private static GmgCircleElement SetCircle(GmgCircleElement element, float size, Color centerColor, Color color, Color border, Position position = default)
+            private static GmgCircleElement SetCircle(GmgCircleElement element, float size, Color centerColor, Color color, Color border, UnityEngine.UIElements.Position position = default)
             {
                 element.BorderWidth = 2;
                 element.VertexColor = color;
@@ -132,12 +132,12 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 return element;
             }
 
-            internal static VisualElement NewRadialText(out TextElement text, int top, Position position = default)
+            internal static VisualElement NewRadialText(out TextElement text, int top, UnityEngine.UIElements.Position position = default)
             {
                 return SetRadialText(new VisualElement(), out text, top, position);
             }
 
-            internal static VisualElement SetRadialText(VisualElement element, out TextElement text, int top, Position position = default)
+            internal static VisualElement SetRadialText(VisualElement element, out TextElement text, int top, UnityEngine.UIElements.Position position = default)
             {
                 element.style.width = 50;
                 element.style.height = 20;
@@ -169,7 +169,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         left = 60,
                         top = 50,
                         backgroundColor = Colors.SubIcon,
-                        position = Position.Absolute,
+                        position = UnityEngine.UIElements.Position.Absolute,
                         justifyContent = Justify.Center,
                         alignItems = Align.Center
                     }

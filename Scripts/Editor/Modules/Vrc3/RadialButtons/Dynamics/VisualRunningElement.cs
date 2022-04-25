@@ -21,7 +21,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons.Dynamics
                     height = 50,
                     left = -25,
                     top = -25,
-                    position = Position.Absolute,
+                    position = UnityEngine.UIElements.Position.Absolute,
                     backgroundImage = ModuleVrc3Styles.RunningParam
                 }
             });

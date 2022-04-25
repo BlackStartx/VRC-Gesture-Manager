@@ -15,7 +15,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElem
             VisualElement center;
             TextElement horizontal;
 
-            style.position = Position.Absolute;
+            style.position = UnityEngine.UIElements.Position.Absolute;
             pickingMode = PickingMode.Ignore;
 
             Add(center = VisualEpStyles.Center);
@@ -70,7 +70,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElem
 
             private static TextElement Create(TextAnchor anchor) => new TextElement
             {
-                style = { color = Color.white, position = Position.Absolute, fontSize = 10, width = VisualEpStyles.InnerSize - 8, marginLeft = 3, unityTextAlign = anchor }
+                style = { color = Color.white, position = UnityEngine.UIElements.Position.Absolute, fontSize = 10, width = VisualEpStyles.InnerSize - 8, marginLeft = 3, unityTextAlign = anchor }
             };
 
             public void SetHeight(float childHeight)

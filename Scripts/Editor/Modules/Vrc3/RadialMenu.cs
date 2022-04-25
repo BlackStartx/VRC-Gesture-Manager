@@ -317,16 +317,16 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         {
             style.alignItems = Align.Center;
             style.justifyContent = Justify.Center;
-            style.position = Position.Absolute;
+            style.position = UnityEngine.UIElements.Position.Absolute;
             pickingMode = PickingMode.Ignore;
 
             _radial = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(Size, RadialMenuUtility.Colors.RadialCenter, RadialMenuUtility.Colors.RadialMiddle, RadialMenuUtility.Colors.RadialBorder));
 
-            _borderHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } });
-            _radial.MyAdd(RadialMenuUtility.Prefabs.NewCircle((int)InnerSize, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.OuterBorder, Position.Absolute));
+            _borderHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UnityEngine.UIElements.Position.Absolute } });
+            _radial.MyAdd(RadialMenuUtility.Prefabs.NewCircle((int)InnerSize, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.OuterBorder, UnityEngine.UIElements.Position.Absolute));
 
-            _dataHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } });
-            _puppetHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } });
+            _dataHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UnityEngine.UIElements.Position.Absolute } });
+            _puppetHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UnityEngine.UIElements.Position.Absolute } });
             _radial.MyAdd(_cursor);
 
             _cursor.SetData(Clamp, ClampReset, (int)(InnerSize / 2f), (int)(Size / 2f), _radial);

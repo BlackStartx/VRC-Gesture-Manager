@@ -13,19 +13,19 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base
 
         protected BaseAxisPuppet(RadialMenuControl control) : base(140, control)
         {
-            var holder = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } });
+            var holder = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UnityEngine.UIElements.Position.Absolute } });
             holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 45));
             holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 135));
             holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 225));
             holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 315));
-            Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.OuterBorder, Position.Absolute));
+            Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.OuterBorder, UnityEngine.UIElements.Position.Absolute));
             _labels = control.GetSubLabels();
         }
 
         public override void AfterCursor()
         {
             const int v = 50;
-            var holder = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } });
+            var holder = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UnityEngine.UIElements.Position.Absolute } });
             holder.Add(RadialMenuUtility.Prefabs.NewIconText(0, -v, 24, LabelIcon(0, ModuleVrc3Styles.AxisUp), LabelText(0)));
             holder.Add(RadialMenuUtility.Prefabs.NewIconText(v, 0, 24, LabelIcon(1, ModuleVrc3Styles.AxisRight), LabelText(1)));
             holder.Add(RadialMenuUtility.Prefabs.NewIconText(0, v, 24, LabelIcon(2, ModuleVrc3Styles.AxisDown), LabelText(2)));
