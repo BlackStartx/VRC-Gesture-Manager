@@ -1,7 +1,8 @@
 ﻿#if VRC_SDK_VRCSDK3
-using GestureManager.Scripts.Core.Editor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using GestureManager.Scripts.Core.Editor;
+using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElements
 {
@@ -36,7 +37,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElem
         {
             style =
             {
-                position = Position.Absolute,
+                position = UIEPosition.Absolute,
                 width = InnerSize,
                 height = InnerSize
             }

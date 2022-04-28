@@ -46,7 +46,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
                     break;
                 case AnimatorControllerParameterType.Trigger:
                 case AnimatorControllerParameterType.Bool:
-                    _animator.SetBool(HashId, value != 0f);
+                    _animator.SetBool(HashId, value > 0.5f);
                     break;
                 default: throw new ArgumentOutOfRangeException();
             }

@@ -5,6 +5,8 @@ namespace GestureManager.Scripts.Editor
 {
     public static class GestureManagerStyles
     {
+        private const string BsxName = "BlackStartx";
+
         private static GUIStyle _bottomStyle;
         private static GUIStyle _emoteError;
         private static GUIStyle _guiGreenButton;
@@ -13,6 +15,7 @@ namespace GestureManager.Scripts.Editor
         private static GUIStyle _middleStyle;
         private static GUIStyle _plusButton;
         private static GUIStyle _header;
+        private static GUIStyle _toolHeader;
         private static GUIStyle _updateStyle;
         private static GUIStyle _headerButton;
         private static GUIStyle _subHeader;
@@ -54,14 +57,6 @@ namespace GestureManager.Scripts.Editor
             fontSize = 12,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.UpperCenter
-        });
-
-        internal static GUIStyle BottomStyle => _bottomStyle ?? (_bottomStyle = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = 11,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.UpperRight,
-            padding = new RectOffset(5, 5, 5, 5)
         });
 
         internal static GUIStyle MiddleStyle => _middleStyle ?? (_middleStyle = new GUIStyle(GUI.skin.label)
@@ -117,11 +112,27 @@ namespace GestureManager.Scripts.Editor
             padding = new RectOffset(10, 10, 10, 10)
         });
 
+        internal static GUIStyle ToolHeader => _toolHeader ?? (_toolHeader = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 15,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            padding = new RectOffset(10, 10, 5, 5)
+        });
+
         public static GUIStyle HeaderButton => _headerButton ?? (_headerButton = new GUIStyle(GUI.skin.button)
         {
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
             margin = new RectOffset(0, 10, 12, 0)
+        });
+
+        private static GUIStyle BottomStyle => _bottomStyle ?? (_bottomStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 11,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.UpperRight,
+            padding = new RectOffset(5, 5, 5, 5)
         });
 
         internal static GUIStyle SubHeader => _subHeader ?? (_subHeader = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
@@ -240,5 +251,7 @@ namespace GestureManager.Scripts.Editor
                 }
             }
         }
+
+        public static void Sign(string category = "Script") => GUILayout.Label($"{category} made by {BsxName}", BottomStyle);
     }
 }

@@ -1,5 +1,7 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System;
+using GestureManager.Scripts.Core.Editor;
+using UnityEditor;
 using UnityEngine;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
@@ -7,6 +9,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
     public abstract class Vrc3Param
     {
         public readonly AnimatorControllerParameterType Type;
+        private readonly Func<float, float> _converted;
         protected readonly int HashId;
         public readonly string Name;
 
@@ -17,25 +20,28 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
             Name = name;
             Type = type;
             HashId = Animator.StringToHash(Name);
+            _converted = GenerateConverter();
         }
 
         public void Set(ModuleVrc3 module, float value)
         {
-            if (Is(value)) return;
+            if (Is(value = _converted(value))) return;
             module.OscModule.OnParameterChange(this, value);
             InternalSet(value);
             OnChange?.Invoke(this, value);
-            foreach (var menu in module.RadialMenus.Values) menu.UpdateValue(Name, value);
+            foreach (var menu in module.Radials) menu.UpdateValue(Name, value);
         }
 
         private void Set(ModuleVrc3 module, bool value) => Set(module, value ? 1f : 0f);
 
-        public void Set(ModuleVrc3 module, bool? value)
+        private void Set(ModuleVrc3 module, int value) => Set(module, (float)value);
+
+        public void Set(ModuleVrc3 module, float? value)
         {
             if (value.HasValue) Set(module, value.Value);
         }
 
-        public void Set(ModuleVrc3 module, float? value)
+        public void Set(ModuleVrc3 module, bool? value)
         {
             if (value.HasValue) Set(module, value.Value);
         }
@@ -78,7 +84,42 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
                     return (null, ((int)Get()).ToString());
                 case AnimatorControllerParameterType.Bool:
                 case AnimatorControllerParameterType.Trigger:
-                    return Get() < 0.5f ? (Color.red, "False") : (Color.green, "True");
+                    return Get() > 0.5f ? (Color.green, "True") : (Color.red, "False");
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public void FieldTuple(ModuleVrc3 module)
+        {
+            var rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label);
+            switch (Type)
+            {
+                case AnimatorControllerParameterType.Float:
+                    if (GmgLayoutHelper.UnityFieldEnterListener(Get(), module, rect, EditorGUI.FloatField, Set, module.Edit)) module.Edit = null;
+                    break;
+                case AnimatorControllerParameterType.Int:
+                    if (GmgLayoutHelper.UnityFieldEnterListener((int)Get(), module, rect, EditorGUI.IntField, Set, module.Edit)) module.Edit = null;
+                    break;
+                case AnimatorControllerParameterType.Bool:
+                case AnimatorControllerParameterType.Trigger:
+                    Set(module, Get() < 0.5f);
+                    module.Edit = null;
+                    break;
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private Func<float, float> GenerateConverter()
+        {
+            switch (Type)
+            {
+                case AnimatorControllerParameterType.Float:
+                    return value => value;
+                case AnimatorControllerParameterType.Int:
+                    return value => (int)value;
+                case AnimatorControllerParameterType.Bool:
+                case AnimatorControllerParameterType.Trigger:
+                    return value => value > 0.5f ? 1f : 0f;
                 default: throw new ArgumentOutOfRangeException();
             }
         }

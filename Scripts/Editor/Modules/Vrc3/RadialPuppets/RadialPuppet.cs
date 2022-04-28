@@ -1,15 +1,18 @@
 ﻿#if VRC_SDK_VRCSDK3
+using UnityEngine;
+using UnityEngine.UIElements;
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Core.VisualElements;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base;
-using UnityEngine;
-using UnityEngine.UIElements;
+using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
 {
     public class RadialPuppet : BasePuppet
     {
+        internal override float Clamp => 20F;
+
         private readonly TextElement _text;
         private readonly VisualElement _arrow;
         private readonly GmgCircleElement _progress;
@@ -18,9 +21,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
 
         public RadialPuppet(RadialMenuControl control) : base(100, control)
         {
-            _progress = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(96, RadialMenuUtility.Colors.ProgressRadial, RadialMenuUtility.Colors.ProgressRadial, Position.Absolute));
-            Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.OuterBorder, Position.Absolute));
-            Add(RadialMenuUtility.Prefabs.NewRadialText(out _text, 0, Position.Absolute));
+            _progress = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(96, RadialMenuUtility.Colors.CustomSelected, RadialMenuUtility.Colors.CustomSelected, UIEPosition.Absolute));
+            Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
+            Add(RadialMenuUtility.Prefabs.NewRadialText(out _text, 0, UIEPosition.Absolute));
             _arrow = this.MyAdd(GenerateArrow());
 
             ShowValue(Get);
@@ -39,9 +42,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
             if (Control.GetSubParameterName(0) == pName) ShowValue(Control.NonAmplifiedValue(value));
         }
 
-        public override void Update(Vector2 mouse, RadialCursor cursor)
+        public override void Update(RadialCursor cursor)
         {
-            if (cursor.GetRadial(mouse, out var radial)) TrySetValue(Get, radial);
+            if (cursor.GetRadial(Clamp, out var radial)) TrySetValue(Get, radial);
         }
 
         private void TrySetValue(float from, float to)
@@ -66,7 +69,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
 
         private static VisualElement GenerateArrow()
         {
-            var container = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } };
+            var container = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } };
             var element = container.MyAdd(new VisualElement
             {
                 pickingMode = PickingMode.Ignore,
@@ -74,9 +77,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
                 {
                     width = 20,
                     height = 20,
-                    backgroundColor = RadialMenuUtility.Colors.ProgressRadial,
+                    backgroundColor = RadialMenuUtility.Colors.CustomSelected,
                     top = -65,
-                    position = Position.Absolute
+                    position = UIEPosition.Absolute
                 }
             }).MyBorder(2f, 0f, RadialMenuUtility.Colors.ProgressBorder);
             element.transform.rotation = Quaternion.Euler(0, 0, 45);

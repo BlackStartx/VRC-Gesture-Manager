@@ -203,6 +203,14 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl
             _sender = null;
             if (!clear) return;
             lock (_queue) _queue.Clear();
+            ClearElements();
+        }
+
+        private void ClearElements()
+        {
+            foreach (var endpointControl in _chronological) endpointControl.Clear();
+            _dataDictionary.Clear();
+            _chronological.Clear();
         }
 
         public void Forget()

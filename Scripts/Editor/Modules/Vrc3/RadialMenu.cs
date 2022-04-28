@@ -6,10 +6,12 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using GestureManager.Scripts.Core.Editor;
+using GestureManager.Scripts.Core.VisualElements;
 using GestureManager.Scripts.Editor.Modules.Vrc3.Params;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base;
 using VRC.SDK3.Avatars.ScriptableObjects;
+using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3
 {
@@ -23,8 +25,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private const float InnerSize = Size / 3;
         private const float Clamp = Size / 3;
         private const float ClampReset = Size / 1.7f;
-
-        private const int CursorSize = 50;
 
         private const string TrackingDocumentationUrl = "https://docs.vrchat.com/docs/animator-parameters#trackingtype-parameter";
 
@@ -47,27 +47,35 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         }
 
         private readonly List<RadialPage> _menuPath = new List<RadialPage>();
+        private readonly List<GmgButton> _selectionTuple = new List<GmgButton>();
 
         private VRCExpressionsMenu _menu;
 
         internal GmgLayoutHelper.Toolbar ToolBar;
         internal GmgLayoutHelper.Toolbar DebugToolBar;
 
+        private bool Puppet => _puppet != null;
         private BasePuppet _puppet;
         private RadialDescription _radialDescription;
 
+
         private VisualElement _borderHolder;
+        private VisualElement _sliceHolder;
         private VisualElement _dataHolder;
+
         private VisualElement _puppetHolder;
         private VisualElement _radial;
 
         internal RadialMenuItem PressingButton;
         private RadialMenuItem[] _buttons;
 
-        public RadialMenu(ModuleVrc3 module)
+        private readonly bool _official;
+
+        public RadialMenu(ModuleVrc3 module, bool official = false)
         {
             Module = module;
-            _cursor = new RadialCursor(CursorSize);
+            _official = official;
+            _cursor = new RadialCursor();
             CreateRadial();
         }
 
@@ -78,16 +86,14 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private void OnClickStart()
         {
             if (_puppet != null) return;
-            var choice = _cursor.GetChoice(ExternalPosition(), _borderHolder);
-            if (choice != -1) _buttons[choice].OnClickStart();
+            if (_cursor.Selection != -1) _buttons[_cursor.Selection].OnClickStart();
         }
 
         private void OnClickEnd()
         {
             if (_puppet == null)
             {
-                var choice = _cursor.GetChoice(ExternalPosition(), _borderHolder);
-                if (choice != -1) _buttons[choice].OnClickEnd();
+                if (_cursor.Selection != -1) _buttons[_cursor.Selection].OnClickEnd();
                 PressingButton?.OnClickEnd();
             }
             else ClosePuppet();
@@ -103,9 +109,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             base.Render(root, rect);
             if (Event.current.type == EventType.MouseUp) OnClickEnd();
             HandleExternalInput();
+            if (!_official) GestureManagerStyles.Sign("UI");
         }
 
-        protected override bool RenderCondition(ModuleVrc3 module, RadialMenu menu) => menu.ToolBar.Selected != 2;
+        protected override bool RenderCondition(ModuleVrc3 module, RadialMenu menu) => menu.ToolBar.Selected == 0;
 
         /*
          * Puppets
@@ -120,8 +127,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             _puppetHolder.Add(_puppet);
             _puppet.style.left = _cursor.style.left;
             _puppet.style.top = _cursor.style.top;
-            _cursor.SetData(20F, float.MaxValue, (int)(InnerSize / 2f), (int)(Size / 2f), _puppet);
-            _cursor.Update(ExternalPosition());
+            _cursor.SetData(puppet.Clamp, float.MaxValue, (int)(InnerSize / 2f), (int)(Size / 2f), _puppet);
+            _cursor.Update(ExternalPosition(), _selectionTuple, Puppet);
             _puppet.AfterCursor();
         }
 
@@ -134,7 +141,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             _puppet.OnClose();
             _puppet = null;
 
-            _cursor.Update(Event.current.mousePosition);
+            _cursor.Update(Event.current.mousePosition, _selectionTuple, Puppet);
         }
 
         /*
@@ -199,6 +206,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             {
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "T Pose", Module.PoseT),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "AFK", GetParam(Vrc3DefaultParams.Afk)),
+                RadialMenuUtility.Buttons.RadialFromParam(this, Vrc3DefaultParams.Vise, GetParam(Vrc3DefaultParams.Vise), Module.ViseAmount),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "Seated", GetParam(Vrc3DefaultParams.Seated)),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "IK Pose", Module.PoseIK)
             });
@@ -223,9 +231,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 new RadialMenuButton(null, _supporters[0], ModuleVrc3Styles.SupportLike),
                 new RadialMenuButton(null, _supporters[1], ModuleVrc3Styles.SupportLike),
                 new RadialMenuButton(null, _supporters[2], ModuleVrc3Styles.SupportLike),
-                new RadialMenuButton(null, "You!", ModuleVrc3Styles.SupportHeart),
+                new RadialMenuButton(null, "You!", ModuleVrc3Styles.SupportHeart) { SelectedCenterColor = Color.red },
                 new RadialMenuButton(null, _supporters[3], ModuleVrc3Styles.SupportLike),
-                new RadialMenuButton(null, _supporters[4], ModuleVrc3Styles.SupportLike),
+                new RadialMenuButton(null, _supporters[4], ModuleVrc3Styles.SupportLike) { SelectedCenterColor = Color.blue },
                 new RadialMenuButton(null, _supporters[5], ModuleVrc3Styles.SupportLike)
             });
         }
@@ -245,15 +253,17 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         internal void SetMenu(VRCExpressionsMenu menu)
         {
             var isMain = menu == _menu;
-            var defaultButtonsCount = isMain ? 2 : 1;
+            var defaultButtonsInt = isMain ? 2 : 1;
+            var intCount = menu.controls.Count + defaultButtonsInt;
+            var intMax = defaultButtonsInt + 8;
 
-            SetButtons(menu.controls.Count + defaultButtonsCount, i =>
+            SetButtons(intCount, intMax, intCurrent =>
             {
-                switch (i)
+                switch (intCurrent)
                 {
                     case 0: return new RadialMenuButton(GoBack, "Back", isMain ? ModuleVrc3Styles.BackHome : ModuleVrc3Styles.Back);
                     case 1 when isMain: return new RadialMenuButton(Module.ResetAvatar, "Reset Avatar", ModuleVrc3Styles.Reset);
-                    default: return new RadialMenuControl(this, menu.controls[i - defaultButtonsCount]);
+                    default: return new RadialMenuControl(this, menu.controls[intCurrent - defaultButtonsInt]);
                 }
             });
         }
@@ -317,48 +327,65 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         {
             style.alignItems = Align.Center;
             style.justifyContent = Justify.Center;
-            style.position = Position.Absolute;
+            style.position = UIEPosition.Absolute;
             pickingMode = PickingMode.Ignore;
 
-            _radial = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(Size, RadialMenuUtility.Colors.RadialCenter, RadialMenuUtility.Colors.RadialMiddle, RadialMenuUtility.Colors.RadialBorder));
+            _radial = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { justifyContent = Justify.Center, position = UIEPosition.Absolute, alignItems = Align.Center } });
 
-            _borderHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } });
-            _radial.MyAdd(RadialMenuUtility.Prefabs.NewCircle((int)InnerSize, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.OuterBorder, Position.Absolute));
+            _sliceHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } });
+            _borderHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } });
+            _radial.MyAdd(RadialMenuUtility.Prefabs.NewCircle((int)InnerSize, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
 
-            _dataHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } });
-            _puppetHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } });
+            _dataHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } });
+            _puppetHolder = _radial.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } });
             _radial.MyAdd(_cursor);
 
             _cursor.SetData(Clamp, ClampReset, (int)(InnerSize / 2f), (int)(Size / 2f), _radial);
         }
 
-        private void SetButtons(int count, Func<int, RadialMenuItem> create) => SetButtons((from index in Enumerable.Range(0, count) select create(index)).ToArray());
+        private void SetButtons(int count, Func<int, RadialMenuItem> create) => SetButtons(count, 10, create);
+
+        private void SetButtons(int count, int max, Func<int, RadialMenuItem> create) => SetButtons((from iInt in Enumerable.Range(0, Math.Min(count, max)) select create(iInt)).ToArray());
 
         private void SetButtons(RadialMenuItem[] buttons)
         {
             _radialDescription = null;
             _buttons = buttons;
 
+            _selectionTuple.Clear();
             _borderHolder.Clear();
+            _sliceHolder.Clear();
             _dataHolder.Clear();
 
             var step = 360f / _buttons.Length;
-            var current = step / 2 - 90;
+            var current = -step / 2;
+            var progress = 1f / _buttons.Length;
 
             var rStep = Mathf.PI * 2 / _buttons.Length;
             var rCurrent = Mathf.PI;
 
             foreach (var item in _buttons)
             {
-                item.Create(Size);
-                _borderHolder.MyAdd(item.Border).transform.rotation = Quaternion.Euler(0, 0, current);
+                item.Create();
+
+                var circleHolder = new VisualElement();
+                var circle = circleHolder.MyAdd(RadialMenuUtility.Prefabs.NewSlice(Size, RadialMenuUtility.Colors.RadialCenter, RadialMenuUtility.Colors.CustomMain, RadialMenuUtility.Colors.CustomBorder));
+                circle.Progress = progress;
+
+                _sliceHolder.MyAdd(circleHolder).transform.rotation = Quaternion.Euler(0, 0, current);
+                _borderHolder.MyAdd(RadialMenuUtility.Prefabs.NewBorder(Size / 2)).transform.rotation = Quaternion.Euler(0, 0, current - 90);
 
                 item.DataHolder.transform.position = new Vector3(Mathf.Sin(rCurrent) * Size / 3, Mathf.Cos(rCurrent) * Size / 3, 0);
 
                 _dataHolder.MyAdd(item.DataHolder);
+                _selectionTuple.Add(new GmgButton { Button = item, Data = item.DataHolder, CircleElement = circle });
+
                 current += step;
                 rCurrent -= rStep;
             }
+
+            _cursor.Selection = _cursor.GetChoice(buttons.Length, Puppet);
+            if (_cursor.Selection != -1) RadialCursor.Sel(_selectionTuple[_cursor.Selection], true);
         }
 
         private void HandleExternalInput()
@@ -366,8 +393,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             if (Event.current.type == EventType.Layout) return;
 
             var mouseVector = ExternalPosition();
-            _cursor.Update(mouseVector);
-            _puppet?.Update(mouseVector, _cursor);
+            _cursor.Update(mouseVector, _selectionTuple, Puppet);
+            _puppet?.Update(_cursor);
         }
 
         internal void UpdateValue(string pName, float value)
@@ -380,11 +407,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         {
             if (string.IsNullOrEmpty(pName)) return false;
 
-            var list = _menuPath.TakeWhile(menu => menu.Param?.Name != pName || RadialMenuUtility.Is(menu.Value, value)).ToList();
+            var list = _menuPath.TakeWhile(page => page.Param?.Name != pName || RadialMenuUtility.Is(page.Value, value)).ToList();
             if (list.Count == _menuPath.Count) return false;
 
-            var count = _menuPath.Count;
-            for (var i = list.Count; i < count; i++) RemoveMenu(list.Count);
+            for (var i = list.Count; i < _menuPath.Count; i++) RemoveMenu(list.Count);
             _menuPath[_menuPath.Count - 1].Open();
             return true;
         }
@@ -395,6 +421,13 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 if (item is RadialMenuDynamic dynamic)
                     dynamic.CheckRunningUpdate();
         }
+    }
+
+    public class GmgButton
+    {
+        internal GmgCircleElement CircleElement;
+        internal RadialMenuItem Button;
+        internal VisualElement Data;
     }
 }
 #endif

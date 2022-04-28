@@ -9,7 +9,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes
         public static Vrc3TestMode Enable(ModuleVrc3 module)
         {
             module.DummyMode = new Vrc3TestMode(module);
-            foreach (var radialMenu in module.RadialMenus.Values) radialMenu.MainMenuPrefab();
+            foreach (var radialMenu in module.Radials) radialMenu.MainMenuPrefab();
             return module.DummyMode as Vrc3TestMode;
         }
 

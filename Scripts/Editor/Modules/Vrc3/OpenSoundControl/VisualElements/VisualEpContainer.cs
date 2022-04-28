@@ -1,7 +1,8 @@
 ﻿#if VRC_SDK_VRCSDK3
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using System.Collections.Generic;
+using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElements
 {
@@ -9,7 +10,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElem
     {
         private readonly Dictionary<EndpointControl, VisualElement> _elements = new Dictionary<EndpointControl, VisualElement>();
 
-        public VisualEpContainer() => style.position = Position.Absolute;
+        public VisualEpContainer() => style.position = UIEPosition.Absolute;
 
         protected override bool RenderCondition(ModuleVrc3 module, RadialMenu menu)
         {

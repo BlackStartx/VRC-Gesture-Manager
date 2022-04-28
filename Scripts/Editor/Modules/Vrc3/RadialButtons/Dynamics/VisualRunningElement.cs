@@ -1,6 +1,7 @@
 ﻿#if VRC_SDK_VRCSDK3
 using UnityEngine;
 using UnityEngine.UIElements;
+using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons.Dynamics
 {
@@ -21,7 +22,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons.Dynamics
                     height = 50,
                     left = -25,
                     top = -25,
-                    position = Position.Absolute,
+                    position = UIEPosition.Absolute,
                     backgroundImage = ModuleVrc3Styles.RunningParam
                 }
             });

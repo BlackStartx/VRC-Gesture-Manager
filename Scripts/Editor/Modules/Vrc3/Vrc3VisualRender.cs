@@ -27,7 +27,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             parent?.Remove(this);
         }
 
-        protected abstract bool RenderCondition(ModuleVrc3 module, RadialMenu menu);
+        protected abstract bool RenderCondition(ModuleVrc3 module, RadialMenu meu);
 
         public void CheckCondition(ModuleVrc3 module, RadialMenu menu)
         {

@@ -1,7 +1,8 @@
 ﻿#if VRC_SDK_VRCSDK3
-using GestureManager.Scripts.Core.Editor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using GestureManager.Scripts.Core.Editor;
+using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3
 {
@@ -35,7 +36,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             _target = target;
 
             style.justifyContent = Justify.Center;
-            style.position = Position.Absolute;
+            style.position = UIEPosition.Absolute;
             pickingMode = PickingMode.Ignore;
 
             CreateWeightController();
@@ -43,14 +44,14 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         private void CreateWeightController()
         {
-            _slider = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { opacity = 0f, position = Position.Absolute, justifyContent = Justify.Center } });
-            _right = _slider.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { backgroundColor = Color.gray, height = 10, position = Position.Absolute, right = 0 } }).MyBorder(1, 5, Color.black);
-            _left = _slider.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { backgroundColor = RadialMenuUtility.Colors.ProgressRadial, height = 10, width = 10, position = Position.Absolute, left = 0 } }).MyBorder(1, 5, Color.black);
-            _dot = _slider.MyAdd(RadialMenuUtility.Prefabs.NewCircle(16, RadialMenuUtility.Colors.RadialCenter, RadialMenuUtility.Colors.RadialMiddle, RadialMenuUtility.Colors.RadialBorder, Position.Absolute));
+            _slider = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { opacity = 0f, position = UIEPosition.Absolute, justifyContent = Justify.Center } });
+            _right = _slider.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { backgroundColor = Color.gray, height = 10, position = UIEPosition.Absolute, right = 0 } }).MyBorder(1, 5, Color.black);
+            _left = _slider.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { backgroundColor = RadialMenuUtility.Colors.CustomSelected, height = 10, width = 10, position = UIEPosition.Absolute, left = 0 } }).MyBorder(1, 5, Color.black);
+            _dot = _slider.MyAdd(RadialMenuUtility.Prefabs.NewCircle(16, RadialMenuUtility.Colors.RadialCenter, RadialMenuUtility.Colors.CustomMain, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
 
-            _textHolder = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { opacity = 1f, position = Position.Absolute, justifyContent = Justify.Center, unityTextAlign = TextAnchor.MiddleCenter, alignItems = Align.Center, flexDirection = FlexDirection.Row } });
+            _textHolder = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { opacity = 1f, position = UIEPosition.Absolute, justifyContent = Justify.Center, unityTextAlign = TextAnchor.MiddleCenter, alignItems = Align.Center, flexDirection = FlexDirection.Row } });
             _textHolder.MyAdd(new TextElement { pickingMode = PickingMode.Ignore, text = "Weight: ", style = { fontSize = 12, height = 15 } });
-            _textWeight = _textHolder.MyAdd(new TextElement { pickingMode = PickingMode.Ignore, text = "100%", style = { fontSize = 15, color = RadialMenuUtility.Colors.ProgressRadial, height = 15 } });
+            _textWeight = _textHolder.MyAdd(new TextElement { pickingMode = PickingMode.Ignore, text = "100%", style = { fontSize = 15, color = RadialMenuUtility.Colors.CustomSelected, height = 15 } });
         }
 
         public override void Render(VisualElement root, Rect rect)
@@ -69,8 +70,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             if (Drag) Update(Event.current.mousePosition);
             SetWeight(_controller.Module.GetParam(_target)?.Get() ?? 0f);
 
-            rect.center += new Vector2((rect.width - _slider.style.width.value.value) / 2, -5);
-            rect.width = _slider.style.width.value.value;
+            rect.center += new Vector2((rect.width - _slider.style.width.value.value) / 2 - 10, -10);
+            rect.width = _slider.style.width.value.value + 20f;
+            rect.height += 10f;
             if (Event.current.type == EventType.MouseDown) CheckDragStart(rect);
         }
 

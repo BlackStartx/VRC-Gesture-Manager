@@ -64,7 +64,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar
                 switch (module.DebugToolBar)
                 {
                     case 0:
-                        ParametersLayout(width, module.Params);
+                        ParametersLayout(module, width);
                         break;
                     case 1:
                         TrackingControlLayout(width, data, module.TrackingControls, module.LocomotionDisabled, module.PoseSpace);
@@ -79,7 +79,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar
             {
                 width /= 3;
                 GUILayout.BeginHorizontal();
-                ParametersLayout(width, module.Params);
+                ParametersLayout(module, width);
                 TrackingControlLayout(width, data, module.TrackingControls, module.LocomotionDisabled, module.PoseSpace);
                 AnimatorsLayout(width, data);
                 GUILayout.EndHorizontal();
@@ -96,7 +96,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar
                 GUILayout.FlexibleSpace();
             }
 
-            private static void ParametersLayout(float width, Dictionary<string, Vrc3Param> moduleParams)
+            private static void ParametersLayout(ModuleVrc3 module, float width)
             {
                 var inWidth = width / 3;
                 GUILayout.BeginVertical(GUILayout.Width(width));
@@ -104,20 +104,32 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar
                 GUILayout.BeginHorizontal();
                 GUILayout.BeginVertical();
                 GUILayout.Label("Parameter", GestureManagerStyles.GuiDebugTitle, GUILayout.Width(inWidth));
-                foreach (var paramPair in moduleParams) GUILayout.Label(paramPair.Key);
+                foreach (var paramPair in module.Params) GUILayout.Label(paramPair.Key);
                 GUILayout.EndVertical();
 
                 GUILayout.BeginVertical();
                 GUILayout.Label("Type", GestureManagerStyles.GuiDebugTitle, GUILayout.Width(inWidth));
-                foreach (var paramPair in moduleParams) GUILayout.Label(paramPair.Value.Type.ToString());
+                foreach (var paramPair in module.Params) GUILayout.Label(paramPair.Value.Type.ToString());
                 GUILayout.EndVertical();
 
                 GUILayout.BeginVertical();
                 GUILayout.Label("Value", GestureManagerStyles.GuiDebugTitle, GUILayout.Width(inWidth));
-                foreach (var paramPair in moduleParams) GmgLayoutHelper.GuiLabel(paramPair.Value.LabelTuple());
+                foreach (var paramPair in module.Params) ParametersLayoutValue(module, paramPair);
                 GUILayout.EndVertical();
                 GUILayout.EndHorizontal();
                 GUILayout.EndVertical();
+            }
+
+            private static void ParametersLayoutValue(ModuleVrc3 module, KeyValuePair<string, Vrc3Param> paramPair)
+            {
+                if (module.Edit != paramPair.Key)
+                {
+                    GmgLayoutHelper.GuiLabel(paramPair.Value.LabelTuple());
+                    var rect = GUILayoutUtility.GetLastRect();
+                    rect.x += rect.width - 15;
+                    if (GUI.Toggle(rect, false, "")) module.Edit = paramPair.Key;
+                }
+                else paramPair.Value.FieldTuple(module);
             }
 
             private static void TrackingControlLayout(float width, Dictionary<VRCAvatarDescriptor.AnimLayerType, ModuleVrc3.LayerData> data, Dictionary<string, VRC_AnimatorTrackingControl.TrackingType> trackingControls, bool locomotionDisabled, bool poseSpace)

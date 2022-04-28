@@ -25,12 +25,25 @@ namespace GestureManager.Scripts.Editor
 
         private const int AntiAliasing = 4;
 
-        private const string Version = "3.4.0";
-        private const string BsxName = "BlackStartx";
+        private const string Version = "3.5.0";
         private const string Discord = "BlackStartx#6593";
 
         private const string VersionURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.v3rsion";
         private const string DiscordURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.discord";
+
+        public static void CreateAndPing(GestureManager manager = null)
+        {
+            if (!manager) manager = new GameObject("GestureManager").AddComponent<GestureManager>();
+            Selection.activeObject = manager;
+            EditorGUIUtility.PingObject(manager);
+        }
+
+        private void Awake()
+        {
+            if (!Manager.gameObject.GetComponent<VRC.SDKBase.VRC_AvatarDescriptor>()) return;
+            DestroyImmediate(Manager);
+            CreateAndPing();
+        }
 
         private void OnEnable()
         {
@@ -48,9 +61,10 @@ namespace GestureManager.Scripts.Editor
 
         private void ManagerGui()
         {
-            GUILayout.Label("Gesture Manager 3.4", GestureManagerStyles.TitleStyle);
-            if (!_updater.Checked) _updater.Check();
-            else if (_updater.Different) _updater.Draw(GUILayoutUtility.GetLastRect());
+            if (!Manager) return;
+
+            GUILayout.Label("Gesture Manager 3.5", GestureManagerStyles.TitleStyle);
+            _updater.Gui();
 
             if (Manager.Module != null)
             {
@@ -60,19 +74,20 @@ namespace GestureManager.Scripts.Editor
             }
             else SetupGui();
 
-            GUILayout.Label($"Script made by {BsxName}", GestureManagerStyles.BottomStyle);
+            GestureManagerStyles.Sign();
         }
 
         private void SetupGui()
         {
-            if (EditorApplication.isPlaying)
+            var isLoaded = Manager.gameObject.scene.isLoaded;
+            if (EditorApplication.isPlaying && isLoaded)
             {
                 if (!Manager || !Manager.enabled || !Manager.gameObject.activeInHierarchy) GUILayout.Label("I'm disabled!", GestureManagerStyles.TextError);
                 else CheckGui();
             }
             else
             {
-                GUILayout.Label("I'm an useless script if you aren't on play mode :D", GestureManagerStyles.MiddleStyle);
+                GUILayout.Label(isLoaded ? "I'm an useless script if you aren't on play mode :D" : "Drag & Drop me into the scene to start testing! ♥", GestureManagerStyles.MiddleStyle);
                 using (new GUILayout.HorizontalScope())
                 {
                     GUILayout.FlexibleSpace();
@@ -249,14 +264,14 @@ namespace GestureManager.Scripts.Editor
 
         private class PrefUpdater
         {
-            public bool Different => Ver != Version;
             private const string DayKey = "GM3 Update Day";
             private const string VerKey = "GM3 Update Ver";
 
             private int? _day;
             private int? _today;
             private string _version;
-            internal bool Checked;
+            private bool _checked;
+            private bool _higher;
 
             private int Day
             {
@@ -272,9 +287,18 @@ namespace GestureManager.Scripts.Editor
 
             private int Today => _today ?? (_today = DateTime.Now.Day).Value;
 
-            public void Check()
+            private bool Higher() => string.CompareOrdinal(Version, Ver) < 0;
+
+            public void Gui()
             {
-                Checked = true;
+                if (!_checked) Check();
+                else if (_higher) Draw(GUILayoutUtility.GetLastRect());
+            }
+
+            private void Check()
+            {
+                _checked = true;
+                _higher = Higher();
                 if (Day != Today) RunCheck();
             }
 
@@ -285,9 +309,10 @@ namespace GestureManager.Scripts.Editor
                 var (lastVersionString, _) = GetVersionInfo(versionString);
                 Ver = lastVersionString;
                 Day = Today;
+                _higher = Higher();
             }
 
-            internal void Draw(Rect rect)
+            private void Draw(Rect rect)
             {
                 rect.x += rect.width - 100;
                 rect.width = 100;

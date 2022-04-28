@@ -1,7 +1,8 @@
 ﻿#if VRC_SDK_VRCSDK3
-using GestureManager.Scripts.Core.Editor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using GestureManager.Scripts.Core.Editor;
+using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElements
 {
@@ -15,7 +16,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElem
             VisualElement center;
             TextElement horizontal;
 
-            style.position = Position.Absolute;
+            style.position = UIEPosition.Absolute;
             pickingMode = PickingMode.Ignore;
 
             Add(center = VisualEpStyles.Center);
@@ -70,7 +71,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElem
 
             private static TextElement Create(TextAnchor anchor) => new TextElement
             {
-                style = { color = Color.white, position = Position.Absolute, fontSize = 10, width = VisualEpStyles.InnerSize - 8, marginLeft = 3, unityTextAlign = anchor }
+                style = { color = Color.white, position = UIEPosition.Absolute, fontSize = 10, width = VisualEpStyles.InnerSize - 8, marginLeft = 3, unityTextAlign = anchor }
             };
 
             public void SetHeight(float childHeight)
@@ -82,19 +83,19 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElem
                 _value.style.height = childHeight;
             }
 
-            public void SetValue((float? min, float? value, float? max, object data) value) => SetValue(value.min, value.value, value.max, value.data);
+            public void SetValue((float? min, object value, float? max) value) => SetValue(value.min, value.value, value.max, EndpointControl.FloatValue(value.value));
 
-            private void SetValue(float? min, float? value, float? max, object data)
+            private void SetValue(float? min, object value, float? max, float? vFloat)
             {
-                _min.visible = value.HasValue;
-                _max.visible = value.HasValue;
-                _bar.visible = value.HasValue;
+                _min.visible = min.HasValue;
+                _max.visible = max.HasValue;
+                _bar.visible = vFloat.HasValue;
                 if (min.HasValue) _min.text = min.Value.ToString("F");
                 if (max.HasValue) _max.text = max.Value.ToString("F");
-                _value.text = value.HasValue ? value.Value.ToString("F") : EndpointControl.StringValue(data);
-                if (!value.HasValue) SetValue(false);
-                else if (min.HasValue && max.HasValue && !RadialMenuUtility.Is(min.Value, max.Value)) SetValue(min.Value, value.Value, max.Value);
-                else SetValue(value.Value > 0.5);
+                _value.text = $"{value}";
+                if (!vFloat.HasValue) return;
+                if (min.HasValue && max.HasValue && !RadialMenuUtility.Is(min.Value, max.Value)) SetValue(min.Value, vFloat.Value, max.Value);
+                else SetValue(vFloat.Value > 0.5);
             }
 
             private void SetValue(float min, float value, float max)

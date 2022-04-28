@@ -8,7 +8,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl
     public class EndpointControl
     {
         internal readonly string HorizontalEndpoint;
-        internal readonly List<(float? min, float? value, float? max, object data)> Values = new List<(float? min, float? value, float? max, object data)>();
+        internal readonly List<(float? min, object value, float? max)> Values = new List<(float? min, object value, float? max)>();
 
         private readonly List<VisualEp> _visualElements;
 
@@ -53,22 +53,12 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl
             }
         }
 
-        public static string StringValue(object value)
-        {
-            switch (value)
-            {
-                case string s: return s;
-                case char c: return c.ToString();
-                default: return "?";
-            }
-        }
-
         public void OnMessage(OscPacket.Message message)
         {
             for (var i = 0; i < message.Arguments.Count; i++)
             {
                 if (i < Values.Count) UpdateValue(i, message.Arguments[i]);
-                else Values.Add((null, FloatValue(message.Arguments[i]), null, message.Arguments[i]));
+                else Values.Add((null, message.Arguments[i], null));
             }
 
             foreach (var visual in _visualElements) visual.OnMessage(this);
@@ -77,14 +67,15 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl
         private void UpdateValue(int i, object argument)
         {
             var vFloat = FloatValue(argument);
-            if (!vFloat.HasValue) Values[i] = (Values[i].min, null, Values[i].max, argument);
-            else UpdateValue(i, vFloat.Value);
+            if (vFloat.HasValue) UpdateValue(i, vFloat.Value, argument);
+            else Values[i] = (Values[i].min, argument, Values[i].max);
         }
 
-        private void UpdateValue(int i, float value)
+        private void UpdateValue(int i, float fValue, object value)
         {
-            if (Values[i].value.HasValue && RadialMenuUtility.Is(Values[i].value.Value, value)) return;
-            Values[i] = (Mathf.Min(Values[i].min ?? Values[i].value ?? value, value, 0), value, Mathf.Max(Values[i].max ?? Values[i].value ?? value, value, 0), value);
+            var vFloat = FloatValue(Values[i].value);
+            if (vFloat.HasValue && RadialMenuUtility.Is(vFloat.Value, fValue)) return;
+            Values[i] = (Mathf.Min(Values[i].min ?? vFloat ?? fValue, fValue, 0), value, Mathf.Max(Values[i].max ?? vFloat ?? fValue, fValue, 0));
         }
 
         public VisualEp New()
@@ -92,6 +83,11 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl
             var visual = new VisualEp(this);
             _visualElements.Add(visual);
             return visual;
+        }
+
+        public void Clear()
+        {
+            foreach (var visual in _visualElements) visual.RemoveFromHierarchy();
         }
     }
 }

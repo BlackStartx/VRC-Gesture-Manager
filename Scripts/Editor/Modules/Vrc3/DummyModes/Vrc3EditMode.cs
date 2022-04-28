@@ -11,7 +11,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes
         public static void Enable(ModuleVrc3 module, IEnumerable<AnimationClip> originalClips)
         {
             module.DummyMode = new Vrc3EditMode(module, originalClips);
-            foreach (var radialMenu in module.RadialMenus.Values) radialMenu.MainMenuPrefab();
+            foreach (var radialMenu in module.Radials) radialMenu.MainMenuPrefab();
         }
 
         internal override string ModeName => "Edit";

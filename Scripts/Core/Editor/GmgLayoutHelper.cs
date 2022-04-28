@@ -12,11 +12,18 @@ namespace GestureManager.Scripts.Core.Editor
      * 
      * What you're looking at are some of the methods of my Unity Libraries.
      * They do not contains all the methods otherwise the UnityPackage would have been so much bigger.
+     *
+     * By the way, don't pay too much attention to the UnityFieldEnterListener, I kinda rushed it~ ^-^
+     * The concept behind it it's a Field that does not change its value until the user press Enter.
+     * The overcomplexity is due to Unity not being friendly with value resets... So I kinda had to workaround it.
      * 
      * P.S: Gmg stands for GestureManager~
      */
     public static class GmgLayoutHelper
     {
+        private static object _unityFieldEnterListenerData;
+        private static string _unityFieldEnterListenerName;
+
         public struct Toolbar
         {
             private GUIContent[] _contents;
@@ -33,10 +40,7 @@ namespace GestureManager.Scripts.Core.Editor
             actions[toolbar].Item2();
         }
 
-        public static IEnumerable<EditorWindow> GetInspectorWindows()
-        {
-            return Resources.FindObjectsOfTypeAll<EditorWindow>().Where(window => window.titleContent.text == "Inspector");
-        }
+        public static IEnumerable<EditorWindow> GetInspectorWindows() => Resources.FindObjectsOfTypeAll<EditorWindow>().Where(window => window.titleContent.text == "Inspector");
 
         public static void GuiLabel((Color? color, string text) tuple) => GuiLabel(tuple.color, tuple.text);
 
@@ -72,28 +76,70 @@ namespace GestureManager.Scripts.Core.Editor
             }
         }
 
+        public static bool UnityFieldEnterListener<T1, T2>(T1 initialText, T2 argument, Rect rect, Func<Rect, T1, T1> field, Action<T2, T1> onEscape, string controlName)
+        {
+            if (_unityFieldEnterListenerName != controlName) _unityFieldEnterListenerData = null;
+            var isEnter = Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter;
+            var isEscape = Event.current.keyCode == KeyCode.Escape;
+            _unityFieldEnterListenerName = controlName;
+            GUI.SetNextControlName(controlName);
+            GUI.FocusControl(controlName);
+            if (_unityFieldEnterListenerData == null) _unityFieldEnterListenerData = initialText;
+            var t = field(rect, _unityFieldEnterListenerData is T1 d ? d : default);
+            if (isEnter) onEscape(argument, _unityFieldEnterListenerData is T1 data ? data : default);
+            else _unityFieldEnterListenerData = t;
+            if (!isEnter && !isEscape) return false;
+            _unityFieldEnterListenerData = null;
+            GUI.SetNextControlName(controlName);
+            GUI.FocusControl(controlName);
+            EditorGUI.LabelField(Rect.zero, "");
+            return true;
+        }
+
+        /*
+         *  Rect Utils!!!
+         *  Rect Utils!!!
+         *  Rect Utils!!!
+         */
+
+        private static Rect SubtractWidthRight(Rect rect, int width, out Rect rectR)
+        {
+            rect.width -= width;
+            rectR = rect;
+            rectR.width = width;
+            rectR.x += rect.width;
+            return rect;
+        }
+
         /*
          *  Object Field!!!
          *  Object Field!!!
          *  Object Field!!!
          */
 
-        public static T ObjectField<T>(string label, T unityObject, Action<T> onObjectSet) where T : UnityEngine.Object
+        private static T ObjectField<T>(string label, T unityObject) where T : UnityEngine.Object
         {
-            return ObjectField(label, unityObject, onObjectSet, (oldObject, newObject) => onObjectSet(newObject), oldObject => onObjectSet(null));
+            if (label != null) return (T)EditorGUILayout.ObjectField(label, unityObject, typeof(T), true, null);
+            return (T)EditorGUILayout.ObjectField(unityObject, typeof(T), true, null);
         }
 
-        private static T ObjectField<T>(string label, T unityObject, Action<T> onObjectSet, Action<T, T> onObjectChange, Action<T> onObjectRemove) where T : UnityEngine.Object
+        public static T ObjectField<T>(string label, T unityObject, Action<T> onObjectSet) where T : UnityEngine.Object
         {
-            var oldObject = unityObject;
-
-            unityObject = (T)(label != null ? EditorGUILayout.ObjectField(label, unityObject, typeof(T), true, null) : EditorGUILayout.ObjectField(unityObject, typeof(T), true, null));
-            if (oldObject == unityObject) return unityObject;
-            if (!oldObject) onObjectSet(unityObject);
-            else if (!unityObject) onObjectRemove(oldObject);
-            else onObjectChange(oldObject, unityObject);
-
+            if (unityObject != (unityObject = ObjectField(label, unityObject))) onObjectSet(unityObject);
             return unityObject;
+        }
+
+        public static bool ButtonObjectField<T>(string label, T unityObject, char text, Action<T> onNewObjectDrop) where T : UnityEngine.Object
+        {
+            var rectL = SubtractWidthRight(GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label), 20, out var rectR);
+            if (unityObject != (unityObject = EditorGUI.ObjectField(rectL, label, unityObject, typeof(T), true) as T)) onNewObjectDrop?.Invoke(unityObject);
+            return GUI.Button(rectR, text.ToString());
+        }
+
+        public static Color ResetColorField(string label, Color current, Color reset)
+        {
+            var rectL = SubtractWidthRight(GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label), 20, out var rectR);
+            return GUI.Button(rectR, "X") ? reset : EditorGUI.ColorField(rectL, label, current);
         }
 
         public static void Divisor(int height)
@@ -113,6 +159,13 @@ namespace GestureManager.Scripts.Core.Editor
         {
             var backULong = value;
             return ulong.TryParse(EditorGUILayout.TextField(label, value.ToString()), out value) ? value : backULong;
+        }
+
+        public static bool ToggleRight(string label, bool active)
+        {
+            GUILayout.Label(label);
+            SubtractWidthRight(GUILayoutUtility.GetLastRect(), 15, out var rectR);
+            return GUI.Toggle(rectR, active, new GUIContent());
         }
 
         /*

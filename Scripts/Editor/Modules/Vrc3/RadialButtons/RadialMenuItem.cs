@@ -1,16 +1,19 @@
 ﻿#if VRC_SDK_VRCSDK3
+using System;
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Core.VisualElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
 {
     public abstract class RadialMenuItem
     {
         internal Color TextColor;
+        internal Color SelectedBorderColor = RadialMenuUtility.Colors.CustomSelected;
+        internal Color SelectedCenterColor = RadialMenuUtility.Colors.RadialSelColor;
 
-        public VisualElement Border;
         public VisualElement DataHolder;
         protected VisualElement Texture;
 
@@ -26,9 +29,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
             TextColor = Color.white;
         }
 
-        public void Create(float size)
+        public void Create()
         {
-            Border = RadialMenuUtility.Prefabs.NewBorder(size / 2);
             DataHolder = RadialMenuUtility.Prefabs.NewData(100, 100);
             Texture = DataHolder.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { width = 50, height = 50, backgroundImage = _texture } });
             if (_subIcon) DataHolder.Add(RadialMenuUtility.Prefabs.NewSubIcon(_subIcon));
@@ -41,6 +43,25 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
         public abstract void OnClickStart();
 
         public abstract void OnClickEnd();
+
+        [Obsolete] public VisualElement Border;
+        [Obsolete]
+        public void Create(float size)
+        {
+            Border = new VisualElement
+            {
+                pickingMode = PickingMode.Ignore,
+                
+                style =
+                {
+                    width = size / 2,
+                    height = 2,
+                    backgroundColor = RadialMenuUtility.Colors.RadialBorder,
+                    position = UIEPosition.Absolute
+                }
+            };
+            Create();
+        }
     }
 }
 #endif

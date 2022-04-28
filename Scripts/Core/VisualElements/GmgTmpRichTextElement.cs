@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace GestureManager.Scripts.Core.VisualElements
 {
@@ -89,7 +90,7 @@ namespace GestureManager.Scripts.Core.VisualElements
         public GmgTmpRichTextElement()
         {
             Add(new TextElement { pickingMode = PickingMode.Ignore, text = "" });
-            Add(_textHolder = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = Position.Absolute } });
+            Add(_textHolder = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } });
             style.alignItems = Align.Center;
             _textHolder.style.alignItems = Align.Center;
         }
@@ -109,6 +110,7 @@ namespace GestureManager.Scripts.Core.VisualElements
                 pickingMode = PickingMode.Ignore, text = Regex.Split(tokenInput, RegexTokenPattern)[0] + EvaluateToken(Regex.Match(tokenInput, RegexTokenPattern).Value)
             };
             if (child.text == "") return;
+            child.style.width = 100;
             _textHolder.Add(child);
         }
 

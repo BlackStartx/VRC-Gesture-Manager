@@ -1,42 +1,72 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Core.VisualElements;
 using GestureManager.Scripts.Editor.Modules.Vrc3.Params;
 using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.UIElements;
 using UnityEngine.Playables;
 using VRC.SDK3.Avatars.ScriptableObjects;
+using UIEPosition = UnityEngine.UIElements.Position;
 using ControlType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3
 {
     public static class RadialMenuUtility
     {
+        internal static Vector2 DataVector = new Vector2(-50, -60);
+
         public static class Colors
         {
+            internal static class Default
+            {
+                internal static readonly Color Main = new Color(0.14f, 0.18f, 0.2f);
+                internal static readonly Color Border = new Color(0.1f, 0.35f, 0.38f);
+                internal static readonly Color Selected = new Color(0.07f, 0.55f, 0.58f);
+            }
+
+            private const string MainKeyName = "GM3 Main Color";
+            private const string BorderKeyName = "GM3 Border Color";
+            private const string SelectedKeyName = "GM3 Selected Color";
+
+            private static Color PrefColor(string name, Color defaultColor) => ColorUtility.TryParseHtmlString(EditorPrefs.GetString(name), out var color) ? color : defaultColor;
+
             internal static readonly Color RadialTextBackground = new Color(0.11f, 0.11f, 0.11f, 0.49f);
-
-            internal static readonly Color ProgressRadial = new Color(0.07f, 0.55f, 0.58f);
-            internal static readonly Color ProgressBorder = new Color(0.06f, 0.79f, 0.83f);
-
-            internal static readonly Color OuterBorder = new Color(0.1f, 0.35f, 0.38f);
+            internal static readonly Color RadialSelColor = new Color(0.06f, 0.2f, 0.22f);
+            internal static readonly Color RadialCenter = new Color(0.06f, 0.27f, 0.29f);
+            internal static readonly Color RadialInner = new Color(0.21f, 0.24f, 0.27f);
+            internal static readonly Color RestartButton = new Color(1f, 0.72f, 0.41f);
             internal static readonly Color SubIcon = new Color(0.22f, 0.24f, 0.27f);
 
-            internal static readonly Color RadialBorder = new Color(0.1f, 0.35f, 0.38f);
-            internal static readonly Color RadialCenter = new Color(0.06f, 0.27f, 0.29f);
-            internal static readonly Color RadialMiddle = new Color(0.14f, 0.18f, 0.2f);
-            internal static readonly Color RadialInner = new Color(0.21f, 0.24f, 0.27f);
+            internal static Color Cursor => new Color(CustomMain.r, CustomMain.g, CustomMain.b, CustomMain.a - 0.3f);
+            internal static Color CursorBorder => new Color(CustomBorder.r, CustomBorder.g, CustomBorder.b, CustomBorder.a - 0.5f);
+            internal static Color ProgressBorder => CustomSelected * 1.5f;
 
-            internal static readonly Color Cursor = RadialMiddle;
-            internal static readonly Color CursorBorder = new Color(0.1f, 0.35f, 0.38f);
+            internal static Color CustomMain = PrefColor(MainKeyName, Default.Main);
+            internal static Color CustomBorder = PrefColor(BorderKeyName, Default.Border);
+            internal static Color CustomSelected = PrefColor(SelectedKeyName, Default.Selected);
 
-            internal static readonly Color RestartButton = new Color(1f, 0.72f, 0.41f);
+            public static void SaveColors(Color main, Color border, Color selected)
+            {
+                CustomMain = main;
+                CustomBorder = border;
+                CustomSelected = selected;
+                EditorPrefs.SetString(MainKeyName, $"#{ColorUtility.ToHtmlStringRGBA(main)}");
+                EditorPrefs.SetString(BorderKeyName, $"#{ColorUtility.ToHtmlStringRGBA(border)}");
+                EditorPrefs.SetString(SelectedKeyName, $"#{ColorUtility.ToHtmlStringRGBA(selected)}");
+            }
+
+            [Obsolete] internal static readonly Color OriginalCursorBorder = new Color(0.1f, 0.35f, 0.38f);
+            [Obsolete] internal static readonly Color OriginalCursor = new Color(0.14f, 0.18f, 0.2f);
+            [Obsolete] internal static readonly Color RadialBorder = new Color(0.1f, 0.35f, 0.38f);
+            [Obsolete] internal static readonly Color RadialMiddle = new Color(0.14f, 0.18f, 0.2f);
+            [Obsolete] internal static readonly Color OuterBorder = new Color(0.1f, 0.35f, 0.38f);
         }
 
         public static class Prefabs
@@ -50,8 +80,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                     {
                         width = size,
                         height = 2,
-                        backgroundColor = Colors.RadialBorder,
-                        position = Position.Absolute
+                        backgroundColor = Colors.CustomBorder,
+                        position = UIEPosition.Absolute
                     }
                 };
             }
@@ -60,6 +90,19 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             {
                 var element = NewBorder(size);
                 element.transform.rotation = Quaternion.Euler(0, 0, euler);
+                return element;
+            }
+
+            internal static VisualElement NewCircleBorder(float size, Color border, UIEPosition position = default) => SetCircleBorder(new VisualElement(), size, border, position);
+
+            private static VisualElement SetCircleBorder(VisualElement element, float size, Color border, UIEPosition position = default)
+            {
+                element.MyBorder(2, size, border);
+                element.pickingMode = PickingMode.Ignore;
+                element.style.position = position;
+                element.style.alignItems = Align.Center;
+                element.style.width = element.style.height = size;
+                element.style.justifyContent = Justify.Center;
                 return element;
             }
 
@@ -77,7 +120,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         left = x - hSize,
                         top = y - hSize,
                         backgroundImage = icon,
-                        position = Position.Absolute
+                        position = UIEPosition.Absolute
                     }
                 }.With(new TextElement
                 {
@@ -105,20 +148,37 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         left = -width / 2,
                         top = -height / 2 - 10,
                         backgroundColor = Color.clear,
-                        position = Position.Absolute,
+                        position = UIEPosition.Absolute,
                         alignItems = Align.Center,
                         justifyContent = Justify.Center
                     }
                 };
             }
 
-            internal static GmgCircleElement NewCircle(float size, Color color, Color border, Position position = default) => SetCircle(new GmgCircleElement(), size, color, color, border, position);
+            internal static GmgCircleElement NewSlice(float size, Color centerColor, Color color, Color border, UIEPosition position = UIEPosition.Absolute) => SetSlice(new GmgCircleElement(), size, centerColor, color, border, position);
 
-            internal static GmgCircleElement NewCircle(float size, Color centerColor, Color color, Color border, Position position = default) => SetCircle(new GmgCircleElement(), size, centerColor, color, border, position);
+            private static GmgCircleElement SetSlice(GmgCircleElement element, float size, Color centerColor, Color color, Color border, UIEPosition position = default)
+            {
+                element.BorderWidth = 2;
+                element.VertexColor = color;
+                element.BorderColor = border;
+                element.CenterColor = centerColor;
+                element.pickingMode = PickingMode.Ignore;
+                element.style.position = position;
+                element.style.alignItems = Align.Center;
+                element.style.width = element.style.height = size;
+                element.style.justifyContent = Justify.Center;
+                element.style.left = element.style.top = -size / 2;
+                return element;
+            }
 
-            internal static GmgCircleElement SetCircle(GmgCircleElement element, float size, Color color, Color border, Position position = default) => SetCircle(element, size, color, color, border, position);
+            internal static GmgCircleElement NewCircle(float size, Color color, Color border, UIEPosition position = default) => SetCircle(new GmgCircleElement(), size, color, color, border, position);
 
-            private static GmgCircleElement SetCircle(GmgCircleElement element, float size, Color centerColor, Color color, Color border, Position position = default)
+            internal static GmgCircleElement NewCircle(float size, Color centerColor, Color color, Color border, UIEPosition position = default) => SetCircle(new GmgCircleElement(), size, centerColor, color, border, position);
+
+            internal static GmgCircleElement SetCircle(GmgCircleElement element, float size, Color color, Color border, UIEPosition position = default) => SetCircle(element, size, color, color, border, position);
+
+            private static GmgCircleElement SetCircle(GmgCircleElement element, float size, Color centerColor, Color color, Color border, UIEPosition position = default)
             {
                 element.BorderWidth = 2;
                 element.VertexColor = color;
@@ -132,12 +192,12 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 return element;
             }
 
-            internal static VisualElement NewRadialText(out TextElement text, int top, Position position = default)
+            internal static VisualElement NewRadialText(out TextElement text, int top, UIEPosition position = default)
             {
                 return SetRadialText(new VisualElement(), out text, top, position);
             }
 
-            internal static VisualElement SetRadialText(VisualElement element, out TextElement text, int top, Position position = default)
+            internal static VisualElement SetRadialText(VisualElement element, out TextElement text, int top, UIEPosition position = default)
             {
                 element.style.width = 50;
                 element.style.height = 20;
@@ -169,7 +229,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         left = 60,
                         top = 50,
                         backgroundColor = Colors.SubIcon,
-                        position = Position.Absolute,
+                        position = UIEPosition.Absolute,
                         justifyContent = Justify.Center,
                         alignItems = Align.Center
                     }
@@ -247,9 +307,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             return new Vrc3ParamExternal(parameter.name, ModuleVrc3Styles.Data.TypeOf[parameter.valueType]);
         }
 
-        public static Vrc3Param CreateParamFromNothing(string name)
+        public static Vrc3Param CreateParamFromNothing(string name, AnimatorControllerParameterType type)
         {
-            return new Vrc3ParamExternal(name, AnimatorControllerParameterType.Float);
+            return new Vrc3ParamExternal(name, type);
         }
 
         public static int RadialPercentage(float value)

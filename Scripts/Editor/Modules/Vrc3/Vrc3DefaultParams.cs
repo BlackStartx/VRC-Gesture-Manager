@@ -1,5 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3
 {
@@ -21,30 +22,40 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         internal const string IsLocal = "IsLocal";
         internal const string Seated = "Seated";
         internal const string VRMode = "VRMode";
+        internal const string Vise = "Viseme";
         internal const string Afk = "AFK";
+        
+        private const string VrcFaceBlendH = "VrcFaceBlendH";
+        private const string VrcFaceBlendV = "VrcFaceBlendV";
+        private const string VrcEmote = "VRCEmote";
+        private const string AngularY = "AngularY";
+        private const string Voice = "Voice";
 
-        private const string Vise = "Viseme";
-
-        public static IEnumerable<string> Parameters => new[]
+        public static IEnumerable<(string name, AnimatorControllerParameterType type)> Parameters => new[]
         {
-            GestureRightWeight,
-            GestureLeftWeight,
-            AvatarVersion,
-            TrackingType,
-            GestureRight,
-            GestureLeft,
-            VelocityX,
-            VelocityY,
-            VelocityZ,
-            InStation,
-            Grounded,
-            MuteSelf,
-            Upright,
-            IsLocal,
-            Seated,
-            VRMode,
-            Vise,
-            Afk
+            (GestureRightWeight, AnimatorControllerParameterType.Float),
+            (GestureLeftWeight, AnimatorControllerParameterType.Float),
+            (VrcFaceBlendH, AnimatorControllerParameterType.Float),
+            (VrcFaceBlendV, AnimatorControllerParameterType.Float),
+            (AvatarVersion, AnimatorControllerParameterType.Int),
+            (TrackingType, AnimatorControllerParameterType.Int),
+            (GestureRight, AnimatorControllerParameterType.Int),
+            (GestureLeft, AnimatorControllerParameterType.Int),
+            (VelocityX, AnimatorControllerParameterType.Float),
+            (VelocityY, AnimatorControllerParameterType.Float),
+            (VelocityZ, AnimatorControllerParameterType.Float),
+            (InStation, AnimatorControllerParameterType.Bool),
+            (AngularY, AnimatorControllerParameterType.Float),
+            (Grounded, AnimatorControllerParameterType.Bool),
+            (MuteSelf, AnimatorControllerParameterType.Bool),
+            (VrcEmote, AnimatorControllerParameterType.Int),
+            (Upright, AnimatorControllerParameterType.Float),
+            (IsLocal, AnimatorControllerParameterType.Bool),
+            (Seated, AnimatorControllerParameterType.Bool),
+            (VRMode, AnimatorControllerParameterType.Int),
+            (Voice, AnimatorControllerParameterType.Float),
+            (Vise, AnimatorControllerParameterType.Int),
+            (Afk, AnimatorControllerParameterType.Bool)
         };
     }
 }
