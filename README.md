@@ -7,7 +7,7 @@ Available for both VRChat SDK 2.0 and SDK 3.0, in Unity 2018 or 2019.
 ## How To Use (SDK 3.0)
 ### Download the UnityPackage
 You can download the UnityPackage from the latest release tab.<br>
-[[Or click here to go to the latest release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/tag/v3.4)]
+[[Or click here to go to the latest release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/latest)]
 
 From there you can find the link for the UnityPackage at the bottom of the page, in the **Assets** tab.<br>
 
@@ -26,7 +26,7 @@ If there are no errors the GestureManager will take control of your Avatar and y
 You can test Left and Right hand gesture with the buttons on top, and you can test 3.0 Expressions from
 the RadialMenu bellow.
 
-![img.png](.markdown/3.4/TestingStart.png)
+![img.png](.markdown/3.5/TestingStart.png)
 
 ### Option Button!
 The Option button in the RadialMenu contains a lot of sub-category that helps you change parameters usually 
@@ -41,7 +41,7 @@ In the **Locomotion** category you can preview animation like:
 - Prone
 - Falling
 
-![img.png](.markdown/3.4/TestingMove.png)
+![img.png](.markdown/3.5/TestingMove.png)
 
 In the **States** category you can preview AFK, Seated, IK and T Pose animations.
 
@@ -58,7 +58,7 @@ In the Option Menu you can find a button called: Edit-Mode.
 Clicking that button will enable the Edit-Mode feature and will create a clone of your avatar 
 giving him all the animation of your VRChat controller layers.
 
-![img.png](.markdown/3.4/EditingMode.png)
+![img.png](.markdown/3.5/EditingMode.png)
 
 Since the avatar have all the animation of your animators, you can edit them by going in to the Animation tab and selecting 
 your avatar from the hierarchy window. (Or by clicking the blue "select your avatar" text under the RadialMenu)
@@ -121,7 +121,7 @@ This can be useful to test how your application is handling OSC packets and for 
 Simply set the OSC address string and populate the message parameters with the + button on the right.<br>
 You can switch between OSC Messages and OSC bundles by clicking the "Bundle" or "Message" buttons.
 
-![img.png](.markdown/3.4/SendOsc.png)
+![img.png](.markdown/3.5/SendOsc.png)
 
 ### Knew Issues
 ♥ All the knew issues since the release of 3.0 has been addressed! ♥
