@@ -11,7 +11,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 {
     public class AnimatorControllerWeight
     {
-        private readonly Dictionary<int, SubTimer> _subControls = new Dictionary<int, SubTimer>();
+        private readonly List<SubTimer> subTimers = new List<SubTimer>();
         private readonly AnimationLayerMixerPlayable _playableMixer;
         private readonly int _index;
 
@@ -21,7 +21,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private float _startWeight;
         private float _startTime;
 
-        private void OnSubTimerCompleted(int index) => _subControls.Remove(index);
+        private void OnSubTimerCompleted(SubTimer timer) => subTimers.Remove(timer);
 
         public float Weight => _playableMixer.GetInputWeight(_index);
 
@@ -34,8 +34,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         public void Update()
         {
-            if (_control) Set(UpdateWeight());
-            foreach (var subTimer in _subControls.Values.ToList()) subTimer.Update(_playable);
+            if (_control) 
+                Set(UpdateWeight());
+            for (int i = 0; i < subTimers.Count; i++)
+                subTimers[i].Update(_playable);
         }
 
         public void Start(VRC_PlayableLayerControl control)
@@ -48,7 +50,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         public void Start(VRC_AnimatorLayerControl control)
         {
-            _subControls[control.layer] = new SubTimer(control, _playable.GetLayerWeight(control.layer), Time.time, OnSubTimerCompleted);
+            var count = _playable.GetLayerCount();
+            if (!control || control.layer >= count)
+                return;
+            subTimers.Add(new SubTimer(control, _playable.GetLayerWeight(control.layer), Time.time, OnSubTimerCompleted));
         }
 
         public void Set(float goalWeight)
@@ -72,11 +77,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private class SubTimer
         {
             private readonly VRC_AnimatorLayerControl _control;
-            private readonly Action<int> _onComplete;
+            private readonly Action<SubTimer> _onComplete;
             private readonly float _startWeight;
             private readonly float _startTime;
-
-            public SubTimer(VRC_AnimatorLayerControl control, float startWeight, float startTime, Action<int> onComplete)
+            public SubTimer(VRC_AnimatorLayerControl control, float startWeight, float startTime, Action<SubTimer> onComplete)
             {
                 _control = control;
                 _startTime = startTime;
@@ -86,7 +90,11 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             public void Update(AnimatorControllerPlayable playable)
             {
-                if (_control) playable.SetLayerWeight(_control.layer, SubUpdateWeight(_control, _startWeight, _startTime));
+                var count = playable.GetLayerCount();
+                if (!_control || _control.layer >= count)
+                    return;
+                if (_control) 
+                    playable.SetLayerWeight(_control.layer, SubUpdateWeight(_control, _startWeight, _startTime));
             }
 
             private float SubUpdateWeight(VRC_AnimatorLayerControl control, float startWeight, float startTime)
@@ -97,7 +105,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             private float SubStop(VRC_AnimatorLayerControl control)
             {
-                _onComplete(control.layer);
+                _onComplete(this);
                 return control.goalWeight;
             }
         }
