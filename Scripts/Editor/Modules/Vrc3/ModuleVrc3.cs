@@ -100,9 +100,22 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             if (_broken) return;
             OscModule.Update();
             _avatarTools.OnUpdate(this);
-            if (DummyMode == null && _layers.Any(IsBroken)) OnBrokenSimulation();
-            if (DummyMode != null && (!DummyMode.Avatar || Avatar.activeSelf)) Dummy.ShutDown();
-            foreach (var pair in _layers) pair.Value.Weight.Update();
+            if (DummyMode == null && IsAnyBroken(_layers)) 
+                OnBrokenSimulation();
+            if (DummyMode != null && (!DummyMode.Avatar || Avatar.activeSelf)) 
+                Dummy.ShutDown();
+            foreach (var pair in _layers) 
+                pair.Value.Weight.Update();
+        }
+
+        private bool IsAnyBroken(Dictionary<VRCAvatarDescriptor.AnimLayerType, LayerData> _layers) 
+        {
+            foreach (var item in _layers)
+            {
+                if (!item.Value.Empty && item.Value.Playable.GetInput(0).IsNull())
+                    return true;
+            }
+            return false;
         }
 
         public override void LateUpdate() => _avatarTools.OnLateUpdate(this);
