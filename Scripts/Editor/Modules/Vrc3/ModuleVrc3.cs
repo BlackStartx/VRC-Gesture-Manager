@@ -667,7 +667,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             VRCPhysBoneBase.OnInitialize += PhysBoneBaseInit;
             VRC_AnimatorLayerControl.Initialize += AnimatorLayerControlInit;
             VRC_PlayableLayerControl.Initialize += PlayableLayerControlInit;
-            VRC_AvatarParameterDriver.Initialize += AvatarParameterDriverInit;
+            VRC_AvatarParameterDriver.OnApplySettings += AvatarParameterDriverSettings; //Initialize += AvatarParameterDriverInit;
             VRC_AnimatorTrackingControl.Initialize += AnimatorTrackingControlInit;
             VRC_AnimatorLocomotionControl.Initialize += AnimatorLocomotionControlInit;
             VRC_AnimatorTemporaryPoseSpace.Initialize += AnimatorTemporaryPoseSpaceInit;
@@ -683,7 +683,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             VRCPhysBoneBase.OnInitialize -= PhysBoneBaseInit;
             VRC_AnimatorLayerControl.Initialize -= AnimatorLayerControlInit;
             VRC_PlayableLayerControl.Initialize -= PlayableLayerControlInit;
-            VRC_AvatarParameterDriver.Initialize -= AvatarParameterDriverInit;
+            VRC_AvatarParameterDriver.OnApplySettings -= AvatarParameterDriverSettings; // Initialize -= AvatarParameterDriverInit;
             VRC_AnimatorTrackingControl.Initialize -= AnimatorTrackingControlInit;
             VRC_AnimatorLocomotionControl.Initialize -= AnimatorLocomotionControlInit;
             VRC_AnimatorTemporaryPoseSpace.Initialize -= AnimatorTemporaryPoseSpaceInit;
@@ -699,7 +699,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         private void PlayableLayerControlInit(VRC_PlayableLayerControl playableLayerControl) => playableLayerControl.ApplySettings += PlayableLayerControlSettings;
 
-        private void AvatarParameterDriverInit(VRC_AvatarParameterDriver avatarParameterDriver) => avatarParameterDriver.ApplySettings += AvatarParameterDriverSettings;
+        //private void AvatarParameterDriverInit(VRC_AvatarParameterDriver avatarParameterDriver) => avatarParameterDriver.ApplySettings += AvatarParameterDriverSettings;
 
         private void AnimatorTrackingControlInit(VRC_AnimatorTrackingControl animatorTrackingControl) => animatorTrackingControl.ApplySettings += AnimatorTrackingControlSettings;
 
