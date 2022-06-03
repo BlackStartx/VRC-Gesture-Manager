@@ -8,6 +8,12 @@ using GestureManager.Scripts.Editor.Modules;
 using GestureManager.Scripts.Extra;
 using UnityEditor;
 using UnityEngine;
+using GmgAvatarDescriptor =
+#if VRC_SDK_VRCSDK2 || VRC_SDK_VRCSDK3
+    VRC.SDKBase.VRC_AvatarDescriptor;
+#else
+    UnityEngine.UI.GraphicRaycaster;
+#endif
 using UnityEngine.UIElements;
 
 namespace GestureManager.Scripts.Editor
@@ -16,20 +22,35 @@ namespace GestureManager.Scripts.Editor
     public class GestureManagerEditor : UnityEditor.Editor
     {
         private GestureManager Manager => target as GestureManager;
-        public override bool RequiresConstantRepaint() => Manager.Module?.RequiresConstantRepaint ?? false;
-        private static IEnumerable<VRC.SDKBase.VRC_AvatarDescriptor> Descriptors => VRC.Tools.FindSceneObjectsOfTypeAll<VRC.SDKBase.VRC_AvatarDescriptor>();
+        private static IEnumerable<GmgAvatarDescriptor> Descriptors => FindSceneObjectsOfTypeAll<GmgAvatarDescriptor>();
         private IEnumerable<ModuleBase> Modules => Descriptors.Select(descriptor => ModuleHelper.GetModuleFor(Manager, descriptor)).Where(module => module != null);
+        private static bool IsValidObject(GameObject g) => g.hideFlags != HideFlags.NotEditable && g.hideFlags != HideFlags.HideAndDontSave && g.scene.name != null;
+        private static IEnumerable<T> FindSceneObjectsOfTypeAll<T>() where T : Component => Resources.FindObjectsOfTypeAll<T>().Where(t => IsValidObject(t.gameObject));
 
         private readonly PrefUpdater _updater = new PrefUpdater();
         private VisualElement _root;
 
         private const int AntiAliasing = 4;
 
-        private const string Version = "3.5.0";
+        private const string Version = "3.6.0";
         private const string Discord = "BlackStartx#6593";
 
         private const string VersionURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.v3rsion";
         private const string DiscordURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.discord";
+
+        [MenuItem("Tools/Gesture Manager Emulator", false, -42)]
+        public static void AddNewEmulator()
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/GestureManager/GestureManager.prefab");
+            if (!asset) asset = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.FindAssets("t:prefab GestureManager").Select(AssetDatabase.GUIDToAssetPath).FirstOrDefault());
+            AddNewEmulator(asset);
+        }
+
+        private static void AddNewEmulator(UnityEngine.Object gObject)
+        {
+            var prefab = PrefabUtility.InstantiatePrefab(gObject) as GameObject;
+            CreateAndPing(prefab ? prefab.GetComponent<GestureManager>() : null);
+        }
 
         public static void CreateAndPing(GestureManager manager = null)
         {
@@ -40,7 +61,7 @@ namespace GestureManager.Scripts.Editor
 
         private void Awake()
         {
-            if (!Manager.gameObject.GetComponent<VRC.SDKBase.VRC_AvatarDescriptor>()) return;
+            if (!Manager.gameObject.GetComponent<GmgAvatarDescriptor>()) return;
             DestroyImmediate(Manager);
             CreateAndPing();
         }
@@ -62,8 +83,9 @@ namespace GestureManager.Scripts.Editor
         private void ManagerGui()
         {
             if (!Manager) return;
+            Manager.SetDrag(!Event.current.alt);
 
-            GUILayout.Label("Gesture Manager 3.5", GestureManagerStyles.TitleStyle);
+            GUILayout.Label("Gesture Manager 3.6", GestureManagerStyles.TitleStyle);
             _updater.Gui();
 
             if (Manager.Module != null)
@@ -162,15 +184,15 @@ namespace GestureManager.Scripts.Editor
 
         private static void RequestGestureDuplication(ModuleBase module, int gestureIndex)
         {
-            var fullGestureName = module.GetFinalGestureByIndex(gestureIndex).name;
-            var gestureName = "[" + fullGestureName.Substring(fullGestureName.IndexOf("]", StringComparison.Ordinal) + 2) + "]";
+            var fullGestureString = module.GetFinalGestureByIndex(gestureIndex).name;
+            var nameString = "[" + fullGestureString.Substring(fullGestureString.IndexOf("]", StringComparison.Ordinal) + 2) + "]";
             var newAnimation = GmgAnimationHelper.CloneAnimationAsset(module.GetFinalGestureByIndex(gestureIndex));
-            var path = EditorUtility.SaveFilePanelInProject("Creating Gesture: " + fullGestureName, gestureName + ".anim", "anim", "Hi (?)");
+            var pathString = EditorUtility.SaveFilePanelInProject("Creating Gesture: " + fullGestureString, nameString + ".anim", "anim", "Hi (?)");
 
-            if (path.Length == 0) return;
+            if (pathString.Length == 0) return;
 
-            AssetDatabase.CreateAsset(newAnimation, path);
-            newAnimation = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+            AssetDatabase.CreateAsset(newAnimation, pathString);
+            newAnimation = AssetDatabase.LoadAssetAtPath<AnimationClip>(pathString);
             module.AddGestureToOverrideController(gestureIndex, newAnimation);
         }
 
@@ -182,25 +204,25 @@ namespace GestureManager.Scripts.Editor
         {
             for (var i = 1; i < 8; i++)
                 using (new GUILayout.HorizontalScope())
-                    if (OnCheckBoxGuiHandAnimation(module, i, position, GestureManagerStyles.PlusTexture, overrider, out var isOn))
+                    if (OnCheckBoxGuiHandAnimation(module, i, position, overrider, out var isOn))
                         module.OnNewHand(hand, isOn ? i : 0);
         }
 
-        private static bool OnCheckBoxGuiHandAnimation(ModuleBase module, int i, int position, Texture texture, bool overrider, out bool isOn)
+        private static bool OnCheckBoxGuiHandAnimation(ModuleBase module, int i, int position, bool overrider, out bool isOn)
         {
             GUILayout.Label(module.GetFinalGestureByIndex(i).name);
             GUILayout.FlexibleSpace();
             isOn = position == i;
             var isDifferent = isOn != (isOn = GUILayout.Toggle(isOn, ""));
             if (!overrider) return isDifferent;
-            if (!module.HasGestureBeenOverridden(i)) OverrideButton(texture, module, i);
+            if (!module.HasGestureBeenOverridden(i)) OverrideButton(module, i);
             else GUILayout.Space(35);
             return isDifferent;
         }
 
-        private static void OverrideButton(Texture texture, ModuleBase module, int i)
+        private static void OverrideButton(ModuleBase module, int i)
         {
-            if (GUILayout.Button(texture, GestureManagerStyles.PlusButton, GUILayout.Width(15), GUILayout.Height(15)))
+            if (GUILayout.Button(GestureManagerStyles.PlusTexture, GestureManagerStyles.PlusButton, GUILayout.Width(15), GUILayout.Height(15)))
                 RequestGestureDuplication(module, i);
         }
 
@@ -264,6 +286,8 @@ namespace GestureManager.Scripts.Editor
 
         private class PrefUpdater
         {
+            private static readonly Color Color = new Color(0.07f, 0.55f, 0.58f);
+
             private const string DayKey = "GM3 Update Day";
             private const string VerKey = "GM3 Update Ver";
 
@@ -314,11 +338,13 @@ namespace GestureManager.Scripts.Editor
 
             private void Draw(Rect rect)
             {
+                var cEvent = Event.current;
                 rect.x += rect.width - 100;
                 rect.width = 100;
                 rect.height -= 16;
                 rect.y += 8;
-                GUI.Label(rect, $"{Ver} is out!", GestureManagerStyles.UpdateStyle);
+                using (new GmgLayoutHelper.GuiBackground(Color)) GUI.Label(rect, $"{Ver} is out!", GestureManagerStyles.UpdateStyle);
+                if (cEvent.type == EventType.MouseDown && cEvent.button == 0 && rect.Contains(cEvent.mousePosition)) CheckForUpdates();
             }
         }
     }

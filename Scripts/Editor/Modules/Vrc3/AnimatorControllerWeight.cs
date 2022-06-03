@@ -1,7 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
@@ -11,6 +10,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 {
     public class AnimatorControllerWeight
     {
+        private readonly List<int> _subCompleted = new List<int>();
         private readonly Dictionary<int, SubTimer> _subControls = new Dictionary<int, SubTimer>();
         private readonly AnimationLayerMixerPlayable _playableMixer;
         private readonly int _index;
@@ -21,7 +21,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private float _startWeight;
         private float _startTime;
 
-        private void OnSubTimerCompleted(int index) => _subControls.Remove(index);
+        private void OnSubTimerCompleted(int index) => _subCompleted.Add(index);
 
         public float Weight => _playableMixer.GetInputWeight(_index);
 
@@ -35,26 +35,22 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         public void Update()
         {
             if (_control) Set(UpdateWeight());
-            foreach (var subTimer in _subControls.Values.ToList()) subTimer.Update(_playable);
+            foreach (var pair in _subControls) pair.Value.Update(_playable);
+            if (_subCompleted.Count == 0) return;
+            foreach (var idInt in _subCompleted) _subControls.Remove(idInt);
+            _subCompleted.Clear();
         }
 
         public void Start(VRC_PlayableLayerControl control)
         {
             _control = control;
-
             _startWeight = Weight;
             _startTime = Time.time;
         }
 
-        public void Start(VRC_AnimatorLayerControl control)
-        {
-            _subControls[control.layer] = new SubTimer(control, _playable.GetLayerWeight(control.layer), Time.time, OnSubTimerCompleted);
-        }
+        public void Start(VRC_AnimatorLayerControl control) => _subControls[control.layer] = new SubTimer(control, _playable.GetLayerWeight(control.layer), Time.time, OnSubTimerCompleted);
 
-        public void Set(float goalWeight)
-        {
-            _playableMixer.SetInputWeight(_index, goalWeight);
-        }
+        public void Set(float goalWeight) => _playableMixer.SetInputWeight(_index, goalWeight);
 
         private float UpdateWeight()
         {

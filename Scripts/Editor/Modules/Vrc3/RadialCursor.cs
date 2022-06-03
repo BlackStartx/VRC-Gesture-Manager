@@ -1,5 +1,4 @@
 ﻿#if VRC_SDK_VRCSDK3
-using System;
 using System.Collections.Generic;
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Core.VisualElements;
@@ -19,14 +18,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         private Vector2 _position;
         internal int Selection = -1;
-
-        [Obsolete]
-        public RadialCursor(int size)
-        {
-            RadialMenuUtility.Prefabs.SetCircle(this, size, RadialMenuUtility.Colors.OriginalCursor, RadialMenuUtility.Colors.OriginalCursorBorder)
-                .MyAdd(RadialMenuUtility.Prefabs.NewCircleBorder((int)(size / 1.5f), RadialMenuUtility.Colors.OriginalCursorBorder))
-                .Add(RadialMenuUtility.Prefabs.NewCircleBorder((int)(size / 4f), RadialMenuUtility.Colors.OriginalCursorBorder));
-        }
 
         public RadialCursor()
         {
@@ -53,9 +44,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             _clampReset = clampReset;
             if (referenceLayout != null && referenceLayout != parent) SetParent(referenceLayout);
         }
-
-        [Obsolete]
-        public void Update(Vector2 mouse) => Update(mouse, null, false);
 
         public void Update(Vector2 mouse, IList<GmgButton> selectionTuple, bool puppet)
         {
@@ -142,9 +130,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         /*
          * Listeners
          */
-
-        [Obsolete]
-        public int GetChoice(Vector2 elements, VisualElement borderHolder) => GetChoice(borderHolder.childCount, false);
 
         internal int GetChoice(int elements, bool puppet) => puppet ? -1 : GetChoice(_position, _min, _max, elements);
 

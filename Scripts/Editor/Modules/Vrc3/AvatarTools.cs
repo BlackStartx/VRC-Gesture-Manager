@@ -1,5 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System.Collections.Generic;
+using System.Linq;
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes;
 using UnityEditor;
@@ -53,17 +54,23 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private class UpdateSceneCamera : GmgDynamicFunction
         {
             private static Camera _camera;
+            private readonly BoolProperty _isActive = new BoolProperty("GM3 SceneCamera");
 
             protected override string Name => "Scene Camera";
             protected override string Description => "This will match your game view with your scene view!\nClick the button to setup the main camera automatically~";
-            protected override bool Active => _camera;
+            protected override bool Active => _isActive.Property;
+
+            public UpdateSceneCamera()
+            {
+                if (_isActive.Property) AutoToggle();
+            }
 
             protected override void Update(ModuleVrc3 module)
             {
                 var sceneView = SceneView.lastActiveSceneView;
                 if (!sceneView) return;
                 var camera = sceneView.camera;
-                if (!camera) return;
+                if (!camera || !_camera) return;
                 var sceneTransform = camera.transform;
                 var transform = _camera.transform;
                 var positionVector = sceneTransform.position;
@@ -73,19 +80,24 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             protected override void Gui(ModuleVrc3 module)
             {
-                if (GmgLayoutHelper.ButtonObjectField("Scene Camera: ", _camera, _camera ? 'X' : 'A', camera => _camera = camera)) _camera = _camera ? null : Camera.main;
+                if (GmgLayoutHelper.ButtonObjectField("Scene Camera: ", _camera, _camera ? 'X' : 'A', camera => _camera = camera)) AutoToggle();
+                _isActive.Property = _camera != null;
             }
+
+            private static void AutoToggle() => _camera = _camera ? null : Camera.main;
         }
 
         private class ClickableContacts : GmgDynamicFunction
         {
-            private bool _active;
+            private readonly BoolProperty _isActive = new BoolProperty("GM3 ClickableContacts");
+            private readonly StringProperty _tag = new StringProperty("GM3 ClickableContacts Tag");
+
             private readonly Camera _camera = Camera.main;
             private readonly HashSet<ContactReceiver> _activeContact = new HashSet<ContactReceiver>();
 
             protected override string Name => "Clickable Contacts";
             protected override string Description => "Click and trigger Avatar Contacts with your mouse!\nLike you can do with PhysBones~";
-            protected override bool Active => _active;
+            protected override bool Active => _isActive.Property;
 
             protected override void Update(ModuleVrc3 module) => LateUpdate(module);
 
@@ -106,14 +118,13 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             {
                 var manager = ContactManager.Inst;
                 if (!manager) return;
+                foreach (var receiver in module.Receivers.Where(receiver => string.IsNullOrEmpty(_tag.Property) || receiver.collisionTags.Contains(_tag.Property))) OnContactValue(receiver, ValueFor(manager, receiver, s, e));
+            }
 
-                foreach (var receiver in module.Contacts)
-                {
-                    var distance = ValueFor(manager, receiver, s, e);
-                    receiver.SetParameter(distance);
-                    if (distance == 0f) _activeContact.Remove(receiver);
-                    else _activeContact.Add(receiver);
-                }
+            private void OnContactValue(ContactReceiver receiver, float value)
+            {
+                if (value == 0f) Disable(receiver);
+                else Enable(receiver, value);
             }
 
             private static float ValueFor(ContactManager manager, ContactReceiver receiver, Vector3 s, Vector3 e)
@@ -139,12 +150,31 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 return (result0 - result1).magnitude - radius;
             }
 
+            private void Enable(ContactReceiver receiver, float value)
+            {
+                if (_activeContact.Contains(receiver)) return;
+                _activeContact.Add(receiver);
+                receiver.SetParameter(value);
+            }
+
+            private void Disable(ContactReceiver receiver)
+            {
+                if (!_activeContact.Contains(receiver)) return;
+                _activeContact.Remove(receiver);
+                receiver.SetParameter(0f);
+            }
+
             private void Disable()
             {
                 foreach (var receiver in _activeContact) receiver.SetParameter(0f);
+                _activeContact.Clear();
             }
 
-            protected override void Gui(ModuleVrc3 module) => _active = GmgLayoutHelper.ToggleRight("Activate clickable contacts: ", _active);
+            protected override void Gui(ModuleVrc3 module)
+            {
+                _isActive.Property = GmgLayoutHelper.ToggleRight("Enabled: ", _isActive.Property);
+                _tag.Property = GmgLayoutHelper.PlaceHolderTextField("Tag: ", _tag.Property, " <leave blank to ignore tags> ");
+            }
         }
 
         private class TestAnimation : GmgDynamicFunction
@@ -245,6 +275,32 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             protected virtual void LateUpdate(ModuleVrc3 module)
             {
+            }
+        }
+
+        private class BoolProperty
+        {
+            private readonly string _key;
+
+            public BoolProperty(string key) => _key = key;
+
+            internal bool Property
+            {
+                get => EditorPrefs.GetBool(_key);
+                set => EditorPrefs.SetBool(_key, value);
+            }
+        }
+
+        private class StringProperty
+        {
+            private readonly string _key;
+
+            public StringProperty(string key) => _key = key;
+
+            internal string Property
+            {
+                get => EditorPrefs.GetString(_key);
+                set => EditorPrefs.SetString(_key, value);
             }
         }
     }

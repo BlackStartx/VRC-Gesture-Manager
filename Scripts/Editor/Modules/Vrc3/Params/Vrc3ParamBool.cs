@@ -13,10 +13,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
             if (onChange != null) SetOnChange((param, f) => onChange(f > 0.5f));
         }
 
-        public override float Get()
-        {
-            return State ? 1f : 0f;
-        }
+        public override float Get() => State ? 1f : 0f;
 
         public void ShutDown()
         {
@@ -24,10 +21,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
             OnChange(this, 0f);
         }
 
-        protected internal override void InternalSet(float value)
-        {
-            State = value > 0.5f;
-        }
+        protected internal override void InternalSet(float value) => State = value > 0.5f;
     }
 }
 #endif

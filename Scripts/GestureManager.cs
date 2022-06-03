@@ -9,10 +9,10 @@ namespace GestureManager.Scripts
         public static readonly Dictionary<GameObject, ModuleBase> ControlledAvatars = new Dictionary<GameObject, ModuleBase>();
         public static bool InWebClientRequest;
 
-        private Vector3 _beforeEmoteAvatarScale;
-        private Vector3 _beforeEmoteAvatarPosition;
-        private Quaternion _beforeEmoteAvatarRotation;
+        private TransformData _managerTransform;
         private Animator _customAnimator;
+        private Transform _beforeEmote;
+        private bool _drag;
 
         public List<ModuleBase> LastCheckedActiveModules = new List<ModuleBase>();
         public ModuleBase Module;
@@ -24,11 +24,25 @@ namespace GestureManager.Scripts
 
         private void Update()
         {
-            if (Module != null && Module.IsInvalid()) UnlinkModule();
-            Module?.Update();
+            if (Module == null) return;
+            if (Module.IsInvalid()) UnlinkModule();
+            else ModuleUpdate();
         }
 
-        private void LateUpdate() => Module?.LateUpdate();
+        private void ModuleUpdate()
+        {
+            if (_drag) _managerTransform.Difference(transform).AddTo(Module.Avatar.transform);
+            _managerTransform = new TransformData(transform);
+            Module.Update();
+        }
+
+        private void LateUpdate()
+        {
+            _managerTransform = new TransformData(transform);
+            Module?.LateUpdate();
+        }
+
+        public void SetDrag(bool drag) => _drag = drag;
 
         public void UnlinkModule() => SetModule(null);
 
@@ -38,27 +52,16 @@ namespace GestureManager.Scripts
             if (Module != null) ControlledAvatars.Remove(Module.Avatar);
 
             Module = module;
+            Module?.Avatar.transform.ApplyTo(transform);
             if (Module == null) return;
 
             Module.InitForAvatar();
             ControlledAvatars[module.Avatar] = module;
         }
 
-        private void SaveCurrentStartEmotePosition()
-        {
-            var animatorGameObject = _customAnimator.gameObject;
-            _beforeEmoteAvatarPosition = animatorGameObject.transform.position;
-            _beforeEmoteAvatarRotation = animatorGameObject.transform.rotation;
-            _beforeEmoteAvatarScale = animatorGameObject.transform.localScale;
-        }
+        private void SaveCurrentStartEmotePosition() => _beforeEmote = _customAnimator.gameObject.transform;
 
-        private void RevertToEmotePosition()
-        {
-            var animatorGameObject = _customAnimator.gameObject;
-            animatorGameObject.transform.position = _beforeEmoteAvatarPosition;
-            animatorGameObject.transform.rotation = _beforeEmoteAvatarRotation;
-            animatorGameObject.transform.localScale = _beforeEmoteAvatarScale;
-        }
+        private void RevertToEmotePosition() => _beforeEmote.ApplyTo(_customAnimator.gameObject.transform);
 
         public void SetCustomAnimation(AnimationClip clip)
         {

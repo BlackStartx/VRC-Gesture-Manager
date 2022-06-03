@@ -1,14 +1,19 @@
 ﻿using GestureManager.Scripts.Extra;
+using GmgAvatarDescriptor =
+#if VRC_SDK_VRCSDK2 || VRC_SDK_VRCSDK3
+    VRC.SDKBase.VRC_AvatarDescriptor;
+#else
+    UnityEngine.Component;
+#endif
 using UnityEngine;
-using VRC.SDKBase;
 
 namespace GestureManager.Scripts.Editor.Modules
 {
     public static class ModuleHelper
     {
-        public static ModuleBase GetModuleFor(GestureManager manager, GameObject gameObject) => GetModuleFor(manager, gameObject.GetComponent<VRC_AvatarDescriptor>());
+        public static ModuleBase GetModuleFor(GestureManager manager, GameObject gameObject) => GetModuleFor(manager, gameObject.GetComponent<GmgAvatarDescriptor>());
 
-        public static ModuleBase GetModuleFor(GestureManager manager, VRC_AvatarDescriptor descriptorComponent)
+        public static ModuleBase GetModuleFor(GestureManager manager, GmgAvatarDescriptor descriptorComponent)
         {
             switch (descriptorComponent)
             {

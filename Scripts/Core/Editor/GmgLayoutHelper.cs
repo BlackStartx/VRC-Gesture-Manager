@@ -168,6 +168,13 @@ namespace GestureManager.Scripts.Core.Editor
             return GUI.Toggle(rectR, active, new GUIContent());
         }
 
+        public static string PlaceHolderTextField(string label, string text, string placeHolder)
+        {
+            text = EditorGUILayout.TextField(label, text);
+            if(string.IsNullOrEmpty(text)) EditorGUI.LabelField(GUILayoutUtility.GetLastRect(), " ", placeHolder);
+            return text;
+        }
+
         /*
          * Classes...
          * Classes...

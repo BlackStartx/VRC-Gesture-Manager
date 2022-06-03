@@ -56,6 +56,29 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
 
         public void Add(ModuleVrc3 module, float value) => Set(module, Get() + value);
 
+        public void Copy(ModuleVrc3 module, float get, bool range, float sourceMin, float sourceMax, float destMin, float destMax)
+        {
+            if (range) get = RangeOf(get, sourceMin, sourceMax, destMin, destMax);
+            switch (Type)
+            {
+                case AnimatorControllerParameterType.Float:
+                    Set(module, get);
+                    break;
+                case AnimatorControllerParameterType.Int:
+                    Set(module, (int)get);
+                    break;
+                case AnimatorControllerParameterType.Bool:
+                case AnimatorControllerParameterType.Trigger:
+                    Set(module, !RadialMenuUtility.Is(get, 0));
+                    break;
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private static float RangeOf(float get, float sourceMin, float sourceMax, float destMin, float destMax) => RangeOf(get - sourceMin, sourceMax - sourceMin, destMin, destMax - destMin);
+
+        private static float RangeOf(float offset, float sourceLen, float destMin, float destLen) => destMin + destLen * (sourceLen != 0 ? Mathf.Clamp01(offset / sourceLen) : 0.0f);
+
         public void Random(ModuleVrc3 module, float min, float max, float chance)
         {
             switch (Type)

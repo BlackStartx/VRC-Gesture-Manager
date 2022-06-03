@@ -1,13 +1,18 @@
 ﻿using System.Collections.Generic;
+using GmgAvatarDescriptor =
+#if VRC_SDK_VRCSDK2 || VRC_SDK_VRCSDK3
+    VRC.SDKBase.VRC_AvatarDescriptor;
+#else
+    UnityEngine.Component;
+#endif
 using UnityEngine;
 using UnityEngine.UIElements;
-using VRC.SDKBase;
 
 namespace GestureManager.Scripts.Extra
 {
     public abstract class ModuleBase
     {
-        private readonly VRC_AvatarDescriptor _avatarDescriptor;
+        private readonly GmgAvatarDescriptor _avatarDescriptor;
 
         private List<string> _errorList = new List<string>();
         private List<string> _warningList = new List<string>();
@@ -16,11 +21,10 @@ namespace GestureManager.Scripts.Extra
         public readonly Animator AvatarAnimator;
         public readonly GestureManager Manager;
 
-        public abstract bool RequiresConstantRepaint { get; }
-
         protected int Right, Left;
+        protected bool GestureDrag;
 
-        protected ModuleBase(GestureManager manager, VRC_AvatarDescriptor avatarDescriptor)
+        protected ModuleBase(GestureManager manager, GmgAvatarDescriptor avatarDescriptor)
         {
             _avatarDescriptor = avatarDescriptor;
 

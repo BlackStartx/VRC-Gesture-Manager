@@ -62,8 +62,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         internal bool PoseSpace;
 
         internal readonly Dictionary<string, VRC_AnimatorTrackingControl.TrackingType> TrackingControls = ModuleVrc3Styles.Data.DefaultTrackingState;
-        internal readonly HashSet<ContactReceiver> Contacts = new HashSet<ContactReceiver>();
+        internal readonly HashSet<ContactReceiver> Receivers = new HashSet<ContactReceiver>();
         private readonly HashSet<AnimationClip> _avatarClips = new HashSet<AnimationClip>();
+        private readonly HashSet<ContactSender> _senders = new HashSet<ContactSender>();
 
         internal int DebugToolBar;
         internal string Edit;
@@ -73,16 +74,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private VRCExpressionsMenu Menu => _avatarDescriptor.expressionsMenu;
         internal IEnumerable<RadialMenu> Radials => _radialMenus.Values;
         internal float ViseAmount => _avatarDescriptor.lipSync == VRC_AvatarDescriptor.LipSyncStyle.VisemeBlendShape ? 14 : 100;
-
-        /*
-         * About this line...
-         *
-         * This is a workaround for receiving constant MouseOver Event and updating the RadialMenu accordingly.
-         * Disabling it boost performance but it heavily affect the user experience.
-         *
-         * If you want to disable it in your implementation, please consider to doing it trough a toggleable settings in the user interface~ ;w;
-         */
-        public override bool RequiresConstantRepaint => true;
 
         public ModuleVrc3(GestureManager manager, VRCAvatarDescriptor avatarDescriptor) : base(manager, avatarDescriptor)
         {
@@ -121,7 +112,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             layerList.AddRange(_avatarDescriptor.specialAnimationLayers);
             layerList.Sort(ModuleVrc3Styles.Data.LayerSort);
 
-            _playableGraph = PlayableGraph.Create("Gesture Manager 3.5");
+            _playableGraph = PlayableGraph.Create("Gesture Manager 3.6");
             var externalOutput = AnimationPlayableOutput.Create(_playableGraph, "Gesture Manager", AvatarAnimator);
             var playableMixer = AnimationLayerMixerPlayable.Create(_playableGraph, layerList.Count + 1);
             externalOutput.SetSourcePlayable(playableMixer);
@@ -130,7 +121,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             _avatarClips.Clear();
             _brokenLayers.Clear();
 
-            Contacts.Clear();
+            _senders.Clear();
+            Receivers.Clear();
 
             for (var i = 0; i < layerList.Count; i++)
             {
@@ -185,6 +177,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             foreach (var physBone in AvatarComponents<VRCPhysBoneBase>()) PhysBoneBaseSetup(physBone);
             foreach (var receiver in AvatarComponents<ContactReceiver>()) ReceiverBaseSetup(receiver);
+            foreach (var sender in AvatarComponents<ContactSender>()) SenderBaseSetup(sender);
 
             OscModule.Resume();
         }
@@ -280,14 +273,22 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 {
                     GUILayout.Label("Left Hand", GestureManagerStyles.GuiHandTitle);
                     weightController.RenderLeft(element);
-                    GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Left, Left, false);
+                    using (new GUILayout.VerticalScope()) GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Left, Left, false);
+                    var rect = GUILayoutUtility.GetLastRect();
+                    var isContained = rect.Contains(Event.current.mousePosition);
+                    GestureDrag = (Event.current.type == EventType.MouseDown && isContained) || Event.current.type != EventType.MouseUp && GestureDrag;
+                    if (isContained && GestureDrag && Event.current.type == EventType.MouseDrag) OnNewLeft((int)((Event.current.mousePosition.y - GUILayoutUtility.GetLastRect().y) / 19) + 1);
                 }
 
                 using (new GUILayout.VerticalScope())
                 {
                     GUILayout.Label("Right Hand", GestureManagerStyles.GuiHandTitle);
                     weightController.RenderRight(element);
-                    GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Right, Right, false);
+                    using (new GUILayout.VerticalScope()) GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Right, Right, false);
+                    var rect = GUILayoutUtility.GetLastRect();
+                    var isContained = rect.Contains(Event.current.mousePosition);
+                    GestureDrag = (Event.current.type == EventType.MouseDown && isContained) || Event.current.type != EventType.MouseUp && GestureDrag;
+                    if (isContained && GestureDrag && Event.current.type == EventType.MouseDrag) OnNewRight((int)((Event.current.mousePosition.y - GUILayoutUtility.GetLastRect().y) / 19) + 1);
                 }
 
                 GUI.enabled = true;
@@ -479,9 +480,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             foreach (var brokenLayer in _brokenLayers)
             {
-                var restore = AssetDatabase.GetAssetPath(ModuleVrc3Styles.Data.RestoreOf(brokenLayer));
-                var original = AssetDatabase.GetAssetPath(ModuleVrc3Styles.Data.ControllerOf(brokenLayer));
-                if (!string.IsNullOrEmpty(restore) && !string.IsNullOrEmpty(original)) AssetDatabase.CopyAsset(restore, original);
+                var pString = AssetDatabase.GetAssetPath(ModuleVrc3Styles.Data.RestoreOf(brokenLayer));
+                var newString = AssetDatabase.GetAssetPath(ModuleVrc3Styles.Data.ControllerOf(brokenLayer));
+                if (!string.IsNullOrEmpty(pString) && !string.IsNullOrEmpty(newString)) AssetDatabase.CopyAsset(pString, newString);
                 else deleted = true;
             }
 
@@ -554,14 +555,16 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             switch (_avatarDescriptor.lipSync)
             {
-                case VRC_AvatarDescriptor.LipSyncStyle.JawFlapBone when _avatarDescriptor.lipSyncJawBone:
+                case VRC_AvatarDescriptor.LipSyncStyle.JawFlapBone:
+                    if (!_avatarDescriptor.lipSyncJawBone) return;
                     _avatarDescriptor.lipSyncJawBone.transform.rotation = vise == 0 ? _avatarDescriptor.lipSyncJawClosed : _avatarDescriptor.lipSyncJawOpen;
-                    break;
-                case VRC_AvatarDescriptor.LipSyncStyle.JawFlapBlendShape when skinnedMesh:
+                    return;
+                case VRC_AvatarDescriptor.LipSyncStyle.JawFlapBlendShape:
+                    if (!skinnedMesh) return;
                     SetBlendShapeWeight(skinnedMesh, _avatarDescriptor.MouthOpenBlendShapeName, vise);
                     return;
-                case VRC_AvatarDescriptor.LipSyncStyle.VisemeBlendShape when skinnedMesh:
-                    if (_avatarDescriptor.VisemeBlendShapes == null) return;
+                case VRC_AvatarDescriptor.LipSyncStyle.VisemeBlendShape:
+                    if (_avatarDescriptor.VisemeBlendShapes == null || !skinnedMesh) return;
                     for (var i = 0; i < _avatarDescriptor.VisemeBlendShapes.Length; i++) SetBlendShapeWeight(skinnedMesh, _avatarDescriptor.VisemeBlendShapes[i], i == vise ? 100.0f : 0.0f);
                     return;
                 case VRC_AvatarDescriptor.LipSyncStyle.Default:
@@ -667,10 +670,11 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             VRCPhysBoneBase.OnInitialize += PhysBoneBaseInit;
             VRC_AnimatorLayerControl.Initialize += AnimatorLayerControlInit;
             VRC_PlayableLayerControl.Initialize += PlayableLayerControlInit;
-            VRC_AvatarParameterDriver.Initialize += AvatarParameterDriverInit;
             VRC_AnimatorTrackingControl.Initialize += AnimatorTrackingControlInit;
             VRC_AnimatorLocomotionControl.Initialize += AnimatorLocomotionControlInit;
             VRC_AnimatorTemporaryPoseSpace.Initialize += AnimatorTemporaryPoseSpaceInit;
+
+            VRC_AvatarParameterDriver.OnApplySettings += AvatarParameterDriverSettings;
 
             _hooked = true;
         }
@@ -683,10 +687,11 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             VRCPhysBoneBase.OnInitialize -= PhysBoneBaseInit;
             VRC_AnimatorLayerControl.Initialize -= AnimatorLayerControlInit;
             VRC_PlayableLayerControl.Initialize -= PlayableLayerControlInit;
-            VRC_AvatarParameterDriver.Initialize -= AvatarParameterDriverInit;
             VRC_AnimatorTrackingControl.Initialize -= AnimatorTrackingControlInit;
             VRC_AnimatorLocomotionControl.Initialize -= AnimatorLocomotionControlInit;
             VRC_AnimatorTemporaryPoseSpace.Initialize -= AnimatorTemporaryPoseSpaceInit;
+
+            VRC_AvatarParameterDriver.OnApplySettings -= AvatarParameterDriverSettings;
 
             _hooked = false;
         }
@@ -698,8 +703,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private void AnimatorLayerControlInit(VRC_AnimatorLayerControl animatorLayerControl) => animatorLayerControl.ApplySettings += AnimatorLayerControlSettings;
 
         private void PlayableLayerControlInit(VRC_PlayableLayerControl playableLayerControl) => playableLayerControl.ApplySettings += PlayableLayerControlSettings;
-
-        private void AvatarParameterDriverInit(VRC_AvatarParameterDriver avatarParameterDriver) => avatarParameterDriver.ApplySettings += AvatarParameterDriverSettings;
 
         private void AnimatorTrackingControlInit(VRC_AnimatorTrackingControl animatorTrackingControl) => animatorTrackingControl.ApplySettings += AnimatorTrackingControlSettings;
 
@@ -741,6 +744,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         break;
                     case VRC_AvatarParameterDriver.ChangeType.Add:
                         param.Add(this, parameter.value);
+                        break;
+                    case VRC_AvatarParameterDriver.ChangeType.Copy:
+                        param.Copy(this, GetParam(parameter.source)?.Get() ?? 0f, parameter.convertRange, parameter.sourceMin, parameter.sourceMax, parameter.destMin, parameter.destMax);
                         break;
                     case VRC_AvatarParameterDriver.ChangeType.Random:
                         param.Random(this, parameter.valueMin, parameter.valueMax, parameter.chance);
@@ -787,20 +793,36 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         private bool ContactBaseInit(ContactBase contactBase)
         {
-            var receiver = contactBase as ContactReceiver;
-            if (!receiver || string.IsNullOrWhiteSpace(receiver.parameter)) return true;
-
-            var animator = receiver.GetComponentInParent<VRCAvatarDescriptor>()?.GetComponent<Animator>();
+            var animator = contactBase.GetComponentInParent<VRCAvatarDescriptor>()?.GetComponent<Animator>();
             if (!_hooked || !animator || animator != AvatarAnimator) return true;
 
-            ReceiverBaseSetup(receiver);
-            return true;
+            switch (contactBase)
+            {
+                case ContactReceiver receiver:
+                    ReceiverBaseSetup(receiver);
+                    return true;
+                case ContactSender sender:
+                    SenderBaseSetup(sender);
+                    return true;
+                default: return true;
+            }
         }
 
         private void ReceiverBaseSetup(ContactReceiver receiver)
         {
-            Contacts.Add(receiver);
+            if (string.IsNullOrWhiteSpace(receiver.parameter)) return;
+            Receivers.Add(receiver);
             receiver.paramAccess = new AnimParameterAccessAvatarGmg(this, receiver.parameter);
+            if (receiver.shape != null) receiver.shape.OnEnter += shape => ContactShapeCheck(receiver, shape.component as ContactSender);
+        }
+
+        private void SenderBaseSetup(ContactSender sender) => _senders.Add(sender);
+
+        private void ContactShapeCheck(ContactReceiver receiver, ContactSender sender)
+        {
+            if (!sender || !receiver) return;
+            if (!receiver.allowSelf && _senders.Contains(sender)) receiver.shape.OnExit.Invoke(sender.shape);
+            if (!receiver.allowOthers && !_senders.Contains(sender)) receiver.shape.OnExit.Invoke(sender.shape);
         }
 
         private void PhysBoneBaseInit(VRCPhysBoneBase vrcPhysBoneBase)

@@ -1,5 +1,4 @@
 ﻿#if VRC_SDK_VRCSDK3
-using System;
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Core.VisualElements;
 using UnityEngine;
@@ -43,25 +42,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
         public abstract void OnClickStart();
 
         public abstract void OnClickEnd();
-
-        [Obsolete] public VisualElement Border;
-        [Obsolete]
-        public void Create(float size)
-        {
-            Border = new VisualElement
-            {
-                pickingMode = PickingMode.Ignore,
-                
-                style =
-                {
-                    width = size / 2,
-                    height = 2,
-                    backgroundColor = RadialMenuUtility.Colors.RadialBorder,
-                    position = UIEPosition.Absolute
-                }
-            };
-            Create();
-        }
     }
 }
 #endif

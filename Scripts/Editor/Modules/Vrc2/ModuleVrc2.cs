@@ -38,7 +38,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
         private AnimationClip _selectingCustomAnim;
         private GmgLayoutHelper.Toolbar _toolBar;
 
-        public override bool RequiresConstantRepaint => false;
         private RuntimeAnimatorController StandingControllerPreset => _standingControllerPreset ? _standingControllerPreset : _standingControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/StandingEmoteTestingTemplate");
         private RuntimeAnimatorController SeatedControllerPreset => _seatedControllerPreset ? _seatedControllerPreset : _seatedControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/SeatedEmoteTestingTemplate");
 
@@ -149,10 +148,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             HumanBodyBones.LastBone
         };
 
-        public ModuleVrc2(GestureManager manager, VRC_AvatarDescriptor avatarDescriptor) : base(manager, avatarDescriptor)
-        {
-            _avatarDescriptor = avatarDescriptor;
-        }
+        public ModuleVrc2(GestureManager manager, VRC_AvatarDescriptor avatarDescriptor) : base(manager, avatarDescriptor) => _avatarDescriptor = avatarDescriptor;
 
         public override void Update()
         {
@@ -281,10 +277,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
 
         protected override void OnNewRight(int right) => Right = right;
 
-        public override AnimationClip GetFinalGestureByIndex(int gestureIndex)
-        {
-            return _myRuntimeOverrideController[_gestureBinds[gestureIndex].GetMyName(_usingType)];
-        }
+        public override AnimationClip GetFinalGestureByIndex(int gestureIndex) => _myRuntimeOverrideController[_gestureBinds[gestureIndex].GetMyName(_usingType)];
 
         public override Animator OnCustomAnimationPlay(AnimationClip animationClip)
         {
@@ -292,10 +285,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             return AvatarAnimator;
         }
 
-        public override bool HasGestureBeenOverridden(int gestureIndex)
-        {
-            return _hasBeenOverridden.ContainsKey(_gestureBinds[gestureIndex].GetMyName(_usingType));
-        }
+        public override bool HasGestureBeenOverridden(int gestureIndex) => _hasBeenOverridden.ContainsKey(_gestureBinds[gestureIndex].GetMyName(_usingType));
 
         public override void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation)
         {
@@ -452,15 +442,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
         {
         }
 
-        public string GetMyName(ControllerType controller)
-        {
-            return controller == ControllerType.Standing ? _standingName : _seatedName;
-        }
+        public string GetMyName(ControllerType controller) => controller == ControllerType.Standing ? _standingName : _seatedName;
 
-        public string GetOriginalName()
-        {
-            return _originalName;
-        }
+        public string GetOriginalName() => _originalName;
     }
 }
 #endif

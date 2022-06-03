@@ -61,12 +61,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 EditorPrefs.SetString(BorderKeyName, $"#{ColorUtility.ToHtmlStringRGBA(border)}");
                 EditorPrefs.SetString(SelectedKeyName, $"#{ColorUtility.ToHtmlStringRGBA(selected)}");
             }
-
-            [Obsolete] internal static readonly Color OriginalCursorBorder = new Color(0.1f, 0.35f, 0.38f);
-            [Obsolete] internal static readonly Color OriginalCursor = new Color(0.14f, 0.18f, 0.2f);
-            [Obsolete] internal static readonly Color RadialBorder = new Color(0.1f, 0.35f, 0.38f);
-            [Obsolete] internal static readonly Color RadialMiddle = new Color(0.14f, 0.18f, 0.2f);
-            [Obsolete] internal static readonly Color OuterBorder = new Color(0.1f, 0.35f, 0.38f);
         }
 
         public static class Prefabs
