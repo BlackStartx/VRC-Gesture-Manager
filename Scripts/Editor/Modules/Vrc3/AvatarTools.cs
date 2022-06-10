@@ -75,6 +75,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 var transform = _camera.transform;
                 var positionVector = sceneTransform.position;
                 transform.rotation = sceneTransform.rotation;
+                _camera.projectionMatrix = camera.projectionMatrix;
                 transform.position = new Vector3(positionVector.x, positionVector.y + 0.001f, positionVector.z);
             }
 
@@ -152,9 +153,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             private void Enable(ContactReceiver receiver, float value)
             {
+                if (receiver.receiverType != ContactReceiver.ReceiverType.OnEnter) receiver.SetParameter(value);
                 if (_activeContact.Contains(receiver)) return;
                 _activeContact.Add(receiver);
-                receiver.SetParameter(value);
+                if (receiver.receiverType == ContactReceiver.ReceiverType.OnEnter) receiver.SetParameter(value);
             }
 
             private void Disable(ContactReceiver receiver)
