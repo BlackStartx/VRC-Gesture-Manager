@@ -10,11 +10,11 @@ namespace GestureManager.Scripts.Core.VisualElements
 {
     public class GmgTmpRichTextElement : VisualElement
     {
-        private static string RegexTokenPattern => "<[^<>]+>";
-        private static string RegexStringPattern => "(.*?<[^<>]+>|.+)";
+        private static readonly Regex TokenPatternRegex = new Regex("<[^<>]+>", RegexOptions.Compiled);
+        private static readonly Regex StringPatternRegex = new Regex("(.*?<[^<>]+>|.+)", RegexOptions.Compiled);
 
         private const string V_OFFSET = "voffset";
-
+        
         private const string SUX_ATTRIBUTE = "8";
 
         private string _text;
@@ -99,7 +99,7 @@ namespace GestureManager.Scripts.Core.VisualElements
         {
             _data = new Data();
             foreach (var _ in Enumerable.Range(0, _textHolder.childCount)) _textHolder.RemoveAt(0);
-            foreach (var splitString in Regex.Matches(input, RegexStringPattern).OfType<Match>().Select(match => match.Value)) AddToken(splitString);
+            foreach (var splitString in StringPatternRegex.Matches(input).OfType<Match>().Select(match => match.Value)) AddToken(splitString);
         }
 
         private void AddToken(string tokenInput)
@@ -107,7 +107,7 @@ namespace GestureManager.Scripts.Core.VisualElements
             var child = new TextElement
             {
                 style = { unityFontStyleAndWeight = _data.FontStyle, color = _data.ColorStyle(style.color), backgroundColor = _data.MarkStyle, fontSize = _data.SizeStyle(style.fontSize) },
-                pickingMode = PickingMode.Ignore, text = Regex.Split(tokenInput, RegexTokenPattern)[0] + EvaluateToken(Regex.Match(tokenInput, RegexTokenPattern).Value)
+                pickingMode = PickingMode.Ignore, text = TokenPatternRegex.Split(tokenInput)[0] + EvaluateToken(TokenPatternRegex.Match(tokenInput).Value)
             };
             if (string.IsNullOrEmpty(child.text)) return;
             child.style.width = 100;
