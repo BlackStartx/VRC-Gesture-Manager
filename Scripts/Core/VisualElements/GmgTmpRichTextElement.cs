@@ -109,18 +109,18 @@ namespace GestureManager.Scripts.Core.VisualElements
                 style = { unityFontStyleAndWeight = _data.FontStyle, color = _data.ColorStyle(style.color), backgroundColor = _data.MarkStyle, fontSize = _data.SizeStyle(style.fontSize) },
                 pickingMode = PickingMode.Ignore, text = Regex.Split(tokenInput, RegexTokenPattern)[0] + EvaluateToken(Regex.Match(tokenInput, RegexTokenPattern).Value)
             };
-            if (child.text == "") return;
+            if (string.IsNullOrEmpty(child.text)) return;
             child.style.width = 100;
             _textHolder.Add(child);
         }
 
-        private static (string, string) GetToken(string tokenString) => GetToken(tokenString.Split(new[] { ' ', '=' }, 2));
+        private static (string, string) GetToken(string tokenString) => GetToken(tokenString.Split(' ', '='));
 
         private static (string, string) GetToken(IReadOnlyList<string> splitData) => (splitData[0], splitData.Count > 1 ? splitData[1] : null);
 
         private string EvaluateToken(string token)
         {
-            if (token == "") return null;
+            if (string.IsNullOrEmpty(token)) return null;
 
             var isClose = token[1] == '/';
             var tokenString = token.Substring(isClose ? 2 : 1, token.Length - (isClose ? 3 : 2));
