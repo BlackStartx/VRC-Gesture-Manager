@@ -10,82 +10,44 @@ namespace GestureManager.Scripts.Core.VisualElements
 {
     public class GmgTmpRichTextElement : VisualElement
     {
-        private static readonly Regex TokenPatternRegex = new Regex("<[^<>]+>", RegexOptions.Compiled);
-        private static readonly Regex StringPatternRegex = new Regex("(.*?<[^<>]+>|.+)", RegexOptions.Compiled);
+        static readonly Regex StringMatchRegex = new Regex(@"([^<]*)<(\\?[^\s=>]*)\s*=?([^>]*)>(.*)", RegexOptions.Compiled);
 
-        private const string V_OFFSET = "voffset";
-        
-        private const string SUX_ATTRIBUTE = "8";
+        static readonly Length Length_SUX = new Length(8);
+        static readonly Length DefaultTmpSize = default(Length);
+        static readonly Color32 DefaultTmpFGC = new Color32(0xFF, 0xFF, 0xFF, 0xFF);
+        static readonly Color32 DefaultTmpBGC = new Color32(0x00, 0x00, 0x00, 0x00);
 
-        private string _text;
+        int _bold = 0;
+        int _italic = 0;
+        readonly Stack<Color32> _fgColorStack = new Stack<Color32>();
+        readonly Stack<Color32> _bgColorStack = new Stack<Color32>();
+        readonly Stack<Length> _sizeStack = new Stack<Length>();
 
-        private Data _data;
+        string _tmpBuffer = string.Empty;
+        FontStyle _tmpStyle = FontStyle.Normal;
+        Length _tmpSize = DefaultTmpSize;
+        Color32 _tmpFGC = DefaultTmpFGC;
+        Color32 _tmpBGC = DefaultTmpBGC;
+
+        string _text;
+        public string Text
+        {
+            get => _text;
+            set
+            {
+                if (_text != value)
+                {
+                    ParseText(_text = value);
+                }
+            }
+        }
 
         private readonly VisualElement _textHolder;
 
-        private class Data
-        {
-            private static Dictionary<string, Color> TextMeshProColorNames => new Dictionary<string, Color>
-            {
-                { "black", Color.black },
-                { "blue", Color.blue },
-                { "green", Color.green },
-                { "orange", new Color(1f, 0.5f, 0f) },
-                { "purple", new Color(0.63f, 0.13f, 0.94f) },
-                { "red", Color.red },
-                { "white", Color.white },
-                { "yellow", new Color(1f, 0.92f, 0f) }
-            };
-
-            public FontStyle FontStyle => Italic == 0 && Bold == 0 ? FontStyle.Normal : Italic == 0 ? FontStyle.Bold : Bold == 0 ? FontStyle.Italic : FontStyle.BoldAndItalic;
-            public StyleColor ColorStyle(StyleColor fallback) => TextColor.LastOrDefault() ?? fallback;
-            public StyleLength SizeStyle(StyleLength fallback) => Size.LastOrDefault() ?? fallback;
-            public StyleColor MarkStyle => Mark.LastOrDefault() ?? Color.clear;
-
-            internal int Italic;
-            internal int Bold;
-            internal readonly List<Color?> Mark = new List<Color?>();
-            internal readonly List<Color?> TextColor = new List<Color?>();
-            internal readonly List<StyleLength?> Size = new List<StyleLength?>();
-
-            private static bool HandleList<T>(IList<T> list, bool close, string attribute, Func<IList<T>, string, bool> tryAdd)
-            {
-                if (!close) return tryAdd(list, attribute);
-                if (list.Count > 0) list.RemoveAt(list.Count - 1);
-                return true;
-            }
-
-            public static bool HandleColorList(IList<Color?> list, bool close, string attribute) => HandleList(list, close, attribute, TryAddColor);
-
-            public static bool HandleStyleLengthList(IList<StyleLength?> list, bool close, string attribute) => HandleList(list, close, attribute, TryAddStyleLength);
-
-            private static bool TryAddStyleLength(ICollection<StyleLength?> list, string attribute)
-            {
-                if (attribute == null || !int.TryParse(attribute, out var intSize)) return false;
-                var item = new StyleLength(intSize);
-                list.Add(item);
-                return true;
-            }
-
-            private static bool TryAddColor(ICollection<Color?> list, string attribute)
-            {
-                if (attribute == null || !ColorOf(attribute, out var color)) return false;
-                list.Add(color);
-                return true;
-            }
-
-            private static bool ColorOf(string attribute, out Color color) => TextMeshProColorNames.TryGetValue(attribute, out color) || ColorUtility.TryParseHtmlString(attribute, out color);
-        }
-
-        public string Text
-        {
-            set
-            {
-                if (_text == value) return;
-                _text = value;
-                SetUp(value);
-            }
-        }
+        public FontStyle FontStyle => (FontStyle)(((_bold > 0) ? 1 : 0) | ((_italic > 0) ? 2 : 0));
+        public Length FontSize => _sizeStack.PeekOrDefault(DefaultTmpSize);
+        public Color32 ForegroundColor => _fgColorStack.PeekOrDefault(DefaultTmpFGC);
+        public Color32 BackgroundColor => _bgColorStack.PeekOrDefault(DefaultTmpBGC);
 
         public GmgTmpRichTextElement()
         {
@@ -95,63 +57,159 @@ namespace GestureManager.Scripts.Core.VisualElements
             _textHolder.style.alignItems = Align.Center;
         }
 
-        private void SetUp(string input)
+        void ClearText()
         {
-            _data = new Data();
-            foreach (var _ in Enumerable.Range(0, _textHolder.childCount)) _textHolder.RemoveAt(0);
-            foreach (var splitString in StringPatternRegex.Matches(input).OfType<Match>().Select(match => match.Value)) AddToken(splitString);
-        }
+            _bold = 0;
+            _italic = 0;
+            _fgColorStack.Clear();
+            _bgColorStack.Clear();
+            _sizeStack.Clear();
+            _tmpBuffer = "";
+            _tmpStyle = FontStyle.Normal;
+            _tmpSize = DefaultTmpSize;
+            _tmpFGC = DefaultTmpFGC;
+            _tmpBGC = DefaultTmpBGC;
 
-        private void AddToken(string tokenInput)
-        {
-            var child = new TextElement
+            for (int i = _textHolder.childCount; i-- > 0;)
             {
-                style = { unityFontStyleAndWeight = _data.FontStyle, color = _data.ColorStyle(style.color), backgroundColor = _data.MarkStyle, fontSize = _data.SizeStyle(style.fontSize) },
-                pickingMode = PickingMode.Ignore, text = TokenPatternRegex.Split(tokenInput)[0] + EvaluateToken(TokenPatternRegex.Match(tokenInput).Value)
-            };
-            if (string.IsNullOrEmpty(child.text)) return;
-            child.style.width = 100;
-            _textHolder.Add(child);
-        }
-
-        private static (string, string) GetToken(string tokenString) => GetToken(tokenString.Split(' ', '='));
-
-        private static (string, string) GetToken(IReadOnlyList<string> splitData) => (splitData[0], splitData.Count > 1 ? splitData[1] : null);
-
-        private string EvaluateToken(string token)
-        {
-            if (string.IsNullOrEmpty(token)) return null;
-
-            var isClose = token[1] == '/';
-            var tokenString = token.Substring(isClose ? 2 : 1, token.Length - (isClose ? 3 : 2));
-            var (tagString, attributeString) = GetToken(tokenString);
-
-            switch (tagString)
-            {
-                case "i":
-                    if (!isClose) _data.Italic++;
-                    else if (_data.Italic > 0) _data.Italic--;
-                    return null;
-                case "b":
-                    if (!isClose) _data.Bold++;
-                    else if (_data.Bold > 0) _data.Bold--;
-                    return null;
-                case "mark":
-                    return Data.HandleColorList(_data.Mark, isClose, attributeString) ? null : token;
-                case "color":
-                    return Data.HandleColorList(_data.TextColor, isClose, attributeString) ? null : token;
-                case "size":
-                    return Data.HandleStyleLengthList(_data.Size, isClose, attributeString) ? null : token;
-                case "sup":
-                    return Data.HandleStyleLengthList(_data.Size, isClose, SUX_ATTRIBUTE) ? null : token;
-                case "sub":
-                    return Data.HandleStyleLengthList(_data.Size, isClose, SUX_ATTRIBUTE) ? null : token;
-                case V_OFFSET:
-                    return null;
-                case "sprite": // No... I won't implement this perfectly... This is enough~
-                    return "☻";
-                default: return token;
+                _textHolder.RemoveAt(i);
             }
+        }
+        void ParseText(string input)
+        {
+            ClearText();
+            string remainingText = input;
+            while (!string.IsNullOrEmpty(remainingText))
+            {
+                var match = StringMatchRegex.Match(remainingText);
+                if (!match.Success)
+                {
+                    AddText(remainingText);
+                    break;
+                }
+
+                var matchGroups = match.Groups;
+
+                AddText(matchGroups[1].Value);
+
+                var tag = matchGroups[2].Value;
+                if (!string.IsNullOrEmpty(tag))
+                {
+                    if (tag[0] == '/')
+                    {
+                        CloseTag(tag.Substring(1));
+                    }
+                    else
+                    {
+                        OpenTag(tag, matchGroups[3].Value);
+                    }
+                }
+
+                remainingText = matchGroups[4].Value;
+            }
+
+            FlushText();
+            MarkDirtyRepaint();
+        }
+
+        void OpenTag(string tag, string attribute)
+        {
+            switch (tag)
+            {
+                case "b":
+                    _bold++;
+                    return;
+                case "i":
+                    _italic++;
+                    return;
+                case "color":
+                    if (GmgColorHelper.TryParseTMPColor(attribute, out var color)) _fgColorStack.Push(color);
+                    return;
+                case "mark":
+                    if (GmgColorHelper.TryParseTMPColor(attribute, out color)) _bgColorStack.Push(color);
+                    return;
+                case "size":
+                    if (int.TryParse(attribute, out var size)) _sizeStack.Push(new Length(size));
+                    return;
+                case "sup":
+                case "sub":
+                    _sizeStack.Push(Length_SUX);
+                    return;
+                case "sprite": // No... I won't implement this perfectly... This is enough~
+                    AddText("☻");
+                    return;
+                case "voffset":
+                default:
+                    return;
+            }
+        }
+        void CloseTag(string tag)
+        {
+            switch (tag)
+            {
+                case "b":
+                    _bold--;
+                    return;
+                case "i":
+                    _italic--;
+                    return;
+                case "color":
+                    _fgColorStack.TryPop();
+                    return;
+                case "mark":
+                    _bgColorStack.TryPop();
+                    return;
+                case "sup":
+                case "sub":
+                case "size":
+                    _sizeStack.TryPop();
+                    return;
+                case "sprite":
+                case "voffset":
+                default:
+                    return;
+            }
+        }
+
+        void AddText(string text)
+        {
+            if (!string.IsNullOrEmpty(text))
+            {
+                var style = FontStyle;
+                var size = FontSize;
+                var fgCol = ForegroundColor;
+                var bgCol = BackgroundColor;
+
+                if (style != _tmpStyle || size != _tmpSize || !fgCol.Equals(_tmpFGC) || !bgCol.Equals(_tmpBGC))
+                {
+                    FlushText();
+                    _tmpStyle = style;
+                    _tmpSize = size;
+                    _tmpFGC = fgCol;
+                    _tmpBGC = bgCol;
+                }
+
+                _tmpBuffer += text;
+            }
+        }
+
+        void FlushText()
+        {
+            if (!string.IsNullOrEmpty(_tmpBuffer))
+            {
+                _textHolder.Add(new TextElement
+                {
+                    text = _tmpBuffer,
+                    pickingMode = PickingMode.Ignore,
+                    style = {
+                        unityFontStyleAndWeight = _tmpStyle,
+                        fontSize = _tmpSize,
+                        color = (Color)_tmpFGC,
+                        backgroundColor = (Color)_tmpBGC
+                    }
+                });
+            }
+            _tmpBuffer = string.Empty;
         }
     }
 }
