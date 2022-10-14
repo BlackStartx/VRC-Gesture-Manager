@@ -10,8 +10,8 @@ namespace GestureManager.Scripts.Core.VisualElements
 {
     public class GmgTmpRichTextElement : VisualElement
     {
-        private static string RegexTokenPattern => "<[^<>]+>";
-        private static string RegexStringPattern => "(.*?<[^<>]+>|.+)";
+        private static readonly Regex RegexTokenPattern = new Regex("<[^<>]+>", RegexOptions.Compiled);
+        private static readonly Regex RegexStringPattern = new Regex("(.*?<[^<>]+>|.+)", RegexOptions.Compiled);
 
         private const string V_OFFSET = "voffset";
 
@@ -27,50 +27,52 @@ namespace GestureManager.Scripts.Core.VisualElements
         {
             private static Dictionary<string, Color> TextMeshProColorNames => new Dictionary<string, Color>
             {
-                { "black", Color.black },
+                { "red", Color.red },
                 { "blue", Color.blue },
+                { "white", Color.white },
+                { "black", Color.black },
                 { "green", Color.green },
                 { "orange", new Color(1f, 0.5f, 0f) },
-                { "purple", new Color(0.63f, 0.13f, 0.94f) },
-                { "red", Color.red },
-                { "white", Color.white },
-                { "yellow", new Color(1f, 0.92f, 0f) }
+                { "yellow", new Color(1f, 0.92f, 0f) },
+                { "purple", new Color(0.63f, 0.13f, 0.94f) }
             };
 
             public FontStyle FontStyle => Italic == 0 && Bold == 0 ? FontStyle.Normal : Italic == 0 ? FontStyle.Bold : Bold == 0 ? FontStyle.Italic : FontStyle.BoldAndItalic;
-            public StyleColor ColorStyle(StyleColor fallback) => TextColor.LastOrDefault() ?? fallback;
-            public StyleLength SizeStyle(StyleLength fallback) => Size.LastOrDefault() ?? fallback;
-            public StyleColor MarkStyle => Mark.LastOrDefault() ?? Color.clear;
+            public StyleColor ColorStyle(StyleColor fallback) => PeekOrDefault(TextColor) ?? fallback;
+            public StyleLength SizeStyle(StyleLength fallback) => PeekOrDefault(Size) ?? fallback;
+            public StyleColor MarkStyle => PeekOrDefault(Mark) ?? Color.clear;
 
+            internal readonly Stack<StyleLength?> Size = new Stack<StyleLength?>();
+            internal readonly Stack<Color?> TextColor = new Stack<Color?>();
+            internal readonly Stack<Color?> Mark = new Stack<Color?>();
             internal int Italic;
             internal int Bold;
-            internal readonly List<Color?> Mark = new List<Color?>();
-            internal readonly List<Color?> TextColor = new List<Color?>();
-            internal readonly List<StyleLength?> Size = new List<StyleLength?>();
 
-            private static bool HandleList<T>(IList<T> list, bool close, string attribute, Func<IList<T>, string, bool> tryAdd)
+            private static bool HandleList<T>(Stack<T> list, bool close, string attribute, Func<Stack<T>, string, bool> tryAdd)
             {
                 if (!close) return tryAdd(list, attribute);
-                if (list.Count > 0) list.RemoveAt(list.Count - 1);
+                if (list.Count > 0) list.Pop();
                 return true;
             }
 
-            public static bool HandleColorList(IList<Color?> list, bool close, string attribute) => HandleList(list, close, attribute, TryAddColor);
+            private static T PeekOrDefault<T>(Stack<T> stack, T defaultValue = default) => stack.Count > 0 ? stack.Peek() : defaultValue;
 
-            public static bool HandleStyleLengthList(IList<StyleLength?> list, bool close, string attribute) => HandleList(list, close, attribute, TryAddStyleLength);
+            public static bool HandleColorList(Stack<Color?> list, bool close, string attribute) => HandleList(list, close, attribute, TryAddColor);
 
-            private static bool TryAddStyleLength(ICollection<StyleLength?> list, string attribute)
+            public static bool HandleStyleLengthList(Stack<StyleLength?> list, bool close, string attribute) => HandleList(list, close, attribute, TryAddStyleLength);
+
+            private static bool TryAddStyleLength(Stack<StyleLength?> list, string attribute)
             {
                 if (attribute == null || !int.TryParse(attribute, out var intSize)) return false;
                 var item = new StyleLength(intSize);
-                list.Add(item);
+                list.Push(item);
                 return true;
             }
 
-            private static bool TryAddColor(ICollection<Color?> list, string attribute)
+            private static bool TryAddColor(Stack<Color?> list, string attribute)
             {
                 if (attribute == null || !ColorOf(attribute, out var color)) return false;
-                list.Add(color);
+                list.Push(color);
                 return true;
             }
 
@@ -99,7 +101,7 @@ namespace GestureManager.Scripts.Core.VisualElements
         {
             _data = new Data();
             foreach (var _ in Enumerable.Range(0, _textHolder.childCount)) _textHolder.RemoveAt(0);
-            foreach (var splitString in Regex.Matches(input, RegexStringPattern).OfType<Match>().Select(match => match.Value)) AddToken(splitString);
+            foreach (var splitString in RegexStringPattern.Matches(input).OfType<Match>().Select(match => match.Value)) AddToken(splitString);
         }
 
         private void AddToken(string tokenInput)
@@ -107,9 +109,9 @@ namespace GestureManager.Scripts.Core.VisualElements
             var child = new TextElement
             {
                 style = { unityFontStyleAndWeight = _data.FontStyle, color = _data.ColorStyle(style.color), backgroundColor = _data.MarkStyle, fontSize = _data.SizeStyle(style.fontSize) },
-                pickingMode = PickingMode.Ignore, text = Regex.Split(tokenInput, RegexTokenPattern)[0] + EvaluateToken(Regex.Match(tokenInput, RegexTokenPattern).Value)
+                pickingMode = PickingMode.Ignore, text = RegexTokenPattern.Split(tokenInput)[0] + EvaluateToken(RegexTokenPattern.Match(tokenInput).Value)
             };
-            if (child.text == "") return;
+            if (string.IsNullOrEmpty(child.text)) return;
             child.style.width = 100;
             _textHolder.Add(child);
         }
@@ -120,7 +122,7 @@ namespace GestureManager.Scripts.Core.VisualElements
 
         private string EvaluateToken(string token)
         {
-            if (token == "") return null;
+            if (string.IsNullOrEmpty(token)) return null;
 
             var isClose = token[1] == '/';
             var tokenString = token.Substring(isClose ? 2 : 1, token.Length - (isClose ? 3 : 2));
