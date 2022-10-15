@@ -9,7 +9,6 @@ namespace GestureManager.Scripts.Editor
 
         private static GUIStyle _bottomStyle;
         private static GUIStyle _emoteError;
-        private static GUIStyle _guiGreenButton;
         private static GUIStyle _guiHandTitle;
         private static GUIStyle _guiDebugTitle;
         private static GUIStyle _middleStyle;
@@ -94,14 +93,6 @@ namespace GestureManager.Scripts.Editor
             active = { textColor = Color.yellow },
             normal = { textColor = Color.yellow },
             alignment = TextAnchor.MiddleCenter
-        });
-
-        internal static GUIStyle GuiGreenButton => _guiGreenButton ?? (_guiGreenButton = new GUIStyle(GUI.skin.button)
-        {
-            active = { textColor = Color.green },
-            normal = { textColor = Color.green },
-            hover = { textColor = Color.green },
-            fixedWidth = 100
         });
 
         internal static GUIStyle Header => _header ?? (_header = new GUIStyle(GUI.skin.label)

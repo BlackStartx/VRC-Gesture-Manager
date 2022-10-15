@@ -23,6 +23,7 @@ namespace GestureManager.Scripts.Extra
 
         protected int Right, Left;
         protected bool GestureDrag;
+        public bool Active;
 
         protected ModuleBase(GestureManager manager, GmgAvatarDescriptor avatarDescriptor)
         {
@@ -35,16 +36,16 @@ namespace GestureManager.Scripts.Extra
 
         public abstract void Update();
         public abstract void LateUpdate();
+        public abstract void OnDrawGizmos();
         public abstract void InitForAvatar();
         public abstract void Unlink();
         public abstract void EditorHeader();
         public abstract void EditorContent(object editor, VisualElement element);
         protected abstract void OnNewLeft(int left);
         protected abstract void OnNewRight(int right);
-        public abstract AnimationClip GetFinalGestureByIndex(int gestureIndex);
+        public abstract string GetGestureTextNameByIndex(int gestureIndex);
         public abstract Animator OnCustomAnimationPlay(AnimationClip clip);
         public abstract bool HasGestureBeenOverridden(int gesture);
-        public abstract void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation);
 
         public virtual bool IsInvalid() => !Avatar || !AvatarAnimator || !_avatarDescriptor;
 

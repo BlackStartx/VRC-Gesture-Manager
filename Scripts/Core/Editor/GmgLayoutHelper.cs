@@ -42,8 +42,6 @@ namespace GestureManager.Scripts.Core.Editor
 
         public static IEnumerable<EditorWindow> GetInspectorWindows() => Resources.FindObjectsOfTypeAll<EditorWindow>().Where(window => window.titleContent.text == "Inspector");
 
-        public static void GuiLabel((Color? color, string text) tuple) => GuiLabel(tuple.color, tuple.text);
-
         public static void GuiLabel((Color? color, string text) tuple, params GUILayoutOption[] options) => GuiLabel(tuple.color, tuple.text, null, options);
 
         private static void GuiLabel(Color? color, string text, GUIStyle style = null, params GUILayoutOption[] options)
@@ -171,8 +169,22 @@ namespace GestureManager.Scripts.Core.Editor
         public static string PlaceHolderTextField(string label, string text, string placeHolder)
         {
             text = EditorGUILayout.TextField(label, text);
-            if(string.IsNullOrEmpty(text)) EditorGUI.LabelField(GUILayoutUtility.GetLastRect(), " ", placeHolder);
+            if (string.IsNullOrEmpty(text)) EditorGUI.LabelField(GUILayoutUtility.GetLastRect(), " ", placeHolder);
             return text;
+        }
+
+        public static string SearchBar(string search, string name = "GM Search", string sNull = null)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                GUI.SetNextControlName(name);
+                search = EditorGUILayout.TextField(search, EditorStyles.toolbarSearchField);
+                var isCancellable = GUI.GetNameOfFocusedControl() == name || !string.IsNullOrEmpty(search);
+                var searchButtonStyle = isCancellable ? GUI.skin.FindStyle("SearchCancelButton") : GUI.skin.FindStyle("SearchCancelButtonEmpty");
+                if (!GUILayout.Button(sNull, searchButtonStyle)) return search;
+                GUI.FocusControl(sNull);
+                return null;
+            }
         }
 
         /*

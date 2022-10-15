@@ -18,7 +18,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         private static KeyValuePair<AnimationClip, AnimationClip> OverrideClip(AnimationClip clip)
         {
-            OverrideOf.TryGetValue(clip.name, out var oClip);
+            OverrideOf.TryGetValue(clip ? clip.name : "", out var oClip);
             return new KeyValuePair<AnimationClip, AnimationClip>(clip, oClip);
         }
 

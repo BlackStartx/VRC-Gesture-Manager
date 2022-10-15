@@ -41,22 +41,23 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private PlayableGraph _playableGraph;
         private bool _hooked;
 
-        private bool _broken;
         private bool _ignoreWarnings;
 
         private int _debug;
 
-        internal readonly Vrc3ParamBool Dummy;
         internal readonly Vrc3ParamBool PoseT;
         internal readonly Vrc3ParamBool PoseIK;
 
-        private readonly Dictionary<UnityEditor.Editor, Vrc3WeightController> _weightControllers = new Dictionary<UnityEditor.Editor, Vrc3WeightController>();
-        private readonly Dictionary<UnityEditor.Editor, VisualEpContainer> _oscContainers = new Dictionary<UnityEditor.Editor, VisualEpContainer>();
-        private readonly Dictionary<UnityEditor.Editor, RadialMenu> _radialMenus = new Dictionary<UnityEditor.Editor, RadialMenu>();
+        private readonly Dictionary<ScriptableObject, Vrc3WeightController> _weightControllers = new Dictionary<ScriptableObject, Vrc3WeightController>();
+        private readonly Dictionary<ScriptableObject, VisualEpContainer> _oscContainers = new Dictionary<ScriptableObject, VisualEpContainer>();
+        private readonly Dictionary<ScriptableObject, RadialMenu> _radialMenus = new Dictionary<ScriptableObject, RadialMenu>();
 
         private readonly Dictionary<VRCAvatarDescriptor.AnimLayerType, LayerData> _layers = new Dictionary<VRCAvatarDescriptor.AnimLayerType, LayerData>();
         private readonly List<VRCAvatarDescriptor.AnimLayerType> _brokenLayers = new List<VRCAvatarDescriptor.AnimLayerType>();
         internal readonly Dictionary<string, Vrc3Param> Params = new Dictionary<string, Vrc3Param>();
+
+        private string _paramFilter;
+        internal Dictionary<string, Vrc3Param> FilteredParams = new Dictionary<string, Vrc3Param>();
 
         internal bool LocomotionDisabled;
         internal bool PoseSpace;
@@ -68,6 +69,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         internal int DebugToolBar;
         internal string Edit;
+        internal bool Broken;
+
+        private static readonly GUILayoutOption SizeOptions = GUILayout.Height(RadialMenu.Size);
+        private static readonly GUILayoutOption[] Options = { GUILayout.ExpandWidth(true), SizeOptions };
 
         private IEnumerable<AnimationClip> OriginalClips => _avatarClips.Where(clip => !clip.name.StartsWith("proxy_"));
         private VRCExpressionParameters Parameters => _avatarDescriptor.expressionParameters;
@@ -81,22 +86,27 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             _avatarDescriptor = avatarDescriptor;
             OscModule = new OscModule(this);
 
-            Dummy = new Vrc3ParamBool(OnDummyModeChange);
             PoseIK = new Vrc3ParamBool(OnIKPoseChange);
             PoseT = new Vrc3ParamBool(OnTPoseChange);
         }
 
         public override void Update()
         {
-            if (_broken) return;
-            OscModule.Update();
-            _avatarTools.OnUpdate(this);
-            if (DummyMode == null && _layers.Any(IsBroken)) OnBrokenSimulation();
-            if (DummyMode != null && (!DummyMode.Avatar || Avatar.activeSelf)) Dummy.ShutDown();
-            foreach (var pair in _layers) pair.Value.Weight.Update();
+            if (!EditorApplication.isPlaying || EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                if (Broken) return;
+                OscModule.Update();
+                _avatarTools.OnUpdate(this);
+                if (DummyMode == null && _layers.Any(IsBroken)) OnBrokenSimulation();
+                if (DummyMode != null && (!DummyMode.Avatar || Avatar.activeSelf)) DummyMode.StopExecution();
+                foreach (var pair in _layers) pair.Value.Weight.Update();
+            }
+            else DestroyGraphs();
         }
 
         public override void LateUpdate() => _avatarTools.OnLateUpdate(this);
+
+        public override void OnDrawGizmos() => _avatarTools.OnDrawGizmos();
 
         public override void InitForAvatar()
         {
@@ -112,7 +122,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             layerList.AddRange(_avatarDescriptor.specialAnimationLayers);
             layerList.Sort(ModuleVrc3Styles.Data.LayerSort);
 
-            _playableGraph = PlayableGraph.Create("Gesture Manager 3.6");
+            _playableGraph = PlayableGraph.Create("Gesture Manager 3.7");
             var externalOutput = AnimationPlayableOutput.Create(_playableGraph, "Gesture Manager", AvatarAnimator);
             var playableMixer = AnimationLayerMixerPlayable.Create(_playableGraph, layerList.Count + 1);
             externalOutput.SetSourcePlayable(playableMixer);
@@ -140,7 +150,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         _avatarClips.Add(clip);
 
                 var controller = Vrc3ProxyOverride.OverrideController(vrcAnimLayer.isDefault ? RequestBuiltInController(vrcAnimLayer.type) : vrcAnimLayer.animatorController);
-                var mask = vrcAnimLayer.isDefault || isFx ? ModuleVrc3Styles.Data.MaskOf[vrcAnimLayer.type] : vrcAnimLayer.mask;
+                var mask = vrcAnimLayer.isDefault || isFx ? ModuleVrc3Styles.Data.MaskOf(vrcAnimLayer.type) : vrcAnimLayer.mask;
 
                 var playable = AnimatorControllerPlayable.Create(_playableGraph, controller);
                 var weight = new AnimatorControllerWeight(playableMixer, playable, intGraph);
@@ -160,9 +170,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             foreach (var menu in Radials) menu.Set(Menu);
             InitParams(AvatarAnimator, Parameters);
 
+            GetParam(Vrc3DefaultParams.IsLocal)?.InternalSet(1f);
             GetParam(Vrc3DefaultParams.Upright)?.InternalSet(1f);
             GetParam(Vrc3DefaultParams.Grounded)?.InternalSet(1f);
-            GetParam(Vrc3DefaultParams.TrackingType)?.InternalSet(1f);
+            GetParam(Vrc3DefaultParams.TrackingType)?.InternalSet(3f);
             GetParam(Vrc3DefaultParams.AvatarVersion)?.InternalSet(3f);
             GetParam(Vrc3DefaultParams.GestureLeftWeight)?.InternalSet(1f);
             GetParam(Vrc3DefaultParams.GestureRightWeight)?.InternalSet(1f);
@@ -186,7 +197,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         {
             CloseDebugWindows();
             if (OscModule.Enabled) OscModule.Stop();
-            if (Dummy.State) Dummy.ShutDown();
+            DummyMode?.StopExecution();
             if (AvatarAnimator) ForgetAvatar();
             StopVisualElements();
             StopVrcHooks();
@@ -194,17 +205,20 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         public override void EditorHeader()
         {
-            if (_brokenLayers.Count == 0 || _ignoreWarnings || _broken) return;
+            if (_brokenLayers.Count == 0 || _ignoreWarnings || Broken) return;
             using (new GmgLayoutHelper.GuiBackground(Color.yellow)) ShowWarnings();
         }
 
         public override void EditorContent(object editor, VisualElement element)
         {
-            var menu = GetOrCreateRadial(editor as UnityEditor.Editor);
-            var oscContainer = GetOrCreateOscContainer(editor as UnityEditor.Editor);
-            var weightController = GetOrCreateWeightController(editor as UnityEditor.Editor);
+            var customEditor = editor as UnityEditor.Editor;
+            if (!customEditor) return;
 
-            GUI.enabled = !_broken;
+            var menu = GetOrCreateRadial(customEditor);
+            var oscContainer = GetOrCreateOscContainer(customEditor);
+            var weightController = GetOrCreateWeightController(customEditor);
+
+            GUI.enabled = !Broken;
             GmgLayoutHelper.MyToolbar(ref menu.ToolBar, new (string, Action)[]
             {
                 ("Gestures", () => EditorContentGesture(element, weightController)),
@@ -216,8 +230,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             GUILayout.Space(4);
             GmgLayoutHelper.Divisor(1);
 
-            if (_broken) ShowError(menu);
-            else
+            if (!Broken)
                 switch (menu.ToolBar.Selected)
                 {
                     case 0:
@@ -227,30 +240,28 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                         ShowDebugMenu(element, oscContainer, menu);
                         break;
                 }
+            else ShowError(menu);
 
             menu.CheckCondition(this, menu);
             oscContainer.CheckCondition(this, menu);
             weightController.CheckCondition(this, menu);
+            if (IsWatchingDebugParameters(menu)) customEditor.Repaint();
         }
 
         protected override void OnNewLeft(int left) => Params[Vrc3DefaultParams.GestureLeft].Set(this, left);
 
         protected override void OnNewRight(int right) => Params[Vrc3DefaultParams.GestureRight].Set(this, right);
 
-        public override AnimationClip GetFinalGestureByIndex(int gestureIndex) => ModuleVrc3Styles.Data.GestureClips[gestureIndex];
+        public override string GetGestureTextNameByIndex(int gestureIndex) => GestureManagerStyles.Data.GestureNames[gestureIndex];
 
         public override Animator OnCustomAnimationPlay(AnimationClip clip)
         {
             if (!clip) return Vrc3TestMode.Disable(DummyMode);
-            if (!(DummyMode is Vrc3TestMode testMode)) testMode = Vrc3TestMode.Enable(this);
+            if (!(DummyMode is Vrc3TestMode testMode)) testMode = new Vrc3TestMode(this);
             return testMode.Test(clip);
         }
 
         public override bool HasGestureBeenOverridden(int gesture) => true;
-
-        public override void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation)
-        {
-        }
 
         protected override List<string> CheckErrors()
         {
@@ -267,13 +278,13 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         {
             using (new EditorGUILayout.HorizontalScope())
             {
-                GUI.enabled = DummyMode == null && !_broken;
+                GUI.enabled = DummyMode == null && !Broken;
 
                 using (new GUILayout.VerticalScope())
                 {
                     GUILayout.Label("Left Hand", GestureManagerStyles.GuiHandTitle);
                     weightController.RenderLeft(element);
-                    using (new GUILayout.VerticalScope()) GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Left, Left, false);
+                    using (new GUILayout.VerticalScope()) GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Left, Left, null);
                     var rect = GUILayoutUtility.GetLastRect();
                     var isContained = rect.Contains(Event.current.mousePosition);
                     GestureDrag = (Event.current.type == EventType.MouseDown && isContained) || Event.current.type != EventType.MouseUp && GestureDrag;
@@ -284,7 +295,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 {
                     GUILayout.Label("Right Hand", GestureManagerStyles.GuiHandTitle);
                     weightController.RenderRight(element);
-                    using (new GUILayout.VerticalScope()) GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Right, Right, false);
+                    using (new GUILayout.VerticalScope()) GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Right, Right, null);
                     var rect = GUILayoutUtility.GetLastRect();
                     var isContained = rect.Contains(Event.current.mousePosition);
                     GestureDrag = (Event.current.type == EventType.MouseDown && isContained) || Event.current.type != EventType.MouseUp && GestureDrag;
@@ -316,11 +327,13 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             GUILayout.Label(_debugAvatarWindow ? Vrc3AvatarDebugWindow.Text.W.Hint : Vrc3AvatarDebugWindow.Text.D.Hint, GestureManagerStyles.SubHeader);
             GUILayout.Space(7);
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GmgLayoutHelper.DebugButton(_debugAvatarWindow ? Vrc3AvatarDebugWindow.Text.W.Button : Vrc3AvatarDebugWindow.Text.D.Button)) SwitchDebugAvatarView();
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.FlexibleSpace();
+                if (GmgLayoutHelper.DebugButton(_debugAvatarWindow ? Vrc3AvatarDebugWindow.Text.W.Button : Vrc3AvatarDebugWindow.Text.D.Button)) SwitchDebugAvatarView();
+                GUILayout.FlexibleSpace();
+            }
+
             GUILayout.Space(6);
         }
 
@@ -332,11 +345,13 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         private IEnumerable<T> AvatarComponents<T>(bool includeInactive = true) where T : Component => Avatar.GetComponentsInChildren<T>(includeInactive);
 
+        private bool IsWatchingDebugParameters(RadialMenu menu) => menu.ToolBar.Selected == 2 && menu.DebugToolBar.Selected == 0 && DebugToolBar == 0; 
+
         private void RemoveVise() => OnViseChange(null, 0f);
 
         private void OnBrokenSimulation()
         {
-            _broken = true;
+            Broken = true;
             foreach (var menu in Radials) menu.ToolBar.Selected = 0;
             if (OscModule.Enabled) OscModule.Stop();
             CloseDebugWindows();
@@ -436,7 +451,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             menu.StopRendering();
             GUILayout.Label("Radial Menu", GestureManagerStyles.GuiHandTitle);
             using (new GmgLayoutHelper.GuiBackground(Color.red))
-            using (new GUILayout.VerticalScope(GUILayout.Height(RadialMenu.Size)))
+            using (new GUILayout.VerticalScope(SizeOptions))
             {
                 GUILayout.FlexibleSpace();
                 using (new GUILayout.VerticalScope(EditorStyles.helpBox))
@@ -461,6 +476,19 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
                 GUILayout.FlexibleSpace();
             }
+        }
+
+        private void ShowRadialMenu(RadialMenu menu, VisualElement element)
+        {
+            GUILayout.Label("Radial Menu", GestureManagerStyles.GuiHandTitle);
+            var rect = GUILayoutUtility.GetLastRect();
+            GUILayoutUtility.GetRect(new GUIContent(), GUIStyle.none, Options);
+            menu.Render(element, GmgLayoutHelper.GetLastRect(ref menu.Rect));
+            menu.ShowRadialDescription();
+            rect.y += 10;
+            rect.x += rect.width - 16;
+            rect.width = rect.height = 16;
+            if (GUI.Button(rect, GestureManagerStyles.PlusTexture, GUIStyle.none)) Vrc3FloatingMenu.Create(this);
         }
 
         private void ReloadScene()
@@ -492,7 +520,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             ReloadScene();
         }
 
-        private RadialMenu GetOrCreateRadial(UnityEditor.Editor editor)
+        internal RadialMenu GetOrCreateRadial(ScriptableObject editor)
         {
             if (_radialMenus.ContainsKey(editor)) return _radialMenus[editor];
 
@@ -501,7 +529,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             return _radialMenus[editor];
         }
 
-        private Vrc3WeightController GetOrCreateWeightController(UnityEditor.Editor editor)
+        private Vrc3WeightController GetOrCreateWeightController(ScriptableObject editor)
         {
             if (_weightControllers.ContainsKey(editor)) return _weightControllers[editor];
 
@@ -509,7 +537,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             return _weightControllers[editor];
         }
 
-        private VisualEpContainer GetOrCreateOscContainer(UnityEditor.Editor editor)
+        private VisualEpContainer GetOrCreateOscContainer(ScriptableObject editor)
         {
             if (_oscContainers.ContainsKey(editor)) return _oscContainers[editor];
 
@@ -517,13 +545,11 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             return _oscContainers[editor];
         }
 
-        private void OnDummyModeChange(bool state) => DummyMode?.OnExecutionChange(state);
-
-        internal void EnableEditMode() => Vrc3EditMode.Enable(this, OriginalClips);
+        internal void EnableEditMode() => DummyMode = new Vrc3EditMode(this, OriginalClips);
 
         public void NoExpressionRefresh()
         {
-            if (Dummy.State) return;
+            if (DummyMode != null) return;
             if (Menu) ResetAvatar();
         }
 
@@ -538,6 +564,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             RemoveVise();
             if (OscModule.Enabled) OscModule.Forget();
             AvatarAnimator.Rebind();
+            _paramFilter = null;
             Params.Clear();
             DestroyGraphs();
         }
@@ -607,6 +634,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             foreach (var (nameString, type) in Vrc3DefaultParams.Parameters)
                 if (!Params.ContainsKey(nameString))
                     Params[nameString] = RadialMenuUtility.CreateParamFromNothing(nameString, type);
+
+            FilteredParams = FilterParam();
         }
 
         public Vrc3Param GetParam(string pName)
@@ -643,19 +672,21 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             return true;
         }
 
-        private static void ShowRadialMenu(RadialMenu menu, VisualElement element)
-        {
-            GUILayout.Label("Radial Menu", GestureManagerStyles.GuiHandTitle);
-            GUILayoutUtility.GetRect(new GUIContent(), GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.Height(RadialMenu.Size));
-            menu.Render(element, GmgLayoutHelper.GetLastRect(ref menu.Rect));
-            menu.ShowRadialDescription();
-        }
-
         private static void SetBlendShapeWeight(SkinnedMeshRenderer skinnedMesh, string name, float weight)
         {
             var intIndex = skinnedMesh.sharedMesh.GetBlendShapeIndex(name);
             if (intIndex != -1) skinnedMesh.SetBlendShapeWeight(intIndex, weight);
         }
+
+        public void ParamFilterSearch()
+        {
+            if (_paramFilter == (_paramFilter = GmgLayoutHelper.SearchBar(_paramFilter))) return;
+            FilteredParams = FilterParam();
+        }
+
+        private Dictionary<string, Vrc3Param> FilterParam() => string.IsNullOrEmpty(_paramFilter) ? Params : Params.Where(ParamMatch).ToDictionary(pair => pair.Key, pair => pair.Value);
+
+        private bool ParamMatch(KeyValuePair<string, Vrc3Param> pair) => pair.Key.IndexOf(_paramFilter, StringComparison.OrdinalIgnoreCase) >= 0;
 
         /*
          * Vrc Hooks
@@ -810,7 +841,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         private void ReceiverBaseSetup(ContactReceiver receiver)
         {
-            if (string.IsNullOrWhiteSpace(receiver.parameter)) return;
             Receivers.Add(receiver);
             receiver.paramAccess = new AnimParameterAccessAvatarGmg(this, receiver.parameter);
             if (receiver.shape != null) receiver.shape.OnEnter += shape => ContactShapeCheck(receiver, shape.component as ContactSender);
@@ -828,18 +858,16 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private void PhysBoneBaseInit(VRCPhysBoneBase vrcPhysBoneBase)
         {
             if (string.IsNullOrEmpty(vrcPhysBoneBase.parameter)) return;
-
             var animator = vrcPhysBoneBase.GetComponentInParent<VRCAvatarDescriptor>()?.GetComponent<Animator>();
             if (!_hooked || !animator || animator != AvatarAnimator) return;
-
             PhysBoneBaseSetup(vrcPhysBoneBase);
         }
 
         private void PhysBoneBaseSetup(VRCPhysBoneBase vrcPhysBoneBase)
         {
             vrcPhysBoneBase.param_IsGrabbed = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_ISGRABBED);
-            vrcPhysBoneBase.param_Angle = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_ANGLE);
             vrcPhysBoneBase.param_Stretch = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_STRETCH);
+            vrcPhysBoneBase.param_Angle = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_ANGLE);
         }
 
         internal struct LayerData

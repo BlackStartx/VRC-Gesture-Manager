@@ -6,12 +6,15 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes
 {
     public class Vrc3TestMode : Vrc3DummyMode
     {
-        public static Vrc3TestMode Enable(ModuleVrc3 module)
+        internal override string ModeName => "Test";
+
+        internal Vrc3TestMode(ModuleVrc3 module) : base(module, "[Testing]")
         {
-            module.DummyMode = new Vrc3TestMode(module);
-            foreach (var radialMenu in module.Radials) radialMenu.MainMenuPrefab();
-            return module.DummyMode as Vrc3TestMode;
         }
+
+        protected internal override void StopExecution() => Module.Manager.StopCustomAnimation();
+
+        public override RadialDescription DummyDescription() => null;
 
         public static Animator Disable(Vrc3DummyMode dummyMode)
         {
@@ -19,21 +22,11 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes
             return null;
         }
 
-        internal override string ModeName => "Test";
-
-        private Vrc3TestMode(ModuleVrc3 module) : base(module, "[Testing]")
-        {
-        }
-
-        protected override void OnExecutionOff() => Module.Manager.StopCustomAnimation();
-
-        public override RadialDescription DummyDescription() => null;
-
         public Animator Test(AnimationClip clip)
         {
-            var animator = Avatar.GetOrAddComponent<Animator>();
-            animator.runtimeAnimatorController = GmgAnimatorControllerHelper.CreateControllerWith(clip);
-            return animator;
+            Animator.runtimeAnimatorController = GmgAnimatorControllerHelper.CreateControllerWith(clip);
+            Animator.applyRootMotion = clip != null;
+            return Animator;
         }
     }
 }

@@ -89,6 +89,16 @@ namespace GestureManager.Scripts.Core.VisualElements
             }
         }
 
+        public Color Color
+        {
+            set
+            {
+                if (style.color == value) return;
+                style.color = value;
+                SetUp(_text);
+            }
+        }
+
         public GmgTmpRichTextElement()
         {
             Add(new TextElement { pickingMode = PickingMode.Ignore, text = "" });

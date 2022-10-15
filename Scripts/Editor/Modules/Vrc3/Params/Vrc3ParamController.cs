@@ -8,9 +8,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
 {
     public class Vrc3ParamController : Vrc3Param
     {
-        private AnimatorControllerPlayable _controller;
-
         private readonly Animator _animator;
+
+        private AnimatorControllerPlayable _controller;
 
         public Vrc3ParamController(AnimatorControllerParameterType type, string name, AnimatorControllerPlayable controller, Animator animator) : base(name, type)
         {

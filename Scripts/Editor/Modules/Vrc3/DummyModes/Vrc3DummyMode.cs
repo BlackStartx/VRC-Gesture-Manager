@@ -1,7 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes
 {
@@ -11,27 +10,33 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes
 
         internal abstract string ModeName { get; }
 
+        internal readonly Animator Animator;
         internal readonly GameObject Avatar;
 
         public string ExitDummyText => "Exit " + ModeName + "-Mode";
 
-        protected Vrc3DummyMode(ModuleVrc3 module, string prefix)
+        protected Vrc3DummyMode(ModuleVrc3 module, string prefix, bool keepPose = false)
         {
+            if (keepPose && module.DummyMode != null) Avatar = Object.Instantiate(module.DummyMode.Avatar);
+            module.DummyMode?.StopExecution();
+            module.DummyMode = this;
             Module = module;
-            Module.ForgetAvatar();
-            Module.Dummy.State = true;
-            Avatar = Object.Instantiate(Module.Avatar);
+            if (!keepPose) Module.ForgetAvatar();
+            if (!Avatar) Avatar = Object.Instantiate(Module.Avatar);
+            if (keepPose) Module.ForgetAvatar();
+            Animator = Avatar.GetOrAddComponent<Animator>();
             Avatar.name = Module.Avatar.name + " " + prefix;
             Module.Avatar.SetActive(false);
             Module.Avatar.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
             EditorApplication.DirtyHierarchyWindowSorting();
+            foreach (var radialMenu in module.Radials) radialMenu.MainMenuPrefab();
         }
 
         internal void Close()
         {
             if (Avatar) Object.DestroyImmediate(Avatar);
-            Module.Dummy.State = false;
             Module.DummyMode = null;
+            if (!Module.Avatar) return;
             Module.Avatar.SetActive(true);
             Module.Avatar.hideFlags = HideFlags.None;
             EditorApplication.DirtyHierarchyWindowSorting();
@@ -41,13 +46,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes
             Module.InitForAvatar();
         }
 
-        public void OnExecutionChange(bool state)
-        {
-            if (state || !Module.Avatar) return;
-            OnExecutionOff();
-        }
-
-        protected virtual void OnExecutionOff() => Close();
+        protected internal virtual void StopExecution() => Close();
 
         public abstract RadialDescription DummyDescription();
     }

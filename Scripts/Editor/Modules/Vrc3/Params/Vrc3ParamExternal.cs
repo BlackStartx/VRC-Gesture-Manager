@@ -12,10 +12,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
         {
         }
 
-        public override float Get()
-        {
-            return _value;
-        }
+        public override float Get() => _value;
 
         protected internal override void InternalSet(float value)
         {

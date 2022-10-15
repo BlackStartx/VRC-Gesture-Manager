@@ -24,7 +24,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         internal const string VRMode = "VRMode";
         internal const string Vise = "Viseme";
         internal const string Afk = "AFK";
-        
+
         private const string VrcFaceBlendH = "VrcFaceBlendH";
         private const string VrcFaceBlendV = "VrcFaceBlendV";
         private const string VrcEmote = "VRCEmote";

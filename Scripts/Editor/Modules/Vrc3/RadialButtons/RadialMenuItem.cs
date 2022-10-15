@@ -9,12 +9,16 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
 {
     public abstract class RadialMenuItem
     {
+        internal GmgCircleElement CircleElement;
+        internal bool Selected;
+
         internal Color TextColor;
         internal Color SelectedBorderColor = RadialMenuUtility.Colors.CustomSelected;
         internal Color SelectedCenterColor = RadialMenuUtility.Colors.RadialSelColor;
 
         public VisualElement DataHolder;
         protected VisualElement Texture;
+        protected GmgTmpRichTextElement Text;
 
         private readonly string _text;
         private readonly Texture2D _texture;
@@ -33,7 +37,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons
             DataHolder = RadialMenuUtility.Prefabs.NewData(100, 100);
             Texture = DataHolder.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { width = 50, height = 50, backgroundImage = _texture } });
             if (_subIcon) DataHolder.Add(RadialMenuUtility.Prefabs.NewSubIcon(_subIcon));
-            DataHolder.MyAdd(new GmgTmpRichTextElement { pickingMode = PickingMode.Ignore, Text = _text, style = { color = TextColor, unityTextAlign = TextAnchor.MiddleCenter } });
+            Text = DataHolder.MyAdd(new GmgTmpRichTextElement { pickingMode = PickingMode.Ignore, Text = _text, style = { color = TextColor, unityTextAlign = TextAnchor.MiddleCenter } });
             CreateExtra();
         }
 

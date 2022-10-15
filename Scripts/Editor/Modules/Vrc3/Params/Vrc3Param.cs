@@ -12,13 +12,15 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
         private readonly Func<float, float> _converted;
         protected readonly int HashId;
         public readonly string Name;
+        public int LastUpdate;
 
-        internal Action<Vrc3Param, float> OnChange;
+        private Action<Vrc3Param, float> _onChange;
 
         protected Vrc3Param(string name, AnimatorControllerParameterType type)
         {
             Name = name;
             Type = type;
+            LastUpdate = Time;
             HashId = Animator.StringToHash(Name);
             _converted = GenerateConverter();
         }
@@ -27,10 +29,15 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
         {
             if (Is(value = _converted(value))) return;
             module.OscModule.OnParameterChange(this, value);
+            LastUpdate = Time;
             InternalSet(value);
-            OnChange?.Invoke(this, value);
+            _onChange?.Invoke(this, value);
             foreach (var menu in module.Radials) menu.UpdateValue(Name, value);
         }
+
+        public string TypeText => Type.ToString();
+
+        public static int Time => (int)(DateTime.Now.Ticks / 100000L);
 
         private void Set(ModuleVrc3 module, bool value) => Set(module, value ? 1f : 0f);
 
@@ -46,7 +53,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
             if (value.HasValue) Set(module, value.Value);
         }
 
-        public void SetOnChange(Action<Vrc3Param, float> onChange) => OnChange = onChange;
+        public void SetOnChange(Action<Vrc3Param, float> onChange) => _onChange = onChange;
 
         private bool Is(float value) => RadialMenuUtility.Is(Get(), value);
 
@@ -112,9 +119,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
             }
         }
 
-        public void FieldTuple(ModuleVrc3 module)
+        public void FieldTuple(ModuleVrc3 module, GUILayoutOption innerOption)
         {
-            var rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label);
+            var rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label, innerOption);
             switch (Type)
             {
                 case AnimatorControllerParameterType.Float:

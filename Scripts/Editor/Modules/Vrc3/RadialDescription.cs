@@ -26,17 +26,17 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         public void Show()
         {
             GUILayout.Space(10);
-            GUILayout.BeginHorizontal(GestureManagerStyles.EmoteError);
-            GUILayout.FlexibleSpace();
-            GUILayout.Label(_text);
+            using (new GUILayout.HorizontalScope(GestureManagerStyles.EmoteError))
+            {
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(_text);
 
-            var guiStyle = EditorGUIUtility.isProSkin ? ModuleVrc3Styles.UrlPro : ModuleVrc3Styles.Url;
-            if (GUILayout.Button(_link, guiStyle)) _action(_url);
-            EditorGUIUtility.AddCursorRect(GUILayoutUtility.GetLastRect(), MouseCursor.Link);
-            GUILayout.Label(_tail);
-            GUILayout.FlexibleSpace();
-
-            GUILayout.EndHorizontal();
+                var guiStyle = EditorGUIUtility.isProSkin ? ModuleVrc3Styles.UrlPro : ModuleVrc3Styles.Url;
+                if (GUILayout.Button(_link, guiStyle)) _action(_url);
+                EditorGUIUtility.AddCursorRect(GUILayoutUtility.GetLastRect(), MouseCursor.Link);
+                GUILayout.Label(_tail);
+                GUILayout.FlexibleSpace();
+            }
         }
     }
 }

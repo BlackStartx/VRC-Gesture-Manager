@@ -1,7 +1,10 @@
 ﻿#if VRC_SDK_VRCSDK3
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Core.VisualElements;
+using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -9,7 +12,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 {
     public class RadialCursor : GmgCircleElement
     {
-        private const int CursorSize = 50;
+        private const float CursorSize = 50;
+
+        private const float MiddleSize = CursorSize / 1.5f;
+        private const float SmallSize = CursorSize / 4f;
 
         private float _clampReset;
         private float _clamp;
@@ -22,8 +28,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         public RadialCursor()
         {
             RadialMenuUtility.Prefabs.SetCircle(this, CursorSize, RadialMenuUtility.Colors.Cursor, RadialMenuUtility.Colors.CursorBorder)
-                .MyAdd(RadialMenuUtility.Prefabs.NewCircleBorder((int)(CursorSize / 1.5f), RadialMenuUtility.Colors.CursorBorder))
-                .Add(RadialMenuUtility.Prefabs.NewCircleBorder((int)(CursorSize / 4f), RadialMenuUtility.Colors.CursorBorder));
+                .MyAdd(RadialMenuUtility.Prefabs.NewCircleBorder(MiddleSize, RadialMenuUtility.Colors.CursorBorder))
+                .Add(RadialMenuUtility.Prefabs.NewCircleBorder(SmallSize, RadialMenuUtility.Colors.CursorBorder));
         }
 
         /*
@@ -45,7 +51,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             if (referenceLayout != null && referenceLayout != parent) SetParent(referenceLayout);
         }
 
-        public void Update(Vector2 mouse, IList<GmgButton> selectionTuple, bool puppet)
+        [Obsolete]
+        public void Update(Vector2 mouse, IEnumerable<GmgButton> selectionTuple, bool puppet) => Update(mouse, selectionTuple.Select(Element).ToList(), puppet);
+
+        public void Update(Vector2 mouse, IList<RadialMenuItem> selectionTuple, bool puppet)
         {
             if (mouse.magnitude < _clampReset) SetCursorPosition(mouse);
             else SetCursorPosition(0, 0);
@@ -54,39 +63,53 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             if (Selection != intSelection) UpdateSelection(selectionTuple, intSelection);
         }
 
-        private void UpdateSelection(IList<GmgButton> selectionTuple, int selection)
+        [Obsolete]
+        private void UpdateSelection(IEnumerable<GmgButton> selectionTuple, int selection) => UpdateSelection(selectionTuple.Select(Element).ToList(), selection);
+
+        private void UpdateSelection(IList<RadialMenuItem> selectionTuple, int selection)
         {
             if (Selection != -1) Des(selectionTuple[Selection]);
             if (selection != -1) Sel(selectionTuple[selection]);
             Selection = selection;
         }
 
-        private static void Des(GmgButton oldElement)
+        [Obsolete]
+        private static void Des(GmgButton oldElement) => Des(Element(oldElement));
+
+        private static void Des(RadialMenuItem oldElement)
         {
-            oldElement.Data.experimental.animation.Scale(1f, 100);
-            oldElement.Data.experimental.animation.TopLeft(RadialMenuUtility.DataVector, 100);
+            oldElement.Selected = false;
+            oldElement.DataHolder.experimental.animation.Scale(1f, 100);
+            oldElement.DataHolder.experimental.animation.TopLeft(RadialMenuUtility.DataVector, 100);
             oldElement.CircleElement.CenterColor = RadialMenuUtility.Colors.RadialCenter;
             oldElement.CircleElement.VertexColor = RadialMenuUtility.Colors.CustomMain;
         }
 
-        internal static void Sel(GmgButton newElement, bool instant = false, float scale = 0.10f)
-        {
-            var topLeftVector = RadialMenuUtility.DataVector + RadialMenuUtility.DataVector * scale;
+        [Obsolete]
+        internal static void Sel(GmgButton newElement, bool instant = false, float scale = 0.10f) => Sel(Element(newElement), instant, scale);
 
-            newElement.Data.experimental.animation.Scale(1f + scale, 100);
-            newElement.Data.experimental.animation.TopLeft(topLeftVector, instant ? 0 : 100);
-            newElement.CircleElement.CenterColor = newElement.Button.SelectedCenterColor;
-            newElement.CircleElement.VertexColor = newElement.Button.SelectedBorderColor;
+        internal static void Sel(RadialMenuItem newElement, bool instant = false, float scale = 0.10f)
+        {
+            newElement.Selected = true;
+            var topLeftVector = RadialMenuUtility.DataVector + RadialMenuUtility.DataVector * scale;
+            newElement.DataHolder.experimental.animation.Scale(1f + scale, 100);
+            newElement.DataHolder.experimental.animation.TopLeft(topLeftVector, instant ? 0 : 100);
+            newElement.CircleElement.CenterColor = newElement.SelectedCenterColor;
+            newElement.CircleElement.VertexColor = newElement.SelectedBorderColor;
+        }
+
+        [Obsolete]
+        private static RadialMenuItem Element(GmgButton element)
+        {
+            element.Button.CircleElement = element.CircleElement;
+            return element.Button;
         }
 
         /*
          * Static
          */
 
-        private static float GetAngle(Vector2 mouse)
-        {
-            return -Mathf.Atan2(mouse.x, mouse.y) * 180f / Mathf.PI + 180f;
-        }
+        private static float GetAngle(Vector2 mouse) => -Mathf.Atan2(mouse.x, mouse.y) * 180f / Mathf.PI + 180f;
 
         private static bool Get2Axis(Vector2 mouse, float range, out Vector2 axis)
         {
@@ -100,12 +123,12 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private static bool Get4Axis(Vector2 mouse, float range, out Vector4 axis)
         {
             axis = Vector4.zero;
-            if (!Get2Axis(mouse, range, out var twoAxis)) return false;
+            if (!Get2Axis(mouse, range, out var aVectorAxis)) return false;
 
-            axis.x = Mathf.Max(twoAxis.y, 0);
-            axis.y = Mathf.Max(twoAxis.x, 0);
-            axis.z = Mathf.Max(-twoAxis.y, 0);
-            axis.w = Mathf.Max(-twoAxis.x, 0);
+            axis.x = Mathf.Max(aVectorAxis.y, 0);
+            axis.y = Mathf.Max(aVectorAxis.x, 0);
+            axis.z = Mathf.Max(-aVectorAxis.y, 0);
+            axis.w = Mathf.Max(-aVectorAxis.x, 0);
 
             return true;
         }
@@ -113,9 +136,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private static bool GetRadial(Vector2 mouse, float min, out float radial)
         {
             radial = -1;
-            if (Event.current.type == EventType.Layout) return false;
-
-            if (mouse.magnitude < min) return false;
+            if (Event.current.type == EventType.Layout || mouse.magnitude < min) return false;
 
             radial = GetAngle(mouse) / 360f;
             return true;

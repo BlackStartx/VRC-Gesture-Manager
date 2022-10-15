@@ -155,14 +155,24 @@ each gesture has the name of the animation file its related.
 Thanks to every friend and person who helped or supported me during the development of this tool~ ♥
 
 - Stack_
-- ♡ GaNyan ♡
-- Nayu
-- Hiro N.
-- [emymin](https://github.com/emymin/)
 - Ahri~
+- Nayu
+- ♡ GaNyan ♡
+- TheIceDragonz
+- NinaV2
+- [emymin](https://github.com/emymin/)
+- Zettai Ryouiki
+- NekOwneD
 - [lindesu](https://github.vrlabs.dev/)
+- OptoCloud
 
-And special thanks to:
+Special thanks to:
+
+- Hiro N.
+- Dominhiho
+- maple
+
+And:
 
 - You~ ♥
 

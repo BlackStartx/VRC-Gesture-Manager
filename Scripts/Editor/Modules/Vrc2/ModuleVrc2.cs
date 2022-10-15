@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using GestureManager.Scripts.Core.Editor;
 using GestureManager.Scripts.Extra;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VRCSDK2;
@@ -16,9 +17,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
     {
         private readonly VRC_AvatarDescriptor _avatarDescriptor;
 
+        private readonly GUILayoutOption _options = GUILayout.Width(100);
+        private readonly int _emoteHash = Animator.StringToHash("Emote");
         private readonly int _handGestureLeft = Animator.StringToHash("HandGestureLeft");
         private readonly int _handGestureRight = Animator.StringToHash("HandGestureRight");
-        private readonly int _emoteHash = Animator.StringToHash("Emote");
 
         private int emote;
 
@@ -38,6 +40,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
         private AnimationClip _selectingCustomAnim;
         private GmgLayoutHelper.Toolbar _toolBar;
 
+        private static GUIStyle _guiGreenButton;
+        private static GUIStyle GuiGreenButton => _guiGreenButton ?? (_guiGreenButton = Ggb(new GUIStyleState { textColor = Color.green }));
+        private static GUIStyle Ggb(GUIStyleState state) => new GUIStyle(GUI.skin.button) { active = state, normal = state, hover = state, fixedWidth = 100 };
         private RuntimeAnimatorController StandingControllerPreset => _standingControllerPreset ? _standingControllerPreset : _standingControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/StandingEmoteTestingTemplate");
         private RuntimeAnimatorController SeatedControllerPreset => _seatedControllerPreset ? _seatedControllerPreset : _seatedControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/SeatedEmoteTestingTemplate");
 
@@ -153,14 +158,14 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
         public override void Update()
         {
             FetchLastBoneRotation();
-            AvatarAnimator.SetInteger(_handGestureLeft, Manager.OnCustomAnimation || emote != 0 ? 8 : Left);
-            AvatarAnimator.SetInteger(_handGestureRight, Manager.OnCustomAnimation || emote != 0 ? 8 : Right);
-            AvatarAnimator.SetInteger(_emoteHash, Manager.OnCustomAnimation ? 9 : emote);
+            AvatarAnimator.SetInteger(_handGestureLeft, Manager.PlayingCustomAnimation || emote != 0 ? 8 : Left);
+            AvatarAnimator.SetInteger(_handGestureRight, Manager.PlayingCustomAnimation || emote != 0 ? 8 : Right);
+            AvatarAnimator.SetInteger(_emoteHash, Manager.PlayingCustomAnimation ? 9 : emote);
         }
 
         public override void LateUpdate()
         {
-            if (emote != 0 || Manager.OnCustomAnimation) return;
+            if (emote != 0 || Manager.PlayingCustomAnimation) return;
 
             foreach (var bodyBone in WhiteListedControlBones)
             {
@@ -175,6 +180,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
                     // ignored
                 }
             }
+        }
+
+        public override void OnDrawGizmos()
+        {
         }
 
         public override void InitForAvatar()
@@ -209,28 +218,29 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             {
                 ("Gestures", () =>
                 {
-                    if (emote != 0 || Manager.OnCustomAnimation)
+                    if (emote != 0 || Manager.PlayingCustomAnimation)
                     {
-                        GUILayout.BeginHorizontal(GestureManagerStyles.EmoteError);
-                        GUILayout.Label("Gesture doesn't work while you're playing an emote!");
-                        if (GUILayout.Button("Stop!", GestureManagerStyles.GuiGreenButton)) StopCurrentEmote();
-
-                        GUILayout.EndHorizontal();
+                        using (new GUILayout.HorizontalScope(GestureManagerStyles.EmoteError))
+                        {
+                            GUILayout.Label("Gesture doesn't work while you're playing an emote!");
+                            if (GUILayout.Button("Stop!", GuiGreenButton)) StopCurrentEmote();
+                        }
                     }
 
-                    GUILayout.BeginHorizontal();
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        using (new GUILayout.VerticalScope())
+                        {
+                            GUILayout.Label("Left Hand", GestureManagerStyles.GuiHandTitle);
+                            GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Left, Left, RequestGestureDuplication);
+                        }
 
-                    GUILayout.BeginVertical();
-                    GUILayout.Label("Left Hand", GestureManagerStyles.GuiHandTitle);
-                    GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Left, Left, true);
-                    GUILayout.EndVertical();
-
-                    GUILayout.BeginVertical();
-                    GUILayout.Label("Right Hand", GestureManagerStyles.GuiHandTitle);
-                    GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Right, Right, true);
-                    GUILayout.EndVertical();
-
-                    GUILayout.EndHorizontal();
+                        using (new GUILayout.VerticalScope())
+                        {
+                            GUILayout.Label("Right Hand", GestureManagerStyles.GuiHandTitle);
+                            GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Right, Right, RequestGestureDuplication);
+                        }
+                    }
                 }),
                 ("Emotes", () =>
                 {
@@ -248,27 +258,21 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
                 ("Test Animation", () =>
                 {
                     GUILayout.Label("Force animation.", GestureManagerStyles.GuiHandTitle);
-
-                    GUILayout.BeginHorizontal();
-                    _selectingCustomAnim = GmgLayoutHelper.ObjectField("Animation: ", _selectingCustomAnim, Manager.SetCustomAnimation);
-
-                    GUI.enabled = _selectingCustomAnim;
-                    if (Manager.OnCustomAnimation && emote == 0)
+                    using (new GUILayout.HorizontalScope())
                     {
-                        if (GUILayout.Button("Stop", GestureManagerStyles.GuiGreenButton)) Manager.StopCustomAnimation();
-                    }
-                    else
-                    {
-                        if (GUILayout.Button("Play", GUILayout.Width(100)))
+                        if (!(_selectingCustomAnim = GmgLayoutHelper.ObjectField("Animation: ", _selectingCustomAnim, Manager.SetCustomAnimation))) GUI.enabled = false;
+                        if (!Manager.PlayingCustomAnimation || emote != 0)
                         {
-                            emote = 0;
-                            Manager.PlayCustomAnimation(_selectingCustomAnim);
+                            if (GUILayout.Button("Play", _options))
+                            {
+                                emote = 0;
+                                Manager.PlayCustomAnimation(_selectingCustomAnim);
+                            }
                         }
+                        else if (GUILayout.Button("Stop", GuiGreenButton)) Manager.StopCustomAnimation();
+
+                        GUI.enabled = true;
                     }
-
-                    GUI.enabled = true;
-
-                    GUILayout.EndHorizontal();
                 })
             });
         }
@@ -277,21 +281,16 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
 
         protected override void OnNewRight(int right) => Right = right;
 
-        public override AnimationClip GetFinalGestureByIndex(int gestureIndex) => _myRuntimeOverrideController[_gestureBinds[gestureIndex].GetMyName(_usingType)];
+        public override string GetGestureTextNameByIndex(int gestureIndex) => GetFinalGestureByIndex(gestureIndex).name;
 
         public override Animator OnCustomAnimationPlay(AnimationClip animationClip)
         {
             SetupOverride(_usingType, false);
+            AvatarAnimator.applyRootMotion = animationClip != null;
             return AvatarAnimator;
         }
 
         public override bool HasGestureBeenOverridden(int gestureIndex) => _hasBeenOverridden.ContainsKey(_gestureBinds[gestureIndex].GetMyName(_usingType));
-
-        public override void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation)
-        {
-            _originalUsingOverrideController[_gestureBinds[gestureIndex].GetOriginalName()] = newAnimation;
-            SetupOverride(_usingType, false);
-        }
 
         public override bool IsInvalid() => base.IsInvalid() || !Avatar.activeInHierarchy;
 
@@ -309,15 +308,23 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             return errorList;
         }
 
+        private AnimationClip GetFinalGestureByIndex(int gestureIndex) => _myRuntimeOverrideController[_gestureBinds[gestureIndex].GetMyName(_usingType)];
+
         private AnimationClip GetEmoteByIndex(int emoteIndex) => _myRuntimeOverrideController[_emoteBinds[emoteIndex].GetMyName(_usingType)];
+
+        private void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation)
+        {
+            _originalUsingOverrideController[_gestureBinds[gestureIndex].GetOriginalName()] = newAnimation;
+            SetupOverride(_usingType, false);
+        }
 
         private void OnEmoteButton(int current, Action<int> play, Action stop)
         {
             using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Label(GetEmoteByIndex(current - 1).name);
-                if (emote == current && GUILayout.Button("Stop", GestureManagerStyles.GuiGreenButton)) stop();
-                if (emote != current && GUILayout.Button("Play", GUILayout.Width(100))) play(current);
+                if (emote == current && GUILayout.Button("Stop", GuiGreenButton)) stop();
+                if (emote != current && GUILayout.Button("Play", _options)) play(current);
             }
         }
 
@@ -336,12 +343,12 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
         private void StopCurrentEmote()
         {
             if (emote != 0) OnEmoteStop();
-            if (Manager.OnCustomAnimation) Manager.StopCustomAnimation();
+            if (Manager.PlayingCustomAnimation) Manager.StopCustomAnimation();
         }
 
         private void FetchLastBoneRotation()
         {
-            if (emote != 0 || Manager.OnCustomAnimation)
+            if (emote != 0 || Manager.PlayingCustomAnimation)
             {
                 _controlDelay = 5;
                 return;
@@ -410,6 +417,20 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             AvatarAnimator.Rebind();
             AvatarAnimator.runtimeAnimatorController = _myRuntimeOverrideController;
             AvatarAnimator.runtimeAnimatorController.name = controllerPreset.name;
+        }
+
+        private void RequestGestureDuplication(int gestureIndex)
+        {
+            var fullGestureString = GetGestureTextNameByIndex(gestureIndex);
+            var nameString = "[" + fullGestureString.Substring(fullGestureString.IndexOf("]", StringComparison.Ordinal) + 2) + "]";
+            var newAnimation = GmgAnimationHelper.CloneAnimationAsset(GetFinalGestureByIndex(gestureIndex));
+            var pathString = EditorUtility.SaveFilePanelInProject("Creating Gesture: " + fullGestureString, nameString + ".anim", "anim", "Hi (?)");
+
+            if (pathString.Length == 0) return;
+
+            AssetDatabase.CreateAsset(newAnimation, pathString);
+            newAnimation = AssetDatabase.LoadAssetAtPath<AnimationClip>(pathString);
+            AddGestureToOverrideController(gestureIndex, newAnimation);
         }
 
         private AnimatorOverrideController GetOverrideController() => _originalUsingOverrideController;

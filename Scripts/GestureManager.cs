@@ -10,17 +10,18 @@ namespace GestureManager.Scripts
         public static bool InWebClientRequest;
 
         private TransformData _managerTransform;
-        private Animator _customAnimator;
-        private Transform _beforeEmote;
+        private TransformData _beforeEmote;
         private bool _drag;
 
         public List<ModuleBase> LastCheckedActiveModules = new List<ModuleBase>();
         public ModuleBase Module;
 
-        public bool OnCustomAnimation { get; private set; }
+        public bool PlayingCustomAnimation { get; private set; }
         public AnimationClip customAnim;
 
         private void OnDisable() => UnlinkModule();
+
+        private void OnDrawGizmos() => Module?.OnDrawGizmos();
 
         private void Update()
         {
@@ -48,50 +49,41 @@ namespace GestureManager.Scripts
 
         public void SetModule(ModuleBase module)
         {
-            Module?.Unlink();
-            if (Module != null) ControlledAvatars.Remove(Module.Avatar);
+            if (Module != null)
+            {
+                Module.Unlink();
+                Module.Active = false;
+                ControlledAvatars.Remove(Module.Avatar);
+            }
 
             Module = module;
             Module?.Avatar.transform.ApplyTo(transform);
             if (Module == null) return;
 
+            Module.Active = true;
             Module.InitForAvatar();
             ControlledAvatars[module.Avatar] = module;
-        }
-
-        private void SaveCurrentStartEmotePosition() => _beforeEmote = _customAnimator.gameObject.transform;
-
-        private void RevertToEmotePosition() => _beforeEmote.ApplyTo(_customAnimator.gameObject.transform);
-
-        public void SetCustomAnimation(AnimationClip clip)
-        {
-            if (!OnCustomAnimation) customAnim = clip;
-            else if (!clip) StopCustomAnimation();
-            else PlayCustomAnimation(clip);
+            _managerTransform = new TransformData(transform);
         }
 
         /*
-         *  Events
+         *  Custom Animation
          */
 
-        public void PlayCustomAnimation(AnimationClip clip)
-        {
-            if (OnCustomAnimation) RevertToEmotePosition();
-            customAnim = clip;
-            OnCustomAnimation = true;
-            _customAnimator = Module.OnCustomAnimationPlay(customAnim);
-            SaveCurrentStartEmotePosition();
-            _customAnimator.applyRootMotion = true;
-        }
+        public void StopCustomAnimation() => SetCustomAnimation(clip: null, play: true, save: false, PlayingCustomAnimation);
 
-        public void StopCustomAnimation()
+        public void SetCustomAnimation(AnimationClip clip) => SetCustomAnimation(clip, play: false, save: true, PlayingCustomAnimation);
+
+        public void PlayCustomAnimation(AnimationClip clip) => SetCustomAnimation(clip, play: true, save: true, PlayingCustomAnimation);
+
+        private void SetCustomAnimation(AnimationClip clip, bool play, bool save, bool playing)
         {
-            OnCustomAnimation = false;
-            SetCustomAnimation(null);
-            _customAnimator = Module.OnCustomAnimationPlay(null);
-            if (!_customAnimator) return;
-            RevertToEmotePosition();
-            _customAnimator.applyRootMotion = false;
+            PlayingCustomAnimation = (PlayingCustomAnimation || play) && clip != null;
+            if (save) customAnim = clip;
+            var customAnimator = PlayingCustomAnimation || playing && !clip ? Module.OnCustomAnimationPlay(clip) : null;
+            if (!customAnimator) return;
+            if (playing) _beforeEmote.ApplyTo(customAnimator.gameObject.transform);
+            else _beforeEmote = new TransformData(customAnimator.gameObject.transform);
         }
     }
 }

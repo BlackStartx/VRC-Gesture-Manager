@@ -35,6 +35,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private static Texture2D _axisDown;
         private static Texture2D _axisLeft;
         private static Texture2D _supportLike;
+        private static Texture2D _supportGold;
         private static Texture2D _supportHeart;
 
         internal static GUIStyle Url => _url ?? (_url = new GUIStyle(GUI.skin.label) { padding = new RectOffset(-3, -3, 1, 0), normal = { textColor = Color.blue } });
@@ -58,6 +59,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         internal static Texture2D AxisDown => _axisDown ? _axisDown : _axisDown = Resources.Load<Texture2D>("Vrc3/BSX_GM_Axis_Down");
         internal static Texture2D AxisLeft => _axisLeft ? _axisLeft : _axisLeft = Resources.Load<Texture2D>("Vrc3/BSX_GM_Axis_Left");
         internal static Texture2D SupportLike => _supportLike ? _supportLike : _supportLike = Resources.Load<Texture2D>("Vrc3/BSX_GM_Support_Like");
+        internal static Texture2D SupportGold => _supportGold ? _supportGold : _supportGold = Resources.Load<Texture2D>("Vrc3/BSX_GM_Support_Gold");
         internal static Texture2D SupportHeart => _supportHeart ? _supportHeart : _supportHeart = Resources.Load<Texture2D>("Vrc3/BSX_GM_Support_Heart");
 
         public static class Data
@@ -73,7 +75,24 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
             internal static AnimatorController ControllerOf(AnimLayerType type) => ControllerOfPath(NameOf[type]);
 
-            public static int LayerSort(VRCAvatarDescriptor.CustomAnimLayer x, VRCAvatarDescriptor.CustomAnimLayer y) => SortValue[x.type] - SortValue[y.type];
+            internal static int LayerSort(VRCAvatarDescriptor.CustomAnimLayer x, VRCAvatarDescriptor.CustomAnimLayer y) => SortValue[x.type] - SortValue[y.type];
+
+            internal static AvatarMask MaskOf(AnimLayerType type)
+            {
+                switch (type)
+                {
+                    case AnimLayerType.Gesture: return Masks.HandsOnly;
+                    case AnimLayerType.IKPose: return Masks.MuscleOnly;
+                    case AnimLayerType.TPose: return Masks.MuscleOnly;
+                    case AnimLayerType.FX: return Masks.Empty;
+                    case AnimLayerType.Deprecated0:
+                    case AnimLayerType.Additive:
+                    case AnimLayerType.Sitting:
+                    case AnimLayerType.Action:
+                    case AnimLayerType.Base:
+                    default: return null;
+                }
+            }
 
             private static readonly Dictionary<AnimLayerType, string> NameOf = new Dictionary<AnimLayerType, string>
             {
@@ -115,35 +134,11 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 { AnimLayerType.FX, 7 }
             };
 
-            internal static readonly Dictionary<AnimLayerType, AvatarMask> MaskOf = new Dictionary<AnimLayerType, AvatarMask>
-            {
-                { AnimLayerType.Base, null },
-                { AnimLayerType.Action, null },
-                { AnimLayerType.Sitting, null },
-                { AnimLayerType.Additive, null },
-                { AnimLayerType.FX, Masks.Empty },
-                { AnimLayerType.TPose, Masks.MuscleOnly },
-                { AnimLayerType.IKPose, Masks.MuscleOnly },
-                { AnimLayerType.Gesture, Masks.HandsOnly }
-            };
-
             internal static readonly Dictionary<ValueType, AnimatorControllerParameterType> TypeOf = new Dictionary<ValueType, AnimatorControllerParameterType>
             {
                 { ValueType.Int, AnimatorControllerParameterType.Int },
                 { ValueType.Bool, AnimatorControllerParameterType.Bool },
                 { ValueType.Float, AnimatorControllerParameterType.Float }
-            };
-
-            public static readonly AnimationClip[] GestureClips =
-            {
-                new AnimationClip { name = GestureManagerStyles.Data.GestureNames[0] },
-                new AnimationClip { name = GestureManagerStyles.Data.GestureNames[1] },
-                new AnimationClip { name = GestureManagerStyles.Data.GestureNames[2] },
-                new AnimationClip { name = GestureManagerStyles.Data.GestureNames[3] },
-                new AnimationClip { name = GestureManagerStyles.Data.GestureNames[4] },
-                new AnimationClip { name = GestureManagerStyles.Data.GestureNames[5] },
-                new AnimationClip { name = GestureManagerStyles.Data.GestureNames[6] },
-                new AnimationClip { name = GestureManagerStyles.Data.GestureNames[7] }
             };
 
             public static Dictionary<string, TrackingType> DefaultTrackingState => new Dictionary<string, TrackingType>
@@ -163,9 +158,19 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         private static class Masks
         {
-            internal static AvatarMask Empty => GmgAvatarMaskHelper.CreateEmptyMask("Empty");
+            private static AvatarMask _empty;
+            private static AvatarMask _muscleOnly;
+            private static AvatarMask _handsOnly;
 
-            internal static AvatarMask MuscleOnly => GmgAvatarMaskHelper.CreateMaskWithout("MuscleOnly", new[]
+            internal static AvatarMask Empty => _empty ? _empty : _empty = CreateEmptyMask();
+
+            internal static AvatarMask MuscleOnly => _muscleOnly ? _muscleOnly : _muscleOnly = CreateMuscleOnlyMask();
+
+            internal static AvatarMask HandsOnly => _handsOnly ? _handsOnly : _handsOnly = CreateHandsOnlyMask();
+
+            private static AvatarMask CreateEmptyMask() => GmgAvatarMaskHelper.CreateEmptyMask("Empty");
+
+            private static AvatarMask CreateMuscleOnlyMask() => GmgAvatarMaskHelper.CreateMaskWithout("MuscleOnly", new[]
             {
                 AvatarMaskBodyPart.LeftFootIK,
                 AvatarMaskBodyPart.LeftHandIK,
@@ -173,7 +178,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 AvatarMaskBodyPart.RightHandIK
             });
 
-            internal static AvatarMask HandsOnly => GmgAvatarMaskHelper.CreateMaskWith("HandsOnly", new[]
+            private static AvatarMask CreateHandsOnlyMask() => GmgAvatarMaskHelper.CreateMaskWith("HandsOnly", new[]
             {
                 AvatarMaskBodyPart.LeftFingers,
                 AvatarMaskBodyPart.RightFingers

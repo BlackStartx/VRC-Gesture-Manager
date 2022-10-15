@@ -32,11 +32,12 @@ namespace GestureManager.Scripts.Editor
 
         private const int AntiAliasing = 4;
 
-        private const string Version = "3.6.0";
+        private const string Version = "3.7.0";
         private const string Discord = "BlackStartx#6593";
 
         private const string VersionURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.v3rsion";
         private const string DiscordURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.discord";
+        private const string SupportURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.support";
 
         [MenuItem("Tools/Gesture Manager Emulator", false, -42)]
         public static void AddNewEmulator()
@@ -85,7 +86,7 @@ namespace GestureManager.Scripts.Editor
             if (!Manager) return;
             Manager.SetDrag(!Event.current.alt);
 
-            GUILayout.Label("Gesture Manager 3.6", GestureManagerStyles.TitleStyle);
+            GUILayout.Label("Gesture Manager 3.7", GestureManagerStyles.TitleStyle);
             _updater.Gui();
 
             if (Manager.Module != null)
@@ -110,20 +111,22 @@ namespace GestureManager.Scripts.Editor
             else
             {
                 GUILayout.Label(isLoaded ? "I'm an useless script if you aren't on play mode :D" : "Drag & Drop me into the scene to start testing! ♥", GestureManagerStyles.MiddleStyle);
+                GUILayout.Space(10);
                 using (new GUILayout.HorizontalScope())
                 {
                     GUILayout.FlexibleSpace();
 
                     GUI.enabled = !GestureManager.InWebClientRequest;
-                    if (GUILayout.Button("Check For Updates", GUILayout.Width(130))) CheckForUpdates();
+                    if (GmgLayoutHelper.DebugButton("Check For Updates")) CheckForUpdates();
 
                     GUILayout.Space(20);
 
-                    if (GUILayout.Button("My Discord Name", GUILayout.Width(130))) CheckDiscordName();
+                    if (GmgLayoutHelper.DebugButton("My Discord Name")) CheckDiscordName();
                     GUI.enabled = true;
 
                     GUILayout.FlexibleSpace();
                 }
+                GUILayout.Space(5);
             }
         }
 
@@ -138,23 +141,27 @@ namespace GestureManager.Scripts.Editor
 
                 foreach (var module in eligibleList)
                 {
-                    GUILayout.BeginVertical(EditorStyles.helpBox);
-                    EditorGUILayout.BeginHorizontal();
-                    GUILayout.Label(module.Avatar.name + ":", GUILayout.Width(Screen.width - 131));
-                    if (GUILayout.Button("Set As Avatar", GUILayout.Width(100))) Manager.SetModule(module);
-                    GUILayout.EndHorizontal();
-                    foreach (var warning in module.GetWarnings()) GUILayout.Label(warning, GestureManagerStyles.TextWarning);
-                    GUILayout.EndVertical();
+                    using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                    {
+                        using (new GUILayout.HorizontalScope())
+                        {
+                            GUILayout.Label(module.Avatar.name + ":", GUILayout.Width(Screen.width - 131));
+                            if (GUILayout.Button("Set As Avatar", GUILayout.Width(100))) Manager.SetModule(module);
+                        }
+
+                        foreach (var warningString in module.GetWarnings()) GUILayout.Label(warningString, GestureManagerStyles.TextWarning);
+                    }
                 }
 
                 if (eligibleList.Count != 0 && nonEligibleList.Count != 0) GUILayout.Label("Non-Eligible VRC_AvatarDescriptors:", GestureManagerStyles.SubHeader);
 
                 foreach (var module in nonEligibleList)
                 {
-                    GUILayout.BeginVertical(GestureManagerStyles.EmoteError);
-                    GUILayout.Label(module.Avatar.name + ":");
-                    foreach (var error in module.GetErrors()) GUILayout.Label(error, GestureManagerStyles.TextError);
-                    GUILayout.EndVertical();
+                    using (new GUILayout.VerticalScope(GestureManagerStyles.EmoteError))
+                    {
+                        GUILayout.Label(module.Avatar.name + ":");
+                        foreach (var errorString in module.GetErrors()) GUILayout.Label(errorString, GestureManagerStyles.TextError);
+                    }
                 }
             }
             else GUILayout.Label("There are no VRC_AvatarDescriptor on your scene. \nPlease consider adding one to your avatar before entering in PlayMode.", GestureManagerStyles.TextError);
@@ -182,48 +189,34 @@ namespace GestureManager.Scripts.Editor
                 EditorGUIUtility.systemCopyBuffer = discord;
         }
 
-        private static void RequestGestureDuplication(ModuleBase module, int gestureIndex)
-        {
-            var fullGestureString = module.GetFinalGestureByIndex(gestureIndex).name;
-            var nameString = "[" + fullGestureString.Substring(fullGestureString.IndexOf("]", StringComparison.Ordinal) + 2) + "]";
-            var newAnimation = GmgAnimationHelper.CloneAnimationAsset(module.GetFinalGestureByIndex(gestureIndex));
-            var pathString = EditorUtility.SaveFilePanelInProject("Creating Gesture: " + fullGestureString, nameString + ".anim", "anim", "Hi (?)");
-
-            if (pathString.Length == 0) return;
-
-            AssetDatabase.CreateAsset(newAnimation, pathString);
-            newAnimation = AssetDatabase.LoadAssetAtPath<AnimationClip>(pathString);
-            module.AddGestureToOverrideController(gestureIndex, newAnimation);
-        }
-
         /*
          * Layout Builders
          */
 
-        internal static void OnCheckBoxGuiHand(ModuleBase module, GestureHand hand, int position, bool overrider)
+        internal static void OnCheckBoxGuiHand(ModuleBase module, GestureHand hand, int position, Action<int> click)
         {
             for (var i = 1; i < 8; i++)
                 using (new GUILayout.HorizontalScope())
-                    if (OnCheckBoxGuiHandAnimation(module, i, position, overrider, out var isOn))
+                    if (OnCheckBoxGuiHandAnimation(module, i, position, click, out var isOn))
                         module.OnNewHand(hand, isOn ? i : 0);
         }
 
-        private static bool OnCheckBoxGuiHandAnimation(ModuleBase module, int i, int position, bool overrider, out bool isOn)
+        private static bool OnCheckBoxGuiHandAnimation(ModuleBase module, int i, int position, Action<int> click, out bool isOn)
         {
-            GUILayout.Label(module.GetFinalGestureByIndex(i).name);
+            GUILayout.Label(module.GetGestureTextNameByIndex(i));
             GUILayout.FlexibleSpace();
             isOn = position == i;
             var isDifferent = isOn != (isOn = GUILayout.Toggle(isOn, ""));
-            if (!overrider) return isDifferent;
-            if (!module.HasGestureBeenOverridden(i)) OverrideButton(module, i);
+            if (click == null) return isDifferent;
+            if (!module.HasGestureBeenOverridden(i)) OverrideButton(i, click);
             else GUILayout.Space(35);
             return isDifferent;
         }
 
-        private static void OverrideButton(ModuleBase module, int i)
+        private static void OverrideButton(int i, Action<int> click)
         {
             if (GUILayout.Button(GestureManagerStyles.PlusTexture, GestureManagerStyles.PlusButton, GUILayout.Width(15), GUILayout.Height(15)))
-                RequestGestureDuplication(module, i);
+                click(i);
         }
 
         /*
@@ -261,8 +254,17 @@ namespace GestureManager.Scripts.Editor
             var discordString = await GetDiscord();
             GestureManager.InWebClientRequest = false;
 
-            EditorUtility.ClearProgressBar();
             DiscordPopup(discordString ?? Discord);
+        }
+
+        internal static async void CheckSupporters(Action<string> supporters)
+        {
+            if (GestureManager.InWebClientRequest) return;
+
+            GestureManager.InWebClientRequest = true;
+            var supportString = await GetSupport();
+            GestureManager.InWebClientRequest = false;
+            if (!string.IsNullOrEmpty(supportString)) supporters(supportString);
         }
 
         /*
@@ -283,6 +285,7 @@ namespace GestureManager.Scripts.Editor
 
         private static async Task<string> GetVersion() => await Get(VersionURL);
         private static async Task<string> GetDiscord() => await Get(DiscordURL);
+        private static async Task<string> GetSupport() => await Get(SupportURL);
 
         private class PrefUpdater
         {

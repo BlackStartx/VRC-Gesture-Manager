@@ -72,7 +72,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                     pickingMode = PickingMode.Ignore,
                     style =
                     {
-                        width = size,
+                        width = size - 2,
                         height = 2,
                         backgroundColor = Colors.CustomBorder,
                         position = UIEPosition.Absolute

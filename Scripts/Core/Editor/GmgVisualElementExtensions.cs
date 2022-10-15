@@ -15,10 +15,10 @@ namespace GestureManager.Scripts.Core.Editor
      */
     public static class GmgVisualElementExtensions
     {
-        public static T MyAdd<T>(this VisualElement visualElement, T child) where T : VisualElement
+        public static T MyAdd<T>(this VisualElement visualElement, T element) where T : VisualElement
         {
-            visualElement.Add(child);
-            return child;
+            visualElement.Add(element);
+            return element;
         }
 
         public static T With<T>(this T visualElement, VisualElement child) where T : VisualElement
@@ -42,6 +42,12 @@ namespace GestureManager.Scripts.Core.Editor
             visualElement.style.borderLeftColor = color;
             visualElement.style.borderTopColor = color;
             return visualElement;
+        }
+
+        public static void SetVisibility<T>(this T visualElement, bool f) where T : VisualElement
+        {
+            visualElement.style.visibility = new StyleEnum<Visibility>(f ? Visibility.Visible : Visibility.Hidden);
+            visualElement.style.display = new StyleEnum<DisplayStyle>(f ? DisplayStyle.Flex : DisplayStyle.None);
         }
 
         public static void MySetAntiAliasing(this EditorWindow window, int antiAliasing)

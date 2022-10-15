@@ -8,20 +8,22 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes
 {
     public class Vrc3EditMode : Vrc3DummyMode
     {
-        public static void Enable(ModuleVrc3 module, IEnumerable<AnimationClip> originalClips)
-        {
-            module.DummyMode = new Vrc3EditMode(module, originalClips);
-            foreach (var radialMenu in module.Radials) radialMenu.MainMenuPrefab();
-        }
-
         internal override string ModeName => "Edit";
 
-        private Vrc3EditMode(ModuleVrc3 module, IEnumerable<AnimationClip> clips) : base(module, "[Edit-Mode]")
-        {
-            Avatar.GetOrAddComponent<Animator>().runtimeAnimatorController = GmgAnimatorControllerHelper.CreateControllerWith(clips);
-        }
+        private const string Prefix = "[Edit-Mode]";
 
-        public override RadialDescription DummyDescription() => new RadialDescription("You're in Edit-Mode,", "select your avatar", "to directly edit your animations!", SelectAvatarAction, null);
+        private const string Text = "You're in Edit-Mode,";
+        private const string Link = "select your avatar";
+        private const string Tail = "to directly edit your animations!";
+
+        private RadialDescription _description;
+        private RadialDescription Description => _description ?? (_description = new RadialDescription(Text, Link, Tail, SelectAvatarAction, null));
+
+        private static RuntimeAnimatorController Controller(IEnumerable<AnimationClip> clips) => GmgAnimatorControllerHelper.CreateControllerWith(clips);
+
+        internal Vrc3EditMode(ModuleVrc3 module, IEnumerable<AnimationClip> clips) : base(module, Prefix) => Animator.runtimeAnimatorController = Controller(clips);
+
+        public override RadialDescription DummyDescription() => Description;
 
         private void SelectAvatarAction(string obj)
         {

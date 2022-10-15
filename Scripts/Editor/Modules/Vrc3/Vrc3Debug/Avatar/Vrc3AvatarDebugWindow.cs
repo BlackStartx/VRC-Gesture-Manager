@@ -16,6 +16,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar
         private ModuleVrc3 _source;
         private Vector2 _scroll;
 
+        private static Color Color => EditorGUIUtility.isProSkin ? Color.magenta : Color.cyan;
+
         internal static Vrc3AvatarDebugWindow Create(ModuleVrc3 source)
         {
             var instance = CreateInstance<Vrc3AvatarDebugWindow>();
@@ -31,7 +33,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar
             return null;
         }
 
-        public void OnInspectorUpdate() => Repaint();
+        public void Update() => Repaint();
 
         private void OnGUI()
         {
@@ -42,10 +44,10 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar
         private void DebugGUI()
         {
             GUILayout.Label("Gesture Manager - Avatar Debug Window", GestureManagerStyles.Header);
-            var fullScreen = Screen.width > 1279;
-            if (!fullScreen) _source.DebugToolBar = Static.DebugToolbar(_source.DebugToolBar);
+            var isFullScreen = Screen.width > 1279;
+            if (!isFullScreen) _source.DebugToolBar = Static.DebugToolbar(_source.DebugToolBar);
             _scroll = GUILayout.BeginScrollView(_scroll);
-            _source.DebugContext(rootVisualElement, null, 0, Screen.width - 60, fullScreen);
+            _source.DebugContext(rootVisualElement, null, 0, Screen.width - 60, isFullScreen);
             GUILayout.EndScrollView();
         }
 
@@ -78,11 +80,12 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar
             private static void DebugLayoutFullScreen(ModuleVrc3 module, float width, Dictionary<VRCAvatarDescriptor.AnimLayerType, ModuleVrc3.LayerData> data)
             {
                 width /= 3;
-                GUILayout.BeginHorizontal();
-                ParametersLayout(module, width);
-                TrackingControlLayout(width, data, module.TrackingControls, module.LocomotionDisabled, module.PoseSpace);
-                AnimatorsLayout(width, data);
-                GUILayout.EndHorizontal();
+                using (new GUILayout.HorizontalScope())
+                {
+                    ParametersLayout(module, width);
+                    TrackingControlLayout(width, data, module.TrackingControls, module.LocomotionDisabled, module.PoseSpace);
+                    AnimatorsLayout(width, data);
+                }
             }
 
             internal static void DummyLayout(string mode)
@@ -98,118 +101,146 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar
 
             private static void ParametersLayout(ModuleVrc3 module, float width)
             {
-                var inWidth = width / 3;
-                GUILayout.BeginVertical(GUILayout.Width(width));
-                GUILayout.Label("Parameters", GestureManagerStyles.GuiHandTitle, GUILayout.Width(width));
-                GUILayout.BeginHorizontal();
-                GUILayout.BeginVertical();
-                GUILayout.Label("Parameter", GestureManagerStyles.GuiDebugTitle, GUILayout.Width(inWidth));
-                foreach (var paramPair in module.Params) GUILayout.Label(paramPair.Key);
-                GUILayout.EndVertical();
+                var widthOption = GUILayout.Width(width);
+                var innerOption = GUILayout.Width(width / 3);
 
-                GUILayout.BeginVertical();
-                GUILayout.Label("Type", GestureManagerStyles.GuiDebugTitle, GUILayout.Width(inWidth));
-                foreach (var paramPair in module.Params) GUILayout.Label(paramPair.Value.Type.ToString());
-                GUILayout.EndVertical();
+                using (new GUILayout.VerticalScope())
+                {
+                    GUILayout.Label("Parameters", GestureManagerStyles.GuiHandTitle, widthOption);
+                    module.ParamFilterSearch();
+                    GUILayout.Space(5);
+                    using (new GUILayout.HorizontalScope(widthOption))
+                    {
+                        GUILayout.Label("Parameter", GestureManagerStyles.GuiDebugTitle, innerOption);
+                        GUILayout.Label("Type", GestureManagerStyles.GuiDebugTitle, innerOption);
+                        GUILayout.Label("Value", GestureManagerStyles.GuiDebugTitle, innerOption);
+                    }
 
-                GUILayout.BeginVertical();
-                GUILayout.Label("Value", GestureManagerStyles.GuiDebugTitle, GUILayout.Width(inWidth));
-                foreach (var paramPair in module.Params) ParametersLayoutValue(module, paramPair);
-                GUILayout.EndVertical();
-                GUILayout.EndHorizontal();
-                GUILayout.EndVertical();
+                    var color = GUI.backgroundColor;
+                    var intTime = Vrc3Param.Time;
+                    foreach (var paramPair in module.FilteredParams)
+                    {
+                        GUILayout.Space(-4);
+                        GUI.backgroundColor = Color.Lerp(Color, color, (intTime - paramPair.Value.LastUpdate) / 100f);
+                        using (new GUILayout.HorizontalScope(GUI.skin.box, widthOption))
+                        {
+                            GUILayout.Label(paramPair.Key, innerOption);
+                            GUILayout.Label(paramPair.Value.TypeText, innerOption);
+                            ParametersLayoutValue(module, paramPair, innerOption);
+                        }
+                    }
+
+                    GUI.backgroundColor = color;
+                }
             }
 
-            private static void ParametersLayoutValue(ModuleVrc3 module, KeyValuePair<string, Vrc3Param> paramPair)
+            private static void ParametersLayoutValue(ModuleVrc3 module, KeyValuePair<string, Vrc3Param> paramPair, GUILayoutOption innerOption)
             {
                 if (module.Edit != paramPair.Key)
                 {
-                    GmgLayoutHelper.GuiLabel(paramPair.Value.LabelTuple());
+                    GmgLayoutHelper.GuiLabel(paramPair.Value.LabelTuple(), innerOption);
                     var rect = GUILayoutUtility.GetLastRect();
-                    rect.x += rect.width - 15;
+                    rect.x += rect.width - 20;
+                    rect.width = 15;
                     if (GUI.Toggle(rect, false, "")) module.Edit = paramPair.Key;
                 }
-                else paramPair.Value.FieldTuple(module);
+                else paramPair.Value.FieldTuple(module, innerOption);
             }
 
             private static void TrackingControlLayout(float width, Dictionary<VRCAvatarDescriptor.AnimLayerType, ModuleVrc3.LayerData> data, Dictionary<string, VRC_AnimatorTrackingControl.TrackingType> trackingControls, bool locomotionDisabled, bool poseSpace)
             {
-                var inWidth = width / 2;
-                GUILayout.BeginVertical(GUILayout.Width(width));
+                var widthOption = GUILayout.Width(width);
+                var innerOption = GUILayout.Width(width / 2);
 
-                GUILayout.Label("Tracking Control", GestureManagerStyles.GuiHandTitle, GUILayout.Width(width));
-                GUILayout.BeginHorizontal();
-                GUILayout.BeginVertical();
-                GUILayout.Label("Name", GestureManagerStyles.GuiDebugTitle, GUILayout.Width(inWidth));
-                foreach (var trackingPair in trackingControls) GUILayout.Label(trackingPair.Key, GUILayout.Width(inWidth));
-                GUILayout.EndVertical();
+                using (new GUILayout.VerticalScope())
+                {
+                    GUILayout.Label("Tracking Control", GestureManagerStyles.GuiHandTitle, widthOption);
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        using (new GUILayout.VerticalScope())
+                        {
+                            GUILayout.Label("Name", GestureManagerStyles.GuiDebugTitle, innerOption);
+                            foreach (var trackingPair in trackingControls) GUILayout.Label(trackingPair.Key, innerOption);
+                        }
 
-                GUILayout.BeginVertical();
-                GUILayout.Label("Value", GestureManagerStyles.GuiDebugTitle, GUILayout.Width(inWidth));
-                foreach (var trackingPair in trackingControls) GmgLayoutHelper.GuiLabel(TrackingTuple(trackingPair.Value), GUILayout.Width(inWidth));
-                GUILayout.EndVertical();
-                GUILayout.EndHorizontal();
+                        using (new GUILayout.VerticalScope())
+                        {
+                            GUILayout.Label("Value", GestureManagerStyles.GuiDebugTitle, innerOption);
+                            foreach (var trackingPair in trackingControls) GmgLayoutHelper.GuiLabel(TrackingTuple(trackingPair.Value), innerOption);
+                        }
+                    }
 
-                GUILayout.Label("Animation Controllers", GestureManagerStyles.GuiHandTitle, GUILayout.Width(width));
-                GUILayout.BeginHorizontal();
-                GUILayout.BeginVertical();
-                GUILayout.Label("Name", GestureManagerStyles.GuiDebugTitle, GUILayout.Width(inWidth));
-                foreach (var controllerPair in data) GUILayout.Label(controllerPair.Key.ToString(), GUILayout.Width(inWidth));
-                GUILayout.EndVertical();
+                    GUILayout.Label("Animation Controllers", GestureManagerStyles.GuiHandTitle, widthOption);
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        using (new GUILayout.VerticalScope())
+                        {
+                            GUILayout.Label("Name", GestureManagerStyles.GuiDebugTitle, innerOption);
+                            foreach (var controllerPair in data) GUILayout.Label(controllerPair.Key.ToString(), innerOption);
+                        }
 
-                GUILayout.BeginVertical();
-                GUILayout.Label("Weight", GestureManagerStyles.GuiDebugTitle, GUILayout.Width(inWidth));
-                foreach (var controllerPair in data) GUILayout.Label(controllerPair.Value.Weight.Weight.ToString("0.00"), GUILayout.Width(inWidth));
-                GUILayout.EndVertical();
-                GUILayout.EndHorizontal();
+                        using (new GUILayout.VerticalScope())
+                        {
+                            GUILayout.Label("Weight", GestureManagerStyles.GuiDebugTitle, innerOption);
+                            foreach (var controllerPair in data) GUILayout.Label(controllerPair.Value.Weight.Weight.ToString("0.00"), innerOption);
+                        }
+                    }
 
-                GUILayout.Label("Miscellaneous", GestureManagerStyles.GuiHandTitle, GUILayout.Width(width));
-                GUILayout.BeginHorizontal();
-                GUILayout.BeginVertical();
-                GUILayout.Label("Locomotion", GUILayout.Width(inWidth));
-                GUILayout.Label("Pose Space", GUILayout.Width(inWidth));
-                GUILayout.EndVertical();
+                    GUILayout.Label("Miscellaneous", GestureManagerStyles.GuiHandTitle, widthOption);
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        using (new GUILayout.VerticalScope())
+                        {
+                            GUILayout.Label("Locomotion", innerOption);
+                            GUILayout.Label("Pose Space", innerOption);
+                        }
 
-                GUILayout.BeginVertical();
-                GmgLayoutHelper.GuiLabel(LocomotionTuple(!locomotionDisabled), GUILayout.Width(inWidth));
-                GmgLayoutHelper.GuiLabel(PoseSpaceTuple(poseSpace), GUILayout.Width(inWidth));
-                GUILayout.EndVertical();
-                GUILayout.EndHorizontal();
-                GUILayout.EndVertical();
+                        using (new GUILayout.VerticalScope())
+                        {
+                            GmgLayoutHelper.GuiLabel(LocomotionTuple(!locomotionDisabled), innerOption);
+                            GmgLayoutHelper.GuiLabel(PoseSpaceTuple(poseSpace), innerOption);
+                        }
+                    }
+                }
             }
 
             private static void AnimatorsLayout(float width, IReadOnlyDictionary<VRCAvatarDescriptor.AnimLayerType, ModuleVrc3.LayerData> data)
             {
-                var inWidth = width / 3;
-                GUILayout.BeginVertical(GUILayout.Width(width));
-                GUILayout.Label("Animator States", GestureManagerStyles.GuiHandTitle, GUILayout.Width(width));
-                foreach (var sortPair in ModuleVrc3Styles.Data.SortValue.Where(sortPair => data.ContainsKey(sortPair.Key)))
+                var widthOption = GUILayout.Width(width);
+                var innerOption = GUILayout.Width(width / 3);
+
+                using (new GUILayout.VerticalScope())
                 {
-                    GUILayout.Label(sortPair.Key.ToString(), GestureManagerStyles.GuiDebugTitle);
-                    var animator = data[sortPair.Key].Playable;
-                    var layerList = Enumerable.Range(0, animator.GetLayerCount()).ToList();
+                    GUILayout.Label("Animator States", GestureManagerStyles.GuiHandTitle, widthOption);
+                    foreach (var sortPair in ModuleVrc3Styles.Data.SortValue.Where(sortPair => data.ContainsKey(sortPair.Key)))
+                    {
+                        GUILayout.Label(sortPair.Key.ToString(), GestureManagerStyles.GuiDebugTitle, widthOption);
+                        var animator = data[sortPair.Key].Playable;
+                        var layerList = Enumerable.Range(0, animator.GetLayerCount()).ToList();
 
-                    GUILayout.BeginHorizontal(EditorStyles.helpBox);
-                    GUILayout.BeginVertical();
-                    GUILayout.Label("Name", GestureManagerStyles.SubHeader, GUILayout.Width(inWidth));
-                    foreach (var intLayer in layerList) GUILayout.Label(animator.GetLayerName(intLayer), GUILayout.Width(inWidth));
-                    GUILayout.EndVertical();
+                        using (new GUILayout.HorizontalScope(EditorStyles.helpBox))
+                        {
+                            using (new GUILayout.VerticalScope())
+                            {
+                                GUILayout.Label("Name", GestureManagerStyles.SubHeader, innerOption);
+                                foreach (var intLayer in layerList) GUILayout.Label(animator.GetLayerName(intLayer), innerOption);
+                            }
 
-                    GUILayout.BeginVertical();
-                    GUILayout.Label("Weight", GestureManagerStyles.SubHeader, GUILayout.Width(inWidth));
-                    foreach (var intLayer in layerList) GUILayout.Label(animator.GetLayerWeight(intLayer).ToString("0.00"), GUILayout.Width(inWidth));
-                    GUILayout.EndVertical();
+                            using (new GUILayout.VerticalScope())
+                            {
+                                GUILayout.Label("Weight", GestureManagerStyles.SubHeader, innerOption);
+                                foreach (var intLayer in layerList) GUILayout.Label(animator.GetLayerWeight(intLayer).ToString("0.00"), innerOption);
+                            }
 
-                    GUILayout.BeginVertical();
-                    GUILayout.Label("State", GestureManagerStyles.SubHeader, GUILayout.Width(inWidth));
-                    foreach (var infos in layerList.Select(intLayer => animator.GetCurrentAnimatorClipInfo(intLayer)))
-                        GUILayout.Label(infos.Length == 0 ? "[UNKNOWN]" : infos[0].clip.name, GUILayout.Width(inWidth));
-
-                    GUILayout.EndVertical();
-                    GUILayout.EndHorizontal();
+                            using (new GUILayout.VerticalScope())
+                            {
+                                GUILayout.Label("State", GestureManagerStyles.SubHeader, innerOption);
+                                foreach (var infos in layerList.Select(intLayer => animator.GetCurrentAnimatorClipInfo(intLayer)))
+                                    GUILayout.Label(infos.Length == 0 ? "[UNKNOWN]" : infos[0].clip.name, innerOption);
+                            }
+                        }
+                    }
                 }
-
-                GUILayout.EndVertical();
             }
 
             private static (Color? color, string text) TrackingTuple(VRC_AnimatorTrackingControl.TrackingType trackingType)
@@ -243,7 +274,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar
 
             public static class D
             {
-                public const string Subtitle = "Select a category from the toolbar bellow.";
+                private const string Select = "Select a ";
+                public const string Subtitle = Select + "category from the toolbar bellow.";
                 public const string Hint = "For an easier experience you can undock the window with the button bellow!";
                 public const string Button = "Undock Debug Window";
             }

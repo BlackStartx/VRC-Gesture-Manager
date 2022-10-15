@@ -26,6 +26,13 @@ namespace GestureManager.Scripts.Extra
             t.localScale += _localScale;
         }
 
+        public void ApplyTo(Transform t)
+        {
+            t.position = _position;
+            t.rotation = _rotation;
+            t.localScale = _localScale;
+        }
+
         public TransformData Difference(Transform t) => new TransformData(t.position - _position, t.rotation * Quaternion.Inverse(_rotation), t.localScale - _localScale);
     }
 
