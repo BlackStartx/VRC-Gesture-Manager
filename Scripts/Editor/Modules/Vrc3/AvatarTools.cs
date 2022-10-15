@@ -96,7 +96,11 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 var transform = _camera.transform;
                 var positionVector = sceneTransform.position;
                 transform.rotation = sceneTransform.rotation;
-                _camera.projectionMatrix = camera.projectionMatrix;
+                _camera.orthographicSize = camera.orthographicSize;
+                _camera.nearClipPlane = camera.nearClipPlane;
+                _camera.farClipPlane = camera.farClipPlane;
+                _camera.orthographic = camera.orthographic;
+                _camera.fieldOfView = camera.fieldOfView;
                 transform.position = new Vector3(positionVector.x, positionVector.y + 0.001f, positionVector.z);
             }
 
