@@ -110,7 +110,7 @@ namespace GestureManager.Scripts.Editor
             }
             else
             {
-                GUILayout.Label(isLoaded ? "I'm an useless script if you aren't on play mode :D" : "Drag & Drop me into the scene to start testing! ♥", GestureManagerStyles.MiddleStyle);
+                GUILayout.Label(isLoaded ? "I'm a useless script if you aren't in play mode :D" : "Drag & Drop me into the scene to start testing! ♥", GestureManagerStyles.MiddleStyle);
                 GUILayout.Space(10);
                 using (new GUILayout.HorizontalScope())
                 {
@@ -164,7 +164,7 @@ namespace GestureManager.Scripts.Editor
                     }
                 }
             }
-            else GUILayout.Label("There are no VRC_AvatarDescriptor on your scene. \nPlease consider adding one to your avatar before entering in PlayMode.", GestureManagerStyles.TextError);
+            else GUILayout.Label("There are no VRC_AvatarDescriptors in your scene. \nPlease consider adding one to your avatar before entering PlayMode.", GestureManagerStyles.TextError);
 
             if (GUILayout.Button("Check Again")) CheckActiveModules();
         }

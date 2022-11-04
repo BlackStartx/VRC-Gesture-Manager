@@ -268,15 +268,15 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar
             {
                 public const string Subtitle = "The debug view is now floating,";
                 public const string Message = "♥   you can switch to other tabs now   ♥";
-                public const string Hint = "or you can dock the window back in by using the button bellow!";
+                public const string Hint = "or you can dock the window back in by using the button below!";
                 public const string Button = "Dock Debug Window";
             }
 
             public static class D
             {
                 private const string Select = "Select a ";
-                public const string Subtitle = Select + "category from the toolbar bellow.";
-                public const string Hint = "For an easier experience you can undock the window with the button bellow!";
+                public const string Subtitle = Select + "category from the toolbar below.";
+                public const string Hint = "For an easier experience, you can undock the window with the button below!";
                 public const string Button = "Undock Debug Window";
             }
         }
