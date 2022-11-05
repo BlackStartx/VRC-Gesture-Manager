@@ -438,7 +438,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 using (new GUILayout.HorizontalScope())
                 {
                     GUILayout.FlexibleSpace();
-                    GUILayout.Label("Some default Animator Controllers has changed!", GestureManagerStyles.TextWarning);
+                    GUILayout.Label("Some default Animator Controllers have changed!", GestureManagerStyles.TextWarning);
                     GUILayout.FlexibleSpace();
                     if (GUILayout.Button("Restore Controllers")) RestoreDefaultControllers();
                     GUILayout.FlexibleSpace();
@@ -514,7 +514,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 else deleted = true;
             }
 
-            const string message = "It seems some controllers has been moved or has been deleted!\n\nPlease, reimport the Gesture Manager to fix this.";
+            const string message = "It seems some controllers have been moved or have been deleted!\n\nPlease reimport the Gesture Manager to fix this.";
             if (deleted) EditorUtility.DisplayDialog("Restore Error!", message, "Ok");
 
             ReloadScene();
