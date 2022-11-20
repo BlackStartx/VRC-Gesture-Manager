@@ -3,15 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using GestureManager.Scripts.Core.Editor;
-using GestureManager.Scripts.Extra;
+using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Runtime.Extra;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VRCSDK2;
-using GmData = GestureManager.Scripts.Editor.GestureManagerStyles.Data;
+using GmData = BlackStartX.GestureManager.Editor.GestureManagerStyles.Data;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc2
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
 {
     public class ModuleVrc2 : ModuleBase
     {
@@ -22,7 +22,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
         private readonly int _handGestureLeft = Animator.StringToHash("HandGestureLeft");
         private readonly int _handGestureRight = Animator.StringToHash("HandGestureRight");
 
-        private int emote;
+        private int _emote;
 
         private RuntimeAnimatorController _avatarWasUsing;
 
@@ -46,10 +46,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
         private RuntimeAnimatorController StandingControllerPreset => _standingControllerPreset ? _standingControllerPreset : _standingControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/StandingEmoteTestingTemplate");
         private RuntimeAnimatorController SeatedControllerPreset => _seatedControllerPreset ? _seatedControllerPreset : _seatedControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/SeatedEmoteTestingTemplate");
 
-        private Dictionary<HumanBodyBones, Quaternion> _lastBoneQuaternions;
-
         private int _controlDelay;
-        private static IEnumerable<HumanBodyBones> Bones => Enum.GetValues(typeof(HumanBodyBones)).Cast<HumanBodyBones>();
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
         private readonly AnimationBind[] _gestureBinds =
@@ -102,84 +99,52 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             { _emoteBinds[7].GetOriginalName(), _emoteBinds[7].GetMyName(_usingType) }
         });
 
-        private IEnumerable<HumanBodyBones> _whiteListedControlBones;
-        private IEnumerable<HumanBodyBones> WhiteListedControlBones => _whiteListedControlBones ?? (_whiteListedControlBones = Bones.Where(bones => !_blackListedControlBones.Contains(bones)));
-
-        private readonly List<HumanBodyBones> _blackListedControlBones = new List<HumanBodyBones>
+        protected override List<HumanBodyBones> PoseBones => new List<HumanBodyBones>
         {
-            // Left
-            HumanBodyBones.LeftThumbDistal,
-            HumanBodyBones.LeftThumbIntermediate,
-            HumanBodyBones.LeftThumbProximal,
-
-            HumanBodyBones.LeftIndexDistal,
-            HumanBodyBones.LeftIndexIntermediate,
-            HumanBodyBones.LeftIndexProximal,
-
-            HumanBodyBones.LeftMiddleDistal,
-            HumanBodyBones.LeftMiddleIntermediate,
-            HumanBodyBones.LeftMiddleProximal,
-
-            HumanBodyBones.LeftRingDistal,
-            HumanBodyBones.LeftRingIntermediate,
-            HumanBodyBones.LeftRingProximal,
-
-            HumanBodyBones.LeftLittleDistal,
-            HumanBodyBones.LeftLittleIntermediate,
-            HumanBodyBones.LeftLittleProximal,
-
-            // Right
-            HumanBodyBones.RightThumbDistal,
-            HumanBodyBones.RightThumbIntermediate,
-            HumanBodyBones.RightThumbProximal,
-
-            HumanBodyBones.RightIndexDistal,
-            HumanBodyBones.RightIndexIntermediate,
-            HumanBodyBones.RightIndexProximal,
-
-            HumanBodyBones.RightMiddleDistal,
-            HumanBodyBones.RightMiddleIntermediate,
-            HumanBodyBones.RightMiddleProximal,
-
-            HumanBodyBones.RightRingDistal,
-            HumanBodyBones.RightRingIntermediate,
-            HumanBodyBones.RightRingProximal,
-
-            HumanBodyBones.RightLittleDistal,
-            HumanBodyBones.RightLittleIntermediate,
-            HumanBodyBones.RightLittleProximal,
-
-            // ???
-            HumanBodyBones.LastBone
+            HumanBodyBones.Hips,
+            HumanBodyBones.LeftUpperLeg,
+            HumanBodyBones.RightUpperLeg,
+            HumanBodyBones.LeftLowerLeg,
+            HumanBodyBones.RightLowerLeg,
+            HumanBodyBones.LeftFoot,
+            HumanBodyBones.RightFoot,
+            HumanBodyBones.Spine,
+            HumanBodyBones.Chest,
+            HumanBodyBones.Neck,
+            HumanBodyBones.Head,
+            HumanBodyBones.LeftShoulder,
+            HumanBodyBones.RightShoulder,
+            HumanBodyBones.LeftUpperArm,
+            HumanBodyBones.RightUpperArm,
+            HumanBodyBones.LeftLowerArm,
+            HumanBodyBones.RightLowerArm,
+            HumanBodyBones.LeftHand,
+            HumanBodyBones.RightHand,
+            HumanBodyBones.LeftToes,
+            HumanBodyBones.RightToes,
+            HumanBodyBones.LeftEye,
+            HumanBodyBones.RightEye,
+            HumanBodyBones.Jaw,
+            HumanBodyBones.UpperChest
         };
 
         public ModuleVrc2(GestureManager manager, VRC_AvatarDescriptor avatarDescriptor) : base(manager, avatarDescriptor) => _avatarDescriptor = avatarDescriptor;
 
         public override void Update()
         {
-            FetchLastBoneRotation();
-            AvatarAnimator.SetInteger(_handGestureLeft, Manager.PlayingCustomAnimation || emote != 0 ? 8 : Left);
-            AvatarAnimator.SetInteger(_handGestureRight, Manager.PlayingCustomAnimation || emote != 0 ? 8 : Right);
-            AvatarAnimator.SetInteger(_emoteHash, Manager.PlayingCustomAnimation ? 9 : emote);
+            if (_emote != 0 || Manager.PlayingCustomAnimation) _controlDelay = 5;
+            else if (_controlDelay <= 0) SavePose(AvatarAnimator);
+            else _controlDelay--;
+
+            AvatarAnimator.SetInteger(_handGestureLeft, Manager.PlayingCustomAnimation || _emote != 0 ? 8 : Left);
+            AvatarAnimator.SetInteger(_handGestureRight, Manager.PlayingCustomAnimation || _emote != 0 ? 8 : Right);
+            AvatarAnimator.SetInteger(_emoteHash, Manager.PlayingCustomAnimation ? 9 : _emote);
         }
 
         public override void LateUpdate()
         {
-            if (emote != 0 || Manager.PlayingCustomAnimation) return;
-
-            foreach (var bodyBone in WhiteListedControlBones)
-            {
-                var boneTransform = AvatarAnimator.GetBoneTransform(bodyBone);
-                try
-                {
-                    var boneQuaternion = _lastBoneQuaternions[bodyBone];
-                    boneTransform.localRotation = new Quaternion(boneQuaternion.x, boneQuaternion.y, boneQuaternion.z, boneQuaternion.w);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
+            if (_emote != 0 || Manager.PlayingCustomAnimation) return;
+            SetPose(AvatarAnimator);
         }
 
         public override void OnDrawGizmos()
@@ -218,7 +183,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             {
                 ("Gestures", () =>
                 {
-                    if (emote != 0 || Manager.PlayingCustomAnimation)
+                    if (_emote != 0 || Manager.PlayingCustomAnimation)
                     {
                         using (new GUILayout.HorizontalScope(GestureManagerStyles.EmoteError))
                         {
@@ -261,11 +226,11 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
                     using (new GUILayout.HorizontalScope())
                     {
                         if (!(_selectingCustomAnim = GmgLayoutHelper.ObjectField("Animation: ", _selectingCustomAnim, Manager.SetCustomAnimation))) GUI.enabled = false;
-                        if (!Manager.PlayingCustomAnimation || emote != 0)
+                        if (!Manager.PlayingCustomAnimation || _emote != 0)
                         {
                             if (GUILayout.Button("Play", _options))
                             {
-                                emote = 0;
+                                _emote = 0;
                                 Manager.PlayCustomAnimation(_selectingCustomAnim);
                             }
                         }
@@ -286,7 +251,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
         public override Animator OnCustomAnimationPlay(AnimationClip animationClip)
         {
             SetupOverride(_usingType, false);
-            AvatarAnimator.applyRootMotion = animationClip != null;
+            AvatarAnimator.applyRootMotion = animationClip;
             return AvatarAnimator;
         }
 
@@ -323,56 +288,27 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc2
             using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Label(GetEmoteByIndex(current - 1).name);
-                if (emote == current && GUILayout.Button("Stop", GuiGreenButton)) stop();
-                if (emote != current && GUILayout.Button("Play", _options)) play(current);
+                if (_emote == current && GUILayout.Button("Stop", GuiGreenButton)) stop();
+                if (_emote != current && GUILayout.Button("Play", _options)) play(current);
             }
         }
 
         private void OnEmoteStart(int emoteIndex)
         {
-            emote = emoteIndex;
+            _emote = emoteIndex;
             Manager.PlayCustomAnimation(GetEmoteByIndex(emoteIndex - 1));
         }
 
         private void OnEmoteStop()
         {
-            emote = 0;
+            _emote = 0;
             Manager.StopCustomAnimation();
         }
 
         private void StopCurrentEmote()
         {
-            if (emote != 0) OnEmoteStop();
+            if (_emote != 0) OnEmoteStop();
             if (Manager.PlayingCustomAnimation) Manager.StopCustomAnimation();
-        }
-
-        private void FetchLastBoneRotation()
-        {
-            if (emote != 0 || Manager.PlayingCustomAnimation)
-            {
-                _controlDelay = 5;
-                return;
-            }
-
-            if (_controlDelay > 0)
-            {
-                _controlDelay--;
-                return;
-            }
-
-            _lastBoneQuaternions = new Dictionary<HumanBodyBones, Quaternion>();
-            foreach (var bodyBone in WhiteListedControlBones)
-            {
-                var boneTransform = AvatarAnimator.GetBoneTransform(bodyBone);
-                try
-                {
-                    _lastBoneQuaternions[bodyBone] = boneTransform.localRotation;
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
         }
 
         private void SetupOverride(ControllerType controllerType, bool saveController)

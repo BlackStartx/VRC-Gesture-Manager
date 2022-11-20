@@ -2,14 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GestureManager.Scripts.Core.Editor;
-using GestureManager.Scripts.Editor.Modules.Vrc3.Params;
+using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using UnityEditor;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDKBase;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar
 {
     internal class Vrc3AvatarDebugWindow : EditorWindow
     {

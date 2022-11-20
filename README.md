@@ -5,19 +5,23 @@ A tool that will help you preview and edit your avatar animation directly in Uni
 Available for both VRChat SDK 2.0 and SDK 3.0, in Unity 2018 or 2019.
 
 ## How To Use (SDK 3.0)
-### Download the UnityPackage
+- ### Import using the VRChat Creator Companion
+[In Progress]
+
+- ### Import using the release UnityPackage
 You can download the UnityPackage from the latest release tab.<br>
 [[Or click here to go to the latest release](https://github.com/BlackStartx/VRC-Gesture-Manager/releases/latest)]
 
 From there you can find the link for the UnityPackage at the bottom of the page, in the **Assets** tab.<br>
 
-### Import on Unity
-Once downloaded, import the UnityPackage directly in your project, 
-and you will find a folder called "GestureManager" in your **Assets** directory.
+### Just one last step!
+Once imported in your project, enable it by navigating to the Unity toolbar and click: 
 
-![img.png](.markdown/3.2/GestureManagerFolder.png)
+`"Tools -> Gesture Manager Emulator"`
 
-Drag and drop the prefab that you find in that folder in to the scene and you're done. 
+This will drop the **GestureManager** prefab into your scene! 
+
+![img.png](.markdown/3.8/GestureManagerStart.png)
 
 Whenever you want to test your avatar hit PlayMode and select the GestureManager from the Hierarchy!
 <br>
@@ -26,7 +30,7 @@ If there are no errors the GestureManager will take control of your Avatar and y
 You can test Left and Right hand gesture with the buttons on top, and you can test 3.0 Expressions from
 the RadialMenu bellow.
 
-![img.png](.markdown/3.5/TestingStart.png)
+![img.png](.markdown/3.8/TestingStart.png)
 
 ### Option Button!
 The Option button in the RadialMenu contains a lot of sub-category that helps you change parameters usually 
@@ -41,7 +45,7 @@ In the **Locomotion** category you can preview animation like:
 - Prone
 - Falling
 
-![img.png](.markdown/3.5/TestingMove.png)
+![img.png](.markdown/3.8/TestingMove.png)
 
 In the **States** category you can preview AFK, Seated, IK and T Pose animations.
 
@@ -121,7 +125,7 @@ This can be useful to test how your application is handling OSC packets and for 
 Simply set the OSC address string and populate the message parameters with the + button on the right.<br>
 You can switch between OSC Messages and OSC bundles by clicking the "Bundle" or "Message" buttons.
 
-![img.png](.markdown/3.5/SendOsc.png)
+![img.png](.markdown/3.8/SendOsc.png)
 
 ### Knew Issues
 ♥ All the knew issues since the release of 3.0 has been addressed! ♥
@@ -165,6 +169,7 @@ Thanks to every friend and person who helped or supported me during the developm
 - NekOwneD
 - [lindesu](https://github.vrlabs.dev/)
 - OptoCloud
+- lukasong
 
 Special thanks to:
 

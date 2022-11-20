@@ -6,7 +6,7 @@ using UnityEngine.Animations;
 using UnityEngine.Playables;
 using VRC.SDKBase;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public class AnimatorControllerWeight
     {

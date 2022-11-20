@@ -1,13 +1,13 @@
 ﻿#if VRC_SDK_VRCSDK3
+using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets.Base;
+using BlackStartX.GestureManager.Runtime.VisualElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using GestureManager.Scripts.Core.Editor;
-using GestureManager.Scripts.Core.VisualElements;
-using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
-using GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base;
 using UIEPosition = UnityEngine.UIElements.Position;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
 {
     public class RadialPuppet : BasePuppet
     {
@@ -19,12 +19,12 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
 
         private float Get => Control.GetSubValue(0);
 
-        public RadialPuppet(RadialMenuControl control) : base(100, control)
+        public RadialPuppet(RadialSliceControl control) : base(100, control)
         {
             _progress = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(96, RadialMenuUtility.Colors.CustomSelected, RadialMenuUtility.Colors.CustomSelected, UIEPosition.Absolute));
             Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
             Add(RadialMenuUtility.Prefabs.NewRadialText(out _text, 0, UIEPosition.Absolute));
-            _arrow = this.MyAdd(GenerateArrow());
+            _arrow = this.MyAdd(ArrowElement());
 
             ShowValue(Get);
         }
@@ -58,16 +58,13 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
             Control.SetSubValue(0, to);
         }
 
-        public override void AfterCursor()
-        {
-            _text.parent.BringToFront();
-        }
+        public override void AfterCursor() => _text.parent.BringToFront();
 
         /*
          * Static
          */
 
-        private static VisualElement GenerateArrow()
+        private static VisualElement ArrowElement()
         {
             var container = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } };
             var element = container.MyAdd(new VisualElement

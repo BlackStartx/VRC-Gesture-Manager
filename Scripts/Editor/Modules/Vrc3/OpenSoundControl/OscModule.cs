@@ -2,15 +2,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GestureManager.Scripts.Core.Editor;
-using GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElements;
-using GestureManager.Scripts.Editor.Modules.Vrc3.Params;
-using GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Avatar;
+using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.VisualElements;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
 {
     public class OscModule
     {
@@ -27,8 +27,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl
         private UdpSender _sender;
         private UdpListener _listener;
         private readonly List<byte[]> _queue = new List<byte[]>();
-
-        private bool _useLocalConfiguration;
 
         private bool _customSelection;
         private string _customAddress = VrcReceiverAddress;

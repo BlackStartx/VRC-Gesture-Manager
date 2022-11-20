@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public static class Vrc3DefaultParams
     {

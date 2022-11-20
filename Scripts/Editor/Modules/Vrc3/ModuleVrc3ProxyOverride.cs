@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using UnityEngine;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public static class Vrc3ProxyOverride
     {

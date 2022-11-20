@@ -2,7 +2,7 @@
 using System;
 using UnityEngine;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 {
     public class Vrc3ParamBool : Vrc3Param
     {

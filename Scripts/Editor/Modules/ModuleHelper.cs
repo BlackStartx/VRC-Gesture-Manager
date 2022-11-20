@@ -1,4 +1,4 @@
-﻿using GestureManager.Scripts.Extra;
+﻿using BlackStartX.GestureManager.Runtime.Extra;
 using GmgAvatarDescriptor =
 #if VRC_SDK_VRCSDK2 || VRC_SDK_VRCSDK3
     VRC.SDKBase.VRC_AvatarDescriptor;
@@ -7,7 +7,7 @@ using GmgAvatarDescriptor =
 #endif
 using UnityEngine;
 
-namespace GestureManager.Scripts.Editor.Modules
+namespace BlackStartX.GestureManager.Editor.Modules
 {
     public static class ModuleHelper
     {

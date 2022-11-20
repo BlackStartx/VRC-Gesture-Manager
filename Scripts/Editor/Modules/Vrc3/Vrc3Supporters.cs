@@ -3,7 +3,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public static class Vrc3Supporter
     {
@@ -43,7 +43,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
                 new Supporter { name = "lindesu" },
                 new Supporter { name = "OptoCloud" },
-                new Supporter { name = "" }
+                new Supporter { name = "lukasong" }
             },
             supporter = new[]
             {

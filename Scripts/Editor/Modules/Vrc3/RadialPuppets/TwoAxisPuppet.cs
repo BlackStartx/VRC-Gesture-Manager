@@ -1,21 +1,21 @@
 ﻿#if VRC_SDK_VRCSDK3
-using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
-using GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets.Base;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
 {
     public class TwoAxisPuppet : BaseAxisPuppet
     {
-        public TwoAxisPuppet(RadialMenuControl control) : base(control)
+        public TwoAxisPuppet(RadialSliceControl control) : base(control)
         {
         }
 
         public override void Update(RadialCursor cursor)
         {
-            if (!cursor.Get2Axis(Clamp, out var axis)) return;
+            if (!cursor.Get2Axis(Clamp, out var vector2)) return;
 
-            Control.SetSubValue(0, axis.x);
-            Control.SetSubValue(1, axis.y);
+            Control.SetSubValue(0, vector2.x);
+            Control.SetSubValue(1, vector2.y);
         }
     }
 }

@@ -1,14 +1,13 @@
 ﻿#if VRC_SDK_VRCSDK3
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using GestureManager.Scripts.Core.Editor;
-using GestureManager.Scripts.Core.VisualElements;
-using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
+using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
+using BlackStartX.GestureManager.Runtime.VisualElements;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public class RadialCursor : GmgCircleElement
     {
@@ -51,10 +50,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             if (referenceLayout != null && referenceLayout != parent) SetParent(referenceLayout);
         }
 
-        [Obsolete]
-        public void Update(Vector2 mouse, IEnumerable<GmgButton> selectionTuple, bool puppet) => Update(mouse, selectionTuple.Select(Element).ToList(), puppet);
-
-        public void Update(Vector2 mouse, IList<RadialMenuItem> selectionTuple, bool puppet)
+        public void Update(Vector2 mouse, IList<RadialSliceBase> selectionTuple, bool puppet)
         {
             if (mouse.magnitude < _clampReset) SetCursorPosition(mouse);
             else SetCursorPosition(0, 0);
@@ -63,46 +59,30 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             if (Selection != intSelection) UpdateSelection(selectionTuple, intSelection);
         }
 
-        [Obsolete]
-        private void UpdateSelection(IEnumerable<GmgButton> selectionTuple, int selection) => UpdateSelection(selectionTuple.Select(Element).ToList(), selection);
-
-        private void UpdateSelection(IList<RadialMenuItem> selectionTuple, int selection)
+        internal void UpdateSelection(IList<RadialSliceBase> selectionTuple, int selection)
         {
             if (Selection != -1) Des(selectionTuple[Selection]);
             if (selection != -1) Sel(selectionTuple[selection]);
             Selection = selection;
         }
 
-        [Obsolete]
-        private static void Des(GmgButton oldElement) => Des(Element(oldElement));
-
-        private static void Des(RadialMenuItem oldElement)
+        private static void Des(RadialSliceBase oldElement)
         {
             oldElement.Selected = false;
             oldElement.DataHolder.experimental.animation.Scale(1f, 100);
             oldElement.DataHolder.experimental.animation.TopLeft(RadialMenuUtility.DataVector, 100);
-            oldElement.CircleElement.CenterColor = RadialMenuUtility.Colors.RadialCenter;
-            oldElement.CircleElement.VertexColor = RadialMenuUtility.Colors.CustomMain;
+            oldElement.CenterColor = oldElement.IdleCenterColor;
+            oldElement.VertexColor = oldElement.IdleBorderColor;
         }
 
-        [Obsolete]
-        internal static void Sel(GmgButton newElement, bool instant = false, float scale = 0.10f) => Sel(Element(newElement), instant, scale);
-
-        internal static void Sel(RadialMenuItem newElement, bool instant = false, float scale = 0.10f)
+        internal static void Sel(RadialSliceBase newElement, bool instant = false, float scale = 0.10f)
         {
             newElement.Selected = true;
             var topLeftVector = RadialMenuUtility.DataVector + RadialMenuUtility.DataVector * scale;
             newElement.DataHolder.experimental.animation.Scale(1f + scale, 100);
             newElement.DataHolder.experimental.animation.TopLeft(topLeftVector, instant ? 0 : 100);
-            newElement.CircleElement.CenterColor = newElement.SelectedCenterColor;
-            newElement.CircleElement.VertexColor = newElement.SelectedBorderColor;
-        }
-
-        [Obsolete]
-        private static RadialMenuItem Element(GmgButton element)
-        {
-            element.Button.CircleElement = element.CircleElement;
-            return element.Button;
+            newElement.CenterColor = newElement.SelectedCenterColor;
+            newElement.VertexColor = newElement.SelectedBorderColor;
         }
 
         /*
@@ -152,7 +132,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
          * Listeners
          */
 
-        internal int GetChoice(int elements, bool puppet) => puppet ? -1 : GetChoice(_position, _min, _max, elements);
+        [PublicAPI] public int GetChoice(int elements, bool puppet) => puppet ? -1 : GetChoice(_position, _min, _max, elements);
 
         internal bool GetRadial(float min, out float radial) => GetRadial(_position, min, out radial);
 

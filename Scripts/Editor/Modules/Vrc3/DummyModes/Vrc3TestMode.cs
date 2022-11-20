@@ -1,8 +1,8 @@
 ﻿#if VRC_SDK_VRCSDK3
-using GestureManager.Scripts.Core.Editor;
+using BlackStartX.GestureManager.Editor.Lib;
 using UnityEngine;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
 {
     public class Vrc3TestMode : Vrc3DummyMode
     {
@@ -25,7 +25,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes
         public Animator Test(AnimationClip clip)
         {
             Animator.runtimeAnimatorController = GmgAnimatorControllerHelper.CreateControllerWith(clip);
-            Animator.applyRootMotion = clip != null;
+            Animator.applyRootMotion = clip;
             return Animator;
         }
     }

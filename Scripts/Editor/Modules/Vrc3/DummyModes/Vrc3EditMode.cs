@@ -1,10 +1,10 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System.Collections.Generic;
-using GestureManager.Scripts.Core.Editor;
+using BlackStartX.GestureManager.Editor.Lib;
 using UnityEditor;
 using UnityEngine;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
 {
     public class Vrc3EditMode : Vrc3DummyMode
     {
@@ -12,12 +12,12 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.DummyModes
 
         private const string Prefix = "[Edit-Mode]";
 
-        private const string Text = "You're in Edit-Mode,";
+        private const string Text = "You're in Edit-Mode, ";
         private const string Link = "select your avatar";
-        private const string Tail = "to directly edit your animations!";
+        private const string Tail = " to directly edit your animations!";
 
         private RadialDescription _description;
-        private RadialDescription Description => _description ?? (_description = new RadialDescription(Text, Link, Tail, SelectAvatarAction, null));
+        private RadialDescription Description => _description ?? (_description = new RadialDescription(Text, Link, Tail, SelectAvatarAction));
 
         private static RuntimeAnimatorController Controller(IEnumerable<AnimationClip> clips) => GmgAnimatorControllerHelper.CreateControllerWith(clips);
 

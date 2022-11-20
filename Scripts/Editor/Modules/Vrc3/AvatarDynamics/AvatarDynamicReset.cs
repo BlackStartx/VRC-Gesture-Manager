@@ -3,7 +3,7 @@ using UnityEngine;
 using VRC.Dynamics;
 using VRC.SDK3.Dynamics.PhysBone;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.AvatarDynamics
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.AvatarDynamics
 {
     public static class AvatarDynamicReset
     {

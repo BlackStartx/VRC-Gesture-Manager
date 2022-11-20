@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
 {
     public class OscPacket
     {

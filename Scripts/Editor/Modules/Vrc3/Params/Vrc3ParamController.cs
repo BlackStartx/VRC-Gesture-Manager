@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 {
     public class Vrc3ParamController : Vrc3Param
     {

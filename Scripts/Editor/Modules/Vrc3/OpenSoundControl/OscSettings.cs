@@ -3,13 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using GestureManager.Scripts.Core.Editor;
-using GestureManager.Scripts.Editor.Modules.Vrc3.Params;
+using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using UnityEditor;
 using UnityEngine;
 using VRC.Core;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
 {
     public class OscSettings
     {

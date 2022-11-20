@@ -1,7 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-namespace GestureManager.Scripts.Editor
+namespace BlackStartX.GestureManager.Editor
 {
     public static class GestureManagerStyles
     {
@@ -15,7 +15,6 @@ namespace GestureManager.Scripts.Editor
         private static GUIStyle _plusButton;
         private static GUIStyle _header;
         private static GUIStyle _toolHeader;
-        private static GUIStyle _updateStyle;
         private static GUIStyle _headerButton;
         private static GUIStyle _subHeader;
         private static GUIStyle _textError;
@@ -25,15 +24,6 @@ namespace GestureManager.Scripts.Editor
 
         private static Texture _plusTextureLgt;
         private static Texture _plusTexturePro;
-        private static Texture _editTextureLgt;
-        private static Texture _editTexturePro;
-
-        internal static GUIStyle UpdateStyle => _updateStyle ?? (_updateStyle = new GUIStyle(EditorStyles.helpBox)
-        {
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleCenter,
-            margin = new RectOffset(0, 0, 10, 10)
-        });
 
         internal static GUIStyle TitleStyle => _titleStyle ?? (_titleStyle = new GUIStyle(GUI.skin.label)
         {

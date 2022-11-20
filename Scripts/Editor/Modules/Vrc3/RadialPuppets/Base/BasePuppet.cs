@@ -1,15 +1,15 @@
 ﻿#if VRC_SDK_VRCSDK3
-using GestureManager.Scripts.Core.VisualElements;
-using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
+using BlackStartX.GestureManager.Runtime.VisualElements;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets.Base
 {
     public abstract class BasePuppet : GmgCircleElement
     {
-        internal readonly RadialMenuControl Control;
+        internal readonly RadialSliceControl Control;
         internal abstract float Clamp { get; }
 
-        protected BasePuppet(float size, RadialMenuControl control)
+        protected BasePuppet(float size, RadialSliceControl control)
         {
             Control = control;
             RadialMenuUtility.Prefabs.SetCircle(this, size, RadialMenuUtility.Colors.CustomMain, RadialMenuUtility.Colors.CustomBorder);

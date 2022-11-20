@@ -3,7 +3,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public class RadialDescription
     {
@@ -11,21 +11,20 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         private readonly string _text;
         private readonly string _link;
-        private readonly string _url;
         private readonly string _tail;
+        private readonly string _url;
 
-        public RadialDescription(string text, string link, string tail, Action<string> action, string url)
+        public RadialDescription(string text, string link, string tail, Action<string> action, string url = null)
         {
+            _action = action;
             _text = text;
             _link = link;
-            _action = action;
-            _url = url;
             _tail = tail;
+            _url = url;
         }
 
         public void Show()
         {
-            GUILayout.Space(10);
             using (new GUILayout.HorizontalScope(GestureManagerStyles.EmoteError))
             {
                 GUILayout.FlexibleSpace();

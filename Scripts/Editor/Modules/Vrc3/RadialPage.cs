@@ -1,14 +1,14 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System.Collections.Generic;
-using GestureManager.Scripts.Editor.Modules.Vrc3.Params;
-using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public class RadialPage
     {
-        private readonly IReadOnlyList<RadialMenuItem> _controls;
+        private readonly IReadOnlyList<RadialSliceBase> _controls;
         private readonly VRCExpressionsMenu _menu;
         private readonly RadialMenu _radialMenu;
         public readonly Vrc3Param Param;
@@ -22,7 +22,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             Value = value;
         }
 
-        public RadialPage(RadialMenu radialMenu, IReadOnlyList<RadialMenuItem> controls)
+        public RadialPage(RadialMenu radialMenu, IReadOnlyList<RadialSliceBase> controls)
         {
             _radialMenu = radialMenu;
             _controls = controls;

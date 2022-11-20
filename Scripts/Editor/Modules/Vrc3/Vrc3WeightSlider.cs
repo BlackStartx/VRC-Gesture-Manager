@@ -1,10 +1,10 @@
 ﻿#if VRC_SDK_VRCSDK3
 using UnityEngine;
 using UnityEngine.UIElements;
-using GestureManager.Scripts.Core.Editor;
+using BlackStartX.GestureManager.Editor.Lib;
 using UIEPosition = UnityEngine.UIElements.Position;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public class Vrc3WeightSlider : Vrc3VisualRender
     {
@@ -44,14 +44,14 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         private void CreateWeightController()
         {
-            _slider = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { opacity = 0f, position = UIEPosition.Absolute, justifyContent = Justify.Center } });
-            _right = _slider.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { backgroundColor = Color.gray, height = 10, position = UIEPosition.Absolute, right = 0 } }).MyBorder(1, 5, Color.black);
-            _left = _slider.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { backgroundColor = RadialMenuUtility.Colors.CustomSelected, height = 10, width = 10, position = UIEPosition.Absolute, left = 0 } }).MyBorder(1, 5, Color.black);
-            _dot = _slider.MyAdd(RadialMenuUtility.Prefabs.NewCircle(16, RadialMenuUtility.Colors.RadialCenter, RadialMenuUtility.Colors.CustomMain, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
+            Add(_slider = new VisualElement { pickingMode = PickingMode.Ignore, style = { opacity = 0f, position = UIEPosition.Absolute, justifyContent = Justify.Center } });
+            _slider.Add(_right = new VisualElement { pickingMode = PickingMode.Ignore, style = { backgroundColor = Color.gray, height = 10, position = UIEPosition.Absolute, right = 0 } }.MyBorder(1, 5, Color.black));
+            _slider.Add(_left = new VisualElement { pickingMode = PickingMode.Ignore, style = { backgroundColor = RadialMenuUtility.Colors.CustomSelected, height = 10, width = 10, position = UIEPosition.Absolute, left = 0 } }.MyBorder(1, 5, Color.black));
+            _slider.Add(_dot = RadialMenuUtility.Prefabs.NewCircle(16, RadialMenuUtility.Colors.CenterIdle, RadialMenuUtility.Colors.CustomMain, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
 
-            _textHolder = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { opacity = 1f, position = UIEPosition.Absolute, justifyContent = Justify.Center, unityTextAlign = TextAnchor.MiddleCenter, alignItems = Align.Center, flexDirection = FlexDirection.Row } });
-            _textHolder.MyAdd(new TextElement { pickingMode = PickingMode.Ignore, text = "Weight: ", style = { fontSize = 12, height = 15 } });
-            _textWeight = _textHolder.MyAdd(new TextElement { pickingMode = PickingMode.Ignore, text = "100%", style = { fontSize = 15, color = RadialMenuUtility.Colors.CustomSelected, height = 15 } });
+            Add(_textHolder = new VisualElement { pickingMode = PickingMode.Ignore, style = { opacity = 1f, position = UIEPosition.Absolute, justifyContent = Justify.Center, unityTextAlign = TextAnchor.MiddleCenter, alignItems = Align.Center, flexDirection = FlexDirection.Row } });
+            _textHolder.Add(new TextElement { pickingMode = PickingMode.Ignore, text = "Weight: ", style = { fontSize = 12, height = 15 } });
+            _textHolder.Add(_textWeight = new TextElement { pickingMode = PickingMode.Ignore, text = "100%", style = { fontSize = 15, color = RadialMenuUtility.Colors.CustomSelected, height = 15 } });
         }
 
         public override void Render(VisualElement root, Rect rect)

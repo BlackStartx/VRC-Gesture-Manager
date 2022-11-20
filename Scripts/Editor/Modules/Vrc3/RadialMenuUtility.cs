@@ -3,10 +3,11 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using GestureManager.Scripts.Core.Editor;
-using GestureManager.Scripts.Core.VisualElements;
-using GestureManager.Scripts.Editor.Modules.Vrc3.Params;
-using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
+using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
+using BlackStartX.GestureManager.Runtime.VisualElements;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -15,8 +16,9 @@ using UnityEngine.Playables;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using UIEPosition = UnityEngine.UIElements.Position;
 using ControlType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType;
+using DynamicType = BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices.RadialSliceDynamic.DynamicType;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public static class RadialMenuUtility
     {
@@ -24,12 +26,16 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         public static class Colors
         {
-            internal static class Default
+            public static class Default
             {
-                internal static readonly Color Main = new Color(0.14f, 0.18f, 0.2f);
-                internal static readonly Color Border = new Color(0.1f, 0.35f, 0.38f);
-                internal static readonly Color Selected = new Color(0.07f, 0.55f, 0.58f);
+                public static readonly Color Main = new Color(0.14f, 0.18f, 0.2f);
+                public static readonly Color Border = new Color(0.1f, 0.35f, 0.38f);
+                public static readonly Color Selected = new Color(0.07f, 0.55f, 0.58f);
             }
+
+            public static readonly Color CenterSelected = new Color(0.06f, 0.2f, 0.22f);
+            public static readonly Color RadialInner = new Color(0.21f, 0.24f, 0.27f);
+            public static readonly Color CenterIdle = new Color(0.06f, 0.27f, 0.29f);
 
             private const string MainKeyName = "GM3 Main Color";
             private const string BorderKeyName = "GM3 Border Color";
@@ -38,9 +44,6 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             private static Color PrefColor(string name, Color defaultColor) => ColorUtility.TryParseHtmlString(EditorPrefs.GetString(name), out var color) ? color : defaultColor;
 
             internal static readonly Color RadialTextBackground = new Color(0.11f, 0.11f, 0.11f, 0.49f);
-            internal static readonly Color RadialSelColor = new Color(0.06f, 0.2f, 0.22f);
-            internal static readonly Color RadialCenter = new Color(0.06f, 0.27f, 0.29f);
-            internal static readonly Color RadialInner = new Color(0.21f, 0.24f, 0.27f);
             internal static readonly Color RestartButton = new Color(1f, 0.72f, 0.41f);
             internal static readonly Color SubIcon = new Color(0.22f, 0.24f, 0.27f);
 
@@ -48,9 +51,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             internal static Color CursorBorder => new Color(CustomBorder.r, CustomBorder.g, CustomBorder.b, CustomBorder.a - 0.5f);
             internal static Color ProgressBorder => CustomSelected * 1.5f;
 
-            internal static Color CustomMain = PrefColor(MainKeyName, Default.Main);
-            internal static Color CustomBorder = PrefColor(BorderKeyName, Default.Border);
-            internal static Color CustomSelected = PrefColor(SelectedKeyName, Default.Selected);
+            public static Color CustomMain = PrefColor(MainKeyName, Default.Main);
+            public static Color CustomBorder = PrefColor(BorderKeyName, Default.Border);
+            public static Color CustomSelected = PrefColor(SelectedKeyName, Default.Selected);
 
             public static void SaveColors(Color main, Color border, Color selected)
             {
@@ -65,7 +68,8 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         public static class Prefabs
         {
-            internal static VisualElement NewBorder(float size)
+            [PublicAPI]
+            public static VisualElement NewBorder(float size)
             {
                 return new VisualElement
                 {
@@ -149,9 +153,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 };
             }
 
-            internal static GmgCircleElement NewSlice(float size, Color centerColor, Color color, Color border, UIEPosition position = UIEPosition.Absolute) => SetSlice(new GmgCircleElement(), size, centerColor, color, border, position);
-
-            private static GmgCircleElement SetSlice(GmgCircleElement element, float size, Color centerColor, Color color, Color border, UIEPosition position = default)
+            internal static void SetSlice(GmgCircleElement element, float size, Color centerColor, Color color, Color border, UIEPosition position = UIEPosition.Absolute)
             {
                 element.BorderWidth = 2;
                 element.VertexColor = color;
@@ -163,12 +165,13 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 element.style.width = element.style.height = size;
                 element.style.justifyContent = Justify.Center;
                 element.style.left = element.style.top = -size / 2;
-                return element;
             }
 
-            internal static GmgCircleElement NewCircle(float size, Color color, Color border, UIEPosition position = default) => SetCircle(new GmgCircleElement(), size, color, color, border, position);
+            [PublicAPI]
+            public static GmgCircleElement NewCircle(float size, Color color, Color border, UIEPosition position = default) => SetCircle(new GmgCircleElement(), size, color, color, border, position);
 
-            internal static GmgCircleElement NewCircle(float size, Color centerColor, Color color, Color border, UIEPosition position = default) => SetCircle(new GmgCircleElement(), size, centerColor, color, border, position);
+            [PublicAPI]
+            public static GmgCircleElement NewCircle(float size, Color centerColor, Color color, Color border, UIEPosition position = default) => SetCircle(new GmgCircleElement(), size, centerColor, color, border, position);
 
             internal static GmgCircleElement SetCircle(GmgCircleElement element, float size, Color color, Color border, UIEPosition position = default) => SetCircle(element, size, color, color, border, position);
 
@@ -186,10 +189,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 return element;
             }
 
-            internal static VisualElement NewRadialText(out TextElement text, int top, UIEPosition position = default)
-            {
-                return SetRadialText(new VisualElement(), out text, top, position);
-            }
+            internal static VisualElement NewRadialText(out TextElement text, int top, UIEPosition position = default) => SetRadialText(new VisualElement(), out text, top, position);
 
             internal static VisualElement SetRadialText(VisualElement element, out TextElement text, int top, UIEPosition position = default)
             {
@@ -203,7 +203,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                 element.style.borderBottomRightRadius = 10;
                 element.style.position = position;
                 if (top != 0) element.style.top = top;
-                text = element.MyAdd(new TextElement { pickingMode = PickingMode.Ignore, style = { height = 20, unityTextAlign = TextAnchor.MiddleCenter, color = Color.white, fontSize = 14 } });
+                element.Add(text = new TextElement { pickingMode = PickingMode.Ignore, style = { height = 20, unityTextAlign = TextAnchor.MiddleCenter, color = Color.white, fontSize = 14 } });
                 return element;
             }
 
@@ -242,25 +242,25 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
 
         public static class Buttons
         {
-            public static RadialMenuControl ToggleFromParam(RadialMenu menu, string name, Vrc3Param param)
+            public static RadialSliceControl ToggleFromParam(RadialMenu menu, string name, Vrc3Param param)
             {
                 return ParamStateToggle(menu, name, param, 1f);
             }
 
-            public static RadialMenuControl ParamStateToggle(RadialMenu menu, string name, Vrc3Param param, float activeValue)
+            public static RadialSliceControl ParamStateToggle(RadialMenu menu, string name, Vrc3Param param, float activeValue)
             {
-                return new RadialMenuControl(menu, name, null, ControlType.Toggle, activeValue, param, Array.Empty<Vrc3Param>(), null, null);
+                return new RadialSliceControl(menu, name, null, ControlType.Toggle, activeValue, param, Array.Empty<Vrc3Param>(), null, null);
             }
 
-            public static RadialMenuItem RadialFromParam(RadialMenu menu, string name, Vrc3Param param, float amplify = 1f)
+            public static RadialSliceBase RadialFromParam(RadialMenu menu, string name, Vrc3Param param, float amplify = 1f)
             {
-                return new RadialMenuControl(menu, name, null, ControlType.RadialPuppet, 1f, null, new[] { param }, null, null, amplify);
+                return new RadialSliceControl(menu, name, null, ControlType.RadialPuppet, 1f, null, new[] { param }, null, null, amplify);
             }
 
-            public static RadialMenuControl AxisFromParams(RadialMenu menu, string name, Vrc3Param xParam, Vrc3Param yParam, float amplify = 1f)
+            public static RadialSliceControl AxisFromParams(RadialMenu menu, string name, Vrc3Param xParam, Vrc3Param yParam, float amplify = 1f)
             {
                 var subLabels = new VRCExpressionsMenu.Control.Label[4];
-                return new RadialMenuControl(menu, name, null, ControlType.TwoAxisPuppet, 1f, null, new[] { xParam, yParam }, null, subLabels, amplify);
+                return new RadialSliceControl(menu, name, null, ControlType.TwoAxisPuppet, 1f, null, new[] { xParam, yParam }, null, subLabels, amplify);
             }
         }
 
@@ -280,7 +280,23 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
                     return ModuleVrc3Styles.FourAxis;
                 case ControlType.RadialPuppet:
                     return ModuleVrc3Styles.Radial;
-                default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
+                default: return null;
+            }
+        }
+
+        public static DynamicType GetDynamicType(ControlType type)
+        {
+            switch (type)
+            {
+                case ControlType.Button:
+                case ControlType.Toggle:
+                    return DynamicType.Running;
+                case ControlType.RadialPuppet:
+                    return DynamicType.Radial;
+                case ControlType.SubMenu:
+                case ControlType.TwoAxisPuppet:
+                case ControlType.FourAxisPuppet:
+                default: return DynamicType.None;
             }
         }
 

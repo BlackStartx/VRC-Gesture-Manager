@@ -1,12 +1,12 @@
 ﻿#if VRC_SDK_VRCSDK3
-using GestureManager.Scripts.Core.Editor;
-using GestureManager.Scripts.Editor.Modules.Vrc3.RadialButtons;
+using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using UIEPosition = UnityEngine.UIElements.Position;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets.Base
 {
     public abstract class BaseAxisPuppet : BasePuppet
     {
@@ -14,13 +14,15 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base
 
         private readonly VRCExpressionsMenu.Control.Label[] _labels;
 
-        protected BaseAxisPuppet(RadialMenuControl control) : base(140, control)
+        protected BaseAxisPuppet(RadialSliceControl control) : base(140, control)
         {
-            var holder = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } });
-            holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 45));
-            holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 135));
-            holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 225));
-            holder.Add(RadialMenuUtility.Prefabs.NewBorder(70, 315));
+            const int size = 70;
+            Add(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } }
+                .With(RadialMenuUtility.Prefabs.NewBorder(size, 45))
+                .With(RadialMenuUtility.Prefabs.NewBorder(size, 135))
+                .With(RadialMenuUtility.Prefabs.NewBorder(size, 225))
+                .With(RadialMenuUtility.Prefabs.NewBorder(size, 315))
+            );
             Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
             _labels = control.GetSubLabels();
         }
@@ -28,11 +30,13 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3.RadialPuppets.Base
         public override void AfterCursor()
         {
             const int v = 50;
-            var holder = this.MyAdd(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } });
-            holder.Add(RadialMenuUtility.Prefabs.NewIconText(0, -v, 24, LabelIcon(0, ModuleVrc3Styles.AxisUp), LabelText(0)));
-            holder.Add(RadialMenuUtility.Prefabs.NewIconText(v, 0, 24, LabelIcon(1, ModuleVrc3Styles.AxisRight), LabelText(1)));
-            holder.Add(RadialMenuUtility.Prefabs.NewIconText(0, v, 24, LabelIcon(2, ModuleVrc3Styles.AxisDown), LabelText(2)));
-            holder.Add(RadialMenuUtility.Prefabs.NewIconText(-v, 0, 24, LabelIcon(3, ModuleVrc3Styles.AxisLeft), LabelText(3)));
+            const int size = 24;
+            Add(new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } }
+                .With(RadialMenuUtility.Prefabs.NewIconText(0, -v, size, LabelIcon(0, ModuleVrc3Styles.AxisUp), LabelText(0)))
+                .With(RadialMenuUtility.Prefabs.NewIconText(v, 0, size, LabelIcon(1, ModuleVrc3Styles.AxisRight), LabelText(1)))
+                .With(RadialMenuUtility.Prefabs.NewIconText(0, v, size, LabelIcon(2, ModuleVrc3Styles.AxisDown), LabelText(2)))
+                .With(RadialMenuUtility.Prefabs.NewIconText(-v, 0, size, LabelIcon(3, ModuleVrc3Styles.AxisLeft), LabelText(3)))
+            );
         }
 
         private Texture2D LabelIcon(int index, Texture2D def) => _labels == null || _labels.Length <= index || !_labels[index].icon ? def : _labels[index].icon;

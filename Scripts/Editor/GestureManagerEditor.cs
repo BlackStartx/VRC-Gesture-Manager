@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using GestureManager.Scripts.Core.Editor;
-using GestureManager.Scripts.Editor.Modules;
-using GestureManager.Scripts.Extra;
+using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Modules;
+using BlackStartX.GestureManager.Runtime.Extra;
 using UnityEditor;
 using UnityEngine;
 using GmgAvatarDescriptor =
@@ -16,7 +16,7 @@ using GmgAvatarDescriptor =
 #endif
 using UnityEngine.UIElements;
 
-namespace GestureManager.Scripts.Editor
+namespace BlackStartX.GestureManager.Editor
 {
     [CustomEditor(typeof(GestureManager))]
     public class GestureManagerEditor : UnityEditor.Editor
@@ -27,22 +27,20 @@ namespace GestureManager.Scripts.Editor
         private static bool IsValidObject(GameObject g) => g.hideFlags != HideFlags.NotEditable && g.hideFlags != HideFlags.HideAndDontSave && g.scene.name != null;
         private static IEnumerable<T> FindSceneObjectsOfTypeAll<T>() where T : Component => Resources.FindObjectsOfTypeAll<T>().Where(t => IsValidObject(t.gameObject));
 
-        private readonly PrefUpdater _updater = new PrefUpdater();
         private VisualElement _root;
 
         private const int AntiAliasing = 4;
 
-        private const string Version = "3.7.0";
         private const string Discord = "BlackStartx#6593";
+        private const string StringPath = "Packages/vrchat.blackstartx.gesture-manager/GestureManager.prefab";
 
-        private const string VersionURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.v3rsion";
         private const string DiscordURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.discord";
         private const string SupportURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.support";
 
         [MenuItem("Tools/Gesture Manager Emulator", false, -42)]
         public static void AddNewEmulator()
         {
-            var asset = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/GestureManager/GestureManager.prefab");
+            var asset = AssetDatabase.LoadAssetAtPath<GameObject>(StringPath);
             if (!asset) asset = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.FindAssets("t:prefab GestureManager").Select(AssetDatabase.GUIDToAssetPath).FirstOrDefault());
             AddNewEmulator(asset);
         }
@@ -86,8 +84,7 @@ namespace GestureManager.Scripts.Editor
             if (!Manager) return;
             Manager.SetDrag(!Event.current.alt);
 
-            GUILayout.Label("Gesture Manager 3.7", GestureManagerStyles.TitleStyle);
-            _updater.Gui();
+            GUILayout.Label("Gesture Manager 3.8", GestureManagerStyles.TitleStyle);
 
             if (Manager.Module != null)
             {
@@ -117,7 +114,7 @@ namespace GestureManager.Scripts.Editor
                     GUILayout.FlexibleSpace();
 
                     GUI.enabled = !GestureManager.InWebClientRequest;
-                    if (GmgLayoutHelper.DebugButton("Check For Updates")) CheckForUpdates();
+                    if (GmgLayoutHelper.DebugButton("Enter Play-Mode")) EditorApplication.EnterPlaymode();
 
                     GUILayout.Space(20);
 
@@ -126,16 +123,17 @@ namespace GestureManager.Scripts.Editor
 
                     GUILayout.FlexibleSpace();
                 }
+
                 GUILayout.Space(5);
             }
         }
 
         private void CheckGui()
         {
-            if (Manager.LastCheckedActiveModules.Count != 0)
+            if (GestureManager.LastCheckedActiveModules.Count != 0)
             {
-                var eligibleList = Manager.LastCheckedActiveModules.Where(module => module.Avatar && module.IsValidDesc()).ToList();
-                var nonEligibleList = Manager.LastCheckedActiveModules.Where(module => module.Avatar && !module.IsValidDesc()).ToList();
+                var eligibleList = GestureManager.LastCheckedActiveModules.Where(module => module.Avatar && module.IsValidDesc()).ToList();
+                var nonEligibleList = GestureManager.LastCheckedActiveModules.Where(module => module.Avatar && !module.IsValidDesc()).ToList();
 
                 GUILayout.Label(eligibleList.Count == 0 ? "No one of your VRC_AvatarDescriptor are eligible." : "Eligible VRC_AvatarDescriptors:", GestureManagerStyles.SubHeader);
 
@@ -181,7 +179,7 @@ namespace GestureManager.Scripts.Editor
 
         private ModuleBase GetValidDescriptor() => CheckActiveModules().FirstOrDefault(module => module.IsPerfectDesc());
 
-        private List<ModuleBase> CheckActiveModules() => Manager.LastCheckedActiveModules = Modules.ToList();
+        private List<ModuleBase> CheckActiveModules() => GestureManager.LastCheckedActiveModules = Modules.ToList();
 
         private static void DiscordPopup(string discord)
         {
@@ -223,29 +221,6 @@ namespace GestureManager.Scripts.Editor
          * Async Calls
          */
 
-        private static (string lastVersion, string download) GetVersionInfo(string info) => GetVersionInfo(info.Trim().Split('\n'));
-
-        private static (string lastVersion, string download) GetVersionInfo(IReadOnlyList<string> split) => (split[0], split[1]);
-
-        private static async void CheckForUpdates()
-        {
-            if (GestureManager.InWebClientRequest) return;
-
-            GestureManager.InWebClientRequest = true;
-            var versionString = await GetVersion();
-            GestureManager.InWebClientRequest = false;
-
-            const string title = "Gesture Manager Updater";
-            if (versionString != null)
-            {
-                var (lastVersionString, downloadString) = GetVersionInfo(versionString);
-                var message = $"Newer version available! ({lastVersionString})\n\nIt's recommended to delete the GestureManager folder before importing the new package.";
-                if (lastVersionString.Equals(Version)) EditorUtility.DisplayDialog(title, $"You have the latest version of the manager. ({lastVersionString})", "Good!");
-                else if (EditorUtility.DisplayDialog(title, message, "Download", "Cancel")) Application.OpenURL(downloadString);
-            }
-            else EditorUtility.DisplayDialog(title, "Unable to check for updates.", "Okay");
-        }
-
         private static async void CheckDiscordName()
         {
             if (GestureManager.InWebClientRequest) return;
@@ -271,11 +246,11 @@ namespace GestureManager.Scripts.Editor
          * Async
          */
 
-        private static async Task<string> Get(string uri)
+        private static async Task<string> Get(string url)
         {
             try
             {
-                return await new WebClient().DownloadStringTaskAsync(uri);
+                return await new WebClient().DownloadStringTaskAsync(url);
             }
             catch (WebException)
             {
@@ -283,72 +258,7 @@ namespace GestureManager.Scripts.Editor
             }
         }
 
-        private static async Task<string> GetVersion() => await Get(VersionURL);
         private static async Task<string> GetDiscord() => await Get(DiscordURL);
         private static async Task<string> GetSupport() => await Get(SupportURL);
-
-        private class PrefUpdater
-        {
-            private static readonly Color Color = new Color(0.07f, 0.55f, 0.58f);
-
-            private const string DayKey = "GM3 Update Day";
-            private const string VerKey = "GM3 Update Ver";
-
-            private int? _day;
-            private int? _today;
-            private string _version;
-            private bool _checked;
-            private bool _higher;
-
-            private int Day
-            {
-                get => _day ?? (_day = EditorPrefs.GetInt(DayKey)).Value;
-                set => EditorPrefs.SetInt(DayKey, (_day = value).Value);
-            }
-
-            private string Ver
-            {
-                get => _version ?? (_version = EditorPrefs.GetString(VerKey, Version));
-                set => EditorPrefs.SetString(VerKey, _version = value);
-            }
-
-            private int Today => _today ?? (_today = DateTime.Now.Day).Value;
-
-            private bool Higher() => string.CompareOrdinal(Version, Ver) < 0;
-
-            public void Gui()
-            {
-                if (!_checked) Check();
-                else if (_higher) Draw(GUILayoutUtility.GetLastRect());
-            }
-
-            private void Check()
-            {
-                _checked = true;
-                _higher = Higher();
-                if (Day != Today) RunCheck();
-            }
-
-            private async void RunCheck()
-            {
-                var versionString = await GetVersion();
-                if (versionString == null) return;
-                var (lastVersionString, _) = GetVersionInfo(versionString);
-                Ver = lastVersionString;
-                Day = Today;
-                _higher = Higher();
-            }
-
-            private void Draw(Rect rect)
-            {
-                var cEvent = Event.current;
-                rect.x += rect.width - 100;
-                rect.width = 100;
-                rect.height -= 16;
-                rect.y += 8;
-                using (new GmgLayoutHelper.GuiBackground(Color)) GUI.Label(rect, $"{Ver} is out!", GestureManagerStyles.UpdateStyle);
-                if (cEvent.type == EventType.MouseDown && cEvent.button == 0 && rect.Contains(cEvent.mousePosition)) CheckForUpdates();
-            }
-        }
     }
 }

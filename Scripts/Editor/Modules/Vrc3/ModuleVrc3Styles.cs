@@ -1,6 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System.Collections.Generic;
-using GestureManager.Scripts.Core;
+using BlackStartX.GestureManager.Runtime;
 using UnityEditor.Animations;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
@@ -10,7 +10,7 @@ using BlendablePlayableLayer = VRC.SDKBase.VRC_PlayableLayerControl.BlendableLay
 using BlendableAnimatorLayer = VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer;
 using TrackingType = VRC.SDKBase.VRC_AnimatorTrackingControl.TrackingType;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public static class ModuleVrc3Styles
     {
@@ -21,6 +21,7 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private static Texture2D _option;
         private static Texture2D _expressions;
         private static Texture2D _noExpressions;
+        private static Texture2D _tools;
         private static Texture2D _back;
         private static Texture2D _backHome;
         private static Texture2D _default;
@@ -37,14 +38,18 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private static Texture2D _supportLike;
         private static Texture2D _supportGold;
         private static Texture2D _supportHeart;
+        private static Texture2D _toolCamera;
+        private static Texture2D _toolClick;
+        private static Texture2D _toolPose;
 
-        internal static GUIStyle Url => _url ?? (_url = new GUIStyle(GUI.skin.label) { padding = new RectOffset(-3, -3, 1, 0), normal = { textColor = Color.blue } });
-        internal static GUIStyle UrlPro => _urlPro ?? (_urlPro = new GUIStyle(GUI.skin.label) { padding = new RectOffset(-3, -3, 1, 0), normal = { textColor = Color.cyan } });
+        internal static GUIStyle Url => _url ?? (_url = new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.blue } });
+        internal static GUIStyle UrlPro => _urlPro ?? (_urlPro = new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.cyan } });
 
         internal static Texture2D Emojis => _emojis ? _emojis : _emojis = Resources.Load<Texture2D>("Vrc3/BSX_GM_Emojis");
         internal static Texture2D Option => _option ? _option : _option = Resources.Load<Texture2D>("Vrc3/BSX_GM_Option");
         internal static Texture2D Expressions => _expressions ? _expressions : _expressions = Resources.Load<Texture2D>("Vrc3/BSX_GM_Expressions");
         internal static Texture2D NoExpressions => _noExpressions ? _noExpressions : _noExpressions = Resources.Load<Texture2D>("Vrc3/BSX_GM_No_Expressions");
+        internal static Texture2D Tools => _tools ? _tools : _tools = Resources.Load<Texture2D>("Vrc3/BSX_GM_Tools");
         internal static Texture2D Back => _back ? _back : _back = Resources.Load<Texture2D>("Vrc3/BSX_GM_Back");
         internal static Texture2D BackHome => _backHome ? _backHome : _backHome = Resources.Load<Texture2D>("Vrc3/BSX_GM_BackHome");
         internal static Texture2D Default => _default ? _default : _default = Resources.Load<Texture2D>("Vrc3/BSX_GM_Default");
@@ -61,6 +66,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         internal static Texture2D SupportLike => _supportLike ? _supportLike : _supportLike = Resources.Load<Texture2D>("Vrc3/BSX_GM_Support_Like");
         internal static Texture2D SupportGold => _supportGold ? _supportGold : _supportGold = Resources.Load<Texture2D>("Vrc3/BSX_GM_Support_Gold");
         internal static Texture2D SupportHeart => _supportHeart ? _supportHeart : _supportHeart = Resources.Load<Texture2D>("Vrc3/BSX_GM_Support_Heart");
+        internal static Texture2D ToolCamera => _toolCamera ? _toolCamera : _toolCamera = Resources.Load<Texture2D>("Vrc3/BSX_GM_Tool_Camera");
+        internal static Texture2D ToolClick => _toolClick ? _toolClick : _toolClick = Resources.Load<Texture2D>("Vrc3/BSX_GM_Tool_Click");
+        internal static Texture2D ToolPose => _toolPose ? _toolPose : _toolPose = Resources.Load<Texture2D>("Vrc3/BSX_GM_Tool_Pose");
 
         public static class Data
         {
@@ -81,9 +89,9 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
             {
                 switch (type)
                 {
-                    case AnimLayerType.Gesture: return Masks.HandsOnly;
-                    case AnimLayerType.IKPose: return Masks.MuscleOnly;
-                    case AnimLayerType.TPose: return Masks.MuscleOnly;
+                    case AnimLayerType.Gesture: return Masks.Hands;
+                    case AnimLayerType.IKPose: return Masks.Armature;
+                    case AnimLayerType.TPose: return Masks.Armature;
                     case AnimLayerType.FX: return Masks.Empty;
                     case AnimLayerType.Deprecated0:
                     case AnimLayerType.Additive:
@@ -159,29 +167,29 @@ namespace GestureManager.Scripts.Editor.Modules.Vrc3
         private static class Masks
         {
             private static AvatarMask _empty;
-            private static AvatarMask _muscleOnly;
-            private static AvatarMask _handsOnly;
+            private static AvatarMask _hands;
+            private static AvatarMask _armature;
 
             internal static AvatarMask Empty => _empty ? _empty : _empty = CreateEmptyMask();
 
-            internal static AvatarMask MuscleOnly => _muscleOnly ? _muscleOnly : _muscleOnly = CreateMuscleOnlyMask();
+            internal static AvatarMask Hands => _hands ? _hands : _hands = CreateHandsMask();
 
-            internal static AvatarMask HandsOnly => _handsOnly ? _handsOnly : _handsOnly = CreateHandsOnlyMask();
+            internal static AvatarMask Armature => _armature ? _armature : _armature = CreateArmatureMask();
 
             private static AvatarMask CreateEmptyMask() => GmgAvatarMaskHelper.CreateEmptyMask("Empty");
 
-            private static AvatarMask CreateMuscleOnlyMask() => GmgAvatarMaskHelper.CreateMaskWithout("MuscleOnly", new[]
+            private static AvatarMask CreateHandsMask() => GmgAvatarMaskHelper.CreateMaskWith("Hands", new[]
+            {
+                AvatarMaskBodyPart.LeftFingers,
+                AvatarMaskBodyPart.RightFingers
+            });
+
+            private static AvatarMask CreateArmatureMask() => GmgAvatarMaskHelper.CreateMaskWithout("Armature", new[]
             {
                 AvatarMaskBodyPart.LeftFootIK,
                 AvatarMaskBodyPart.LeftHandIK,
                 AvatarMaskBodyPart.RightFootIK,
                 AvatarMaskBodyPart.RightHandIK
-            });
-
-            private static AvatarMask CreateHandsOnlyMask() => GmgAvatarMaskHelper.CreateMaskWith("HandsOnly", new[]
-            {
-                AvatarMaskBodyPart.LeftFingers,
-                AvatarMaskBodyPart.RightFingers
             });
         }
     }

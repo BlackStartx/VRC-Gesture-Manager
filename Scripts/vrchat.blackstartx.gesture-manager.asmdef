@@ -1,0 +1,14 @@
+{
+  "name": "vrchat.blackstartx.gesture-manager",
+  "rootNamespace": "BlackStartX.GestureManager.Runtime",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

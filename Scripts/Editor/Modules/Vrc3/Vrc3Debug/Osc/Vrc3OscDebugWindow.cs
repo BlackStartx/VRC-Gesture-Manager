@@ -1,10 +1,10 @@
 ﻿#if VRC_SDK_VRCSDK3
-using GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElements;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.VisualElements;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.Vrc3Debug.Osc
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Osc
 {
     public class Vrc3OscDebugWindow : EditorWindow
     {

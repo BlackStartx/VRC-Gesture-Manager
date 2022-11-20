@@ -3,7 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
 {
     public class UdpSender
     {

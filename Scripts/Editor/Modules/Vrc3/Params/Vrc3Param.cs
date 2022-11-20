@@ -1,10 +1,10 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System;
-using GestureManager.Scripts.Core.Editor;
+using BlackStartX.GestureManager.Editor.Lib;
 using UnityEditor;
 using UnityEngine;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.Params
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 {
     public abstract class Vrc3Param
     {

@@ -1,19 +1,19 @@
 ﻿#if VRC_SDK_VRCSDK3
-using GestureManager.Scripts.Core.Editor;
+using BlackStartX.GestureManager.Editor.Lib;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UIEPosition = UnityEngine.UIElements.Position;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public class Vrc3FloatingMenu : EditorWindow
     {
         private ModuleVrc3 _module;
 
         private RadialMenu _menu;
-        private RadialMenu Menu => _menu ?? (_menu = _module.GetOrCreateRadial(this));
+        private RadialMenu Menu => _menu ?? (_menu = _module.GetOrCreateRadial(this, true));
 
         private readonly GUILayoutOption[] _options = { GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true) };
         private static Vector2 HeaderSize => new Vector2(0, 21);

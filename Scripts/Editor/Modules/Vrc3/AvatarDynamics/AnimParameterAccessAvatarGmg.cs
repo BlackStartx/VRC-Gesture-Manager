@@ -1,8 +1,8 @@
 ﻿#if VRC_SDK_VRCSDK3
-using GestureManager.Scripts.Editor.Modules.Vrc3.Params;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using VRC.SDKBase;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.AvatarDynamics
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.AvatarDynamics
 {
     internal class AnimParameterAccessAvatarGmg : IAnimParameterAccess
     {

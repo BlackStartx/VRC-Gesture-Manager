@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 using System.Collections.Generic;
 using UIEPosition = UnityEngine.UIElements.Position;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3.OpenSoundControl.VisualElements
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.VisualElements
 {
     public class VisualEpContainer : Vrc3VisualRender
     {

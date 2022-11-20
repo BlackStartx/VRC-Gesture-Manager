@@ -1,13 +1,14 @@
 ﻿#if VRC_SDK_VRCSDK3
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace GestureManager.Scripts.Editor.Modules.Vrc3
+namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public abstract class Vrc3VisualRender : VisualElement
     {
         private bool _rendering;
-        internal Rect Rect;
+        [PublicAPI] public Rect Rect;
 
         public virtual void Render(VisualElement root, Rect rect)
         {
