@@ -6,7 +6,18 @@ Available for both VRChat SDK 2.0 and SDK 3.0, in Unity 2018 or 2019.
 
 ## How To Use (SDK 3.0)
 - ### Import using the VRChat Creator Companion
-[In Progress]
+
+1) Open the VRChat Creator Companion app and select the project you want to add the package to.
+   <br>(If you have none, you may be interested on creating or adding a new project first)
+   <br><br>
+2) On the right side you can select the packages you want to add to your project, be sure that
+   you are not filtering out "Curated" packages!
+   <br><br>
+3) Look for "Gesture Manager" and click the **Add** button!
+
+<br>You have correctly imported the package into your project!
+<br>Once the VCC app have finished doing the rest you're free to open the project and the tool 
+will be there waiting for you~ ♥
 
 - ### Import using the release UnityPackage
 You can download the UnityPackage from the latest release tab.<br>
@@ -62,7 +73,7 @@ In the Option Menu you can find a button called: Edit-Mode.
 Clicking that button will enable the Edit-Mode feature and will create a clone of your avatar 
 giving him all the animation of your VRChat controller layers.
 
-![img.png](.markdown/3.5/EditingMode.png)
+![img.png](.markdown/3.8/EditingMode.png)
 
 Since the avatar have all the animation of your animators, you can edit them by going in to the Animation tab and selecting 
 your avatar from the hierarchy window. (Or by clicking the blue "select your avatar" text under the RadialMenu)
