@@ -65,6 +65,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal readonly HashSet<ContactReceiver> Receivers = new HashSet<ContactReceiver>();
         private readonly HashSet<AnimationClip> _avatarClips = new HashSet<AnimationClip>();
         private readonly HashSet<ContactSender> _senders = new HashSet<ContactSender>();
+        private readonly HashSet<Animator> _animators = new HashSet<Animator>();
 
         internal int DebugToolBar;
         internal string Edit;
@@ -133,6 +134,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             externalOutput.SetSourcePlayable(playableMixer);
 
             _layers.Clear();
+            _animators.Clear();
             _avatarClips.Clear();
             _brokenLayers.Clear();
 
@@ -193,7 +195,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             foreach (var physBone in AvatarComponents<VRCPhysBoneBase>()) PhysBoneBaseSetup(physBone);
             foreach (var receiver in AvatarComponents<ContactReceiver>()) ReceiverBaseSetup(receiver);
-            foreach (var sender in AvatarComponents<ContactSender>()) SenderBaseSetup(sender);
+            foreach (var coSender in AvatarComponents<ContactSender>()) SenderBaseSetup(coSender);
+            foreach (var animator in AvatarComponents<Animator>()) AnimatorBaseSetup(animator);
+            _animators.Add(AvatarAnimator);
 
             OscModule.Resume();
         }
@@ -760,21 +764,21 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void AnimatorLayerControlSettings(VRC_AnimatorLayerControl control, Animator animator)
         {
-            if (!_hooked || animator != AvatarAnimator) return;
+            if (!_hooked || !_animators.Contains(AvatarAnimator)) return;
 
             _layers[ModuleVrc3Styles.Data.AnimatorToLayer[control.playable]].Weight.Start(control);
         }
 
         private void PlayableLayerControlSettings(VRC_PlayableLayerControl control, Animator animator)
         {
-            if (!_hooked || animator != AvatarAnimator) return;
+            if (!_hooked || !_animators.Contains(AvatarAnimator)) return;
 
             _layers[ModuleVrc3Styles.Data.PlayableToLayer[control.layer]].Weight.Start(control);
         }
 
         private void AvatarParameterDriverSettings(VRC_AvatarParameterDriver driver, Animator animator)
         {
-            if (!_hooked || animator != AvatarAnimator) return;
+            if (!_hooked || !_animators.Contains(AvatarAnimator)) return;
 
             foreach (var parameter in driver.parameters)
             {
@@ -802,7 +806,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void AnimatorTrackingControlSettings(VRC_AnimatorTrackingControl control, Animator animator)
         {
-            if (!_hooked || animator != AvatarAnimator) return;
+            if (!_hooked || !_animators.Contains(AvatarAnimator)) return;
             const VRC_AnimatorTrackingControl.TrackingType noChange = VRC_AnimatorTrackingControl.TrackingType.NoChange;
 
             if (control.trackingHip != noChange) TrackingControls["Hip"] = control.trackingHip;
@@ -819,14 +823,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void AnimatorLocomotionControlSettings(VRC_AnimatorLocomotionControl control, Animator animator)
         {
-            if (!_hooked || animator != AvatarAnimator) return;
+            if (!_hooked || !_animators.Contains(AvatarAnimator)) return;
 
             LocomotionDisabled = control.disableLocomotion;
         }
 
         private void AnimatorTemporaryPoseSpaceSettings(VRC_AnimatorTemporaryPoseSpace poseSpace, Animator animator)
         {
-            if (!_hooked || animator != AvatarAnimator) return;
+            if (!_hooked || !_animators.Contains(AvatarAnimator)) return;
 
             PoseSpace = poseSpace.enterPoseSpace;
         }
@@ -866,6 +870,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             if (!sender || !receiver) return;
             if (!receiver.allowSelf && _senders.Contains(sender)) receiver.shape.OnExit.Invoke(sender.shape);
             if (!receiver.allowOthers && !_senders.Contains(sender)) receiver.shape.OnExit.Invoke(sender.shape);
+        }
+
+        private void AnimatorBaseSetup(Animator animator)
+        {
+            _animators.Add(animator);
+            if (!animator.enabled) return;
+            animator.Rebind();
         }
 
         private void PhysBoneBaseInit(VRCPhysBoneBase vrcPhysBoneBase)

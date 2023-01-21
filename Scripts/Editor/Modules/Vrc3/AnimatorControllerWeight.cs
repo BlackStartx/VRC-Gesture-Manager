@@ -23,6 +23,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void OnSubTimerCompleted(int index) => _subCompleted.Add(index);
 
+        private static float ElapsedTime(float time) => Time.time - time;
+
         public float Weight => _playableMixer.GetInputWeight(_index);
 
         public AnimatorControllerWeight(AnimationLayerMixerPlayable playableMixer, AnimatorControllerPlayable playable, int index)
@@ -34,7 +36,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         public void Update()
         {
-            if (_control) Set(UpdateWeight());
+            if (_control) Set(UpdateWeight(ElapsedTime(_startTime)));
             foreach (var pair in _subControls) pair.Value.Update(_playable);
             if (_subCompleted.Count == 0) return;
             foreach (var idInt in _subCompleted) _subControls.Remove(idInt);
@@ -50,17 +52,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         public void Start(VRC_AnimatorLayerControl control) => _subControls[control.layer] = new SubTimer(control, _playable.GetLayerWeight(control.layer), Time.time, OnSubTimerCompleted);
 
-        public void Set(float goalWeight) => _playableMixer.SetInputWeight(_index, goalWeight);
+        public void Set(float weight) => _playableMixer.SetInputWeight(_index, weight);
 
-        private float UpdateWeight()
+        private float UpdateWeight(float time)
         {
-            var time = Time.time - _startTime;
-            return time > _control.blendDuration ? Stop() : Mathf.Lerp(_startWeight, _control.goalWeight, time / _control.blendDuration);
+            return time > _control.blendDuration ? Stop(_control.goalWeight) : Mathf.Lerp(_startWeight, _control.goalWeight, time / _control.blendDuration);
         }
 
-        private float Stop()
+        private float Stop(float weight)
         {
-            var weight = _control.goalWeight;
             _control = null;
             return weight;
         }
@@ -82,12 +82,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             public void Update(AnimatorControllerPlayable playable)
             {
-                if (_control) playable.SetLayerWeight(_control.layer, SubUpdateWeight(_control, _startWeight, _startTime));
+                if (_control) SubSet(playable, SubUpdateWeight(_control, _startWeight, ElapsedTime(_startTime)));
             }
 
-            private float SubUpdateWeight(VRC_AnimatorLayerControl control, float startWeight, float startTime)
+            private void SubSet(AnimatorControllerPlayable playable, float weight) => playable.SetLayerWeight(_control.layer, weight);
+
+            private float SubUpdateWeight(VRC_AnimatorLayerControl control, float startWeight, float time)
             {
-                var time = Time.time - startTime;
                 return time > control.blendDuration ? SubStop(control) : Mathf.Lerp(startWeight, control.goalWeight, time / control.blendDuration);
             }
 
