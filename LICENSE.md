@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2022 BlackStartx
+Copyright © 2019-2023 BlackStartx
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

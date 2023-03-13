@@ -43,7 +43,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
                 new Supporter { name = "lindesu" },
                 new Supporter { name = "OptoCloud" },
-                new Supporter { name = "lukasong" }
+                new Supporter { name = "lukasong" },
+
+                new Supporter { name = ".Rei." },
+                new Supporter { name = "" },
+                new Supporter { name = "" }
             },
             supporter = new[]
             {

@@ -128,22 +128,22 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
             HumanBodyBones.UpperChest
         };
 
-        public ModuleVrc2(GestureManager manager, VRC_AvatarDescriptor avatarDescriptor) : base(manager, avatarDescriptor) => _avatarDescriptor = avatarDescriptor;
+        public ModuleVrc2(VRC_AvatarDescriptor avatarDescriptor) : base(avatarDescriptor) => _avatarDescriptor = avatarDescriptor;
 
         public override void Update()
         {
-            if (_emote != 0 || Manager.PlayingCustomAnimation) _controlDelay = 5;
+            if (_emote != 0 || PlayingCustomAnimation) _controlDelay = 5;
             else if (_controlDelay <= 0) SavePose(AvatarAnimator);
             else _controlDelay--;
 
-            AvatarAnimator.SetInteger(_handGestureLeft, Manager.PlayingCustomAnimation || _emote != 0 ? 8 : Left);
-            AvatarAnimator.SetInteger(_handGestureRight, Manager.PlayingCustomAnimation || _emote != 0 ? 8 : Right);
-            AvatarAnimator.SetInteger(_emoteHash, Manager.PlayingCustomAnimation ? 9 : _emote);
+            AvatarAnimator.SetInteger(_handGestureLeft, PlayingCustomAnimation || _emote != 0 ? 8 : Left);
+            AvatarAnimator.SetInteger(_handGestureRight, PlayingCustomAnimation || _emote != 0 ? 8 : Right);
+            AvatarAnimator.SetInteger(_emoteHash, PlayingCustomAnimation ? 9 : _emote);
         }
 
         public override void LateUpdate()
         {
-            if (_emote != 0 || Manager.PlayingCustomAnimation) return;
+            if (_emote != 0 || PlayingCustomAnimation) return;
             SetPose(AvatarAnimator);
         }
 
@@ -183,7 +183,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
             {
                 ("Gestures", () =>
                 {
-                    if (_emote != 0 || Manager.PlayingCustomAnimation)
+                    if (_emote != 0 || PlayingCustomAnimation)
                     {
                         using (new GUILayout.HorizontalScope(GestureManagerStyles.EmoteError))
                         {
@@ -225,16 +225,16 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
                     GUILayout.Label("Force animation.", GestureManagerStyles.GuiHandTitle);
                     using (new GUILayout.HorizontalScope())
                     {
-                        if (!(_selectingCustomAnim = GmgLayoutHelper.ObjectField("Animation: ", _selectingCustomAnim, Manager.SetCustomAnimation))) GUI.enabled = false;
-                        if (!Manager.PlayingCustomAnimation || _emote != 0)
+                        if (!(_selectingCustomAnim = GmgLayoutHelper.ObjectField("Animation: ", _selectingCustomAnim, SetCustomAnimation))) GUI.enabled = false;
+                        if (!PlayingCustomAnimation || _emote != 0)
                         {
                             if (GUILayout.Button("Play", _options))
                             {
                                 _emote = 0;
-                                Manager.PlayCustomAnimation(_selectingCustomAnim);
+                                PlayCustomAnimation(_selectingCustomAnim);
                             }
                         }
-                        else if (GUILayout.Button("Stop", GuiGreenButton)) Manager.StopCustomAnimation();
+                        else if (GUILayout.Button("Stop", GuiGreenButton)) StopCustomAnimation();
 
                         GUI.enabled = true;
                     }
@@ -248,7 +248,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
 
         public override string GetGestureTextNameByIndex(int gestureIndex) => GetFinalGestureByIndex(gestureIndex).name;
 
-        public override Animator OnCustomAnimationPlay(AnimationClip animationClip)
+        protected override Animator OnCustomAnimationPlay(AnimationClip animationClip)
         {
             SetupOverride(_usingType, false);
             AvatarAnimator.applyRootMotion = animationClip;
@@ -296,19 +296,19 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
         private void OnEmoteStart(int emoteIndex)
         {
             _emote = emoteIndex;
-            Manager.PlayCustomAnimation(GetEmoteByIndex(emoteIndex - 1));
+            PlayCustomAnimation(GetEmoteByIndex(emoteIndex - 1));
         }
 
         private void OnEmoteStop()
         {
             _emote = 0;
-            Manager.StopCustomAnimation();
+            StopCustomAnimation();
         }
 
         private void StopCurrentEmote()
         {
             if (_emote != 0) OnEmoteStop();
-            if (Manager.PlayingCustomAnimation) Manager.StopCustomAnimation();
+            if (PlayingCustomAnimation) StopCustomAnimation();
         }
 
         private void SetupOverride(ControllerType controllerType, bool saveController)
@@ -325,7 +325,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
 
             var finalOverride = new List<KeyValuePair<AnimationClip, AnimationClip>>
             {
-                new KeyValuePair<AnimationClip, AnimationClip>(_myRuntimeOverrideController["[EXTRA] CustomAnimation"], Manager.customAnim)
+                new KeyValuePair<AnimationClip, AnimationClip>(_myRuntimeOverrideController["[EXTRA] CustomAnimation"], CustomAnim)
             };
 
             var validOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();

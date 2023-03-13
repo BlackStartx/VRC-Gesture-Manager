@@ -43,7 +43,30 @@ the RadialMenu bellow.
 
 ![img.png](.markdown/3.8/TestingStart.png)
 
-### Option Button!
+![img.png](.markdown/Tools.png)
+
+There are other features that can help you creating and testing your avatar easier.
+
+Those feature are under the "Tools" tab.
+
+# - Scene Camera
+
+This tool will match the GameView camera with the SceneView camera.
+
+Useful to move the camera around and test PhysBones and Contacts~
+
+https://user-images.githubusercontent.com/26898122/224570606-125f3838-c97e-4379-afdf-42c989bad5cb.mp4
+
+# - Clickable Contacts
+
+This tool will trigger contact if clicked over with the mouse, similar to how PhysBones works.
+
+You can also define a tag to filter the affected contacts!
+
+https://user-images.githubusercontent.com/26898122/224572259-252527e0-b1ee-4121-8940-3e3ba618025a.mp4
+
+![img.png](.markdown/Options.png)
+
 The Option button in the RadialMenu contains a lot of sub-category that helps you change parameters usually 
 controlled by the VRChat client.
 
@@ -67,7 +90,7 @@ In the **Extra** category you can change Gesture Weights, MuteSelf, IsLocal and 
 
 > If a button have a gray text it means that the parameter is not used by your avatar.
 
-### Edit-Mode Feature
+# - Edit Mode
 In the Option Menu you can find a button called: Edit-Mode.
 
 Clicking that button will enable the Edit-Mode feature and will create a clone of your avatar 
@@ -85,9 +108,11 @@ From here, you can edit your animation as you usually do, by clicking the record
 
 ![img.png](.markdown/3.2/Editing.png)
 
-### Avatar Debug Menu
+![alt text](.markdown/Debug.png)
 
 The Debug tab of the Gesture Manager is where you can check lots of information about the current state of your avatar.
+
+# Avatar Debug
 
 This window contains: Animator Parameters, Tracking Controls, Animation Controllers Weight, Animator States and Layer 
 Weights as well as Locomotion and Pose Space current values.
@@ -98,15 +123,13 @@ clicking the `Undock Debug Window` button bellow.
 This will create a floating window that you can move independently.
 You can maximize it on another screen too, if you wish.
 
-You can put the floating debug window wherever you want and use the Gesture Manager as you usually do.
-
 > The Debug Window is responsive, it will change the way content displayed inside of it depending of the width of the window.
 
 #### Debug Window Example
 
 ![img.gif](.markdown/Debug/DebugAvatar.gif)
 
-### Osc Debug Menu
+# Osc Menu
 
 In the Debug tab you can enable the integration for OSC data packages.
 
@@ -166,7 +189,7 @@ each gesture has the name of the animation file its related.
 
 ![alt text](.markdown/2.0/TestingStart.png)
 
-## Special Thanks~
+![alt text](.markdown/ThanksTo.png)
 Thanks to every friend and person who helped or supported me during the development of this tool~ ♥
 
 - Stack_
@@ -181,6 +204,7 @@ Thanks to every friend and person who helped or supported me during the developm
 - [lindesu](https://github.vrlabs.dev/)
 - OptoCloud
 - lukasong
+- .Rei.
 
 Special thanks to:
 

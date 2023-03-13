@@ -11,13 +11,9 @@ namespace BlackStartX.GestureManager
         public static bool InWebClientRequest;
 
         private TransformData _managerTransform;
-        private TransformData _beforeEmote;
         private bool _drag;
 
         public ModuleBase Module;
-
-        public bool PlayingCustomAnimation { get; private set; }
-        public AnimationClip customAnim;
 
         private void OnDisable() => UnlinkModule();
 
@@ -64,26 +60,6 @@ namespace BlackStartX.GestureManager
             Module.InitForAvatar();
             ControlledAvatars[module.Avatar] = module;
             _managerTransform = new TransformData(transform);
-        }
-
-        /*
-         *  Custom Animation
-         */
-
-        public void StopCustomAnimation() => SetCustomAnimation(clip: null, play: true, save: false, PlayingCustomAnimation);
-
-        public void SetCustomAnimation(AnimationClip clip) => SetCustomAnimation(clip, play: false, save: true, PlayingCustomAnimation);
-
-        public void PlayCustomAnimation(AnimationClip clip) => SetCustomAnimation(clip, play: true, save: true, PlayingCustomAnimation);
-
-        private void SetCustomAnimation(AnimationClip clip, bool play, bool save, bool playing)
-        {
-            PlayingCustomAnimation = (PlayingCustomAnimation || play) && clip;
-            if (save) customAnim = clip;
-            var customAnimator = PlayingCustomAnimation || playing && !clip ? Module.OnCustomAnimationPlay(clip) : null;
-            if (!customAnimator) return;
-            if (playing) _beforeEmote.ApplyTo(customAnimator.gameObject.transform);
-            else _beforeEmote = new TransformData(customAnimator.gameObject.transform);
         }
     }
 }

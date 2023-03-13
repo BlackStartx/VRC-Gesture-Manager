@@ -12,7 +12,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
         {
         }
 
-        protected internal override void StopExecution() => Module.Manager.StopCustomAnimation();
+        protected internal override void StopExecution() => Module.StopCustomAnimation();
 
         public override RadialDescription DummyDescription() => null;
 

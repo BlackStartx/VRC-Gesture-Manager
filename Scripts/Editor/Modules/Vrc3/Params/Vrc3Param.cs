@@ -1,13 +1,17 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System;
+using System.Collections.Generic;
 using BlackStartX.GestureManager.Editor.Lib;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Animations;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 {
     public abstract class Vrc3Param
     {
+        protected readonly HashSet<AnimatorControllerPlayable> Playables = new HashSet<AnimatorControllerPlayable>();
+
         public readonly AnimatorControllerParameterType Type;
         private readonly Func<float, float> _converted;
         protected readonly int HashId;
@@ -42,6 +46,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
         private void Set(ModuleVrc3 module, bool value) => Set(module, value ? 1f : 0f);
 
         private void Set(ModuleVrc3 module, int value) => Set(module, (float)value);
+
+        public void Subscribe(AnimatorControllerPlayable playable) => Playables.Add(playable);
 
         public void Set(ModuleVrc3 module, float? value)
         {

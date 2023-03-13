@@ -1,16 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &100100000
-Prefab:
-  m_ObjectHideFlags: 1
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications: []
-    m_RemovedComponents: []
-  m_ParentPrefab: {fileID: 0}
-  m_RootGameObject: {fileID: 1196135828297054}
-  m_IsPrefabParent: 1
 --- !u!1 &1196135828297054
 GameObject:
   m_ObjectHideFlags: 0
@@ -54,4 +43,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2398979b1d0d84349abc5ee9f0571350, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  customAnim: {fileID: 0}

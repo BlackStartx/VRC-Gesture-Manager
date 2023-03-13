@@ -23,7 +23,7 @@ namespace BlackStartX.GestureManager.Editor
     {
         private GestureManager Manager => target as GestureManager;
         private static IEnumerable<GmgAvatarDescriptor> Descriptors => FindSceneObjectsOfTypeAll<GmgAvatarDescriptor>();
-        private IEnumerable<ModuleBase> Modules => Descriptors.Select(descriptor => ModuleHelper.GetModuleFor(Manager, descriptor)).Where(module => module != null);
+        private static IEnumerable<ModuleBase> Modules => Descriptors.Select(ModuleHelper.GetModuleFor).Where(module => module != null);
         private static bool IsValidObject(GameObject g) => g.hideFlags != HideFlags.NotEditable && g.hideFlags != HideFlags.HideAndDontSave && g.scene.name != null;
         private static IEnumerable<T> FindSceneObjectsOfTypeAll<T>() where T : Component => Resources.FindObjectsOfTypeAll<T>().Where(t => IsValidObject(t.gameObject));
 
@@ -171,15 +171,15 @@ namespace BlackStartX.GestureManager.Editor
         {
             if (obj)
             {
-                var module = ModuleHelper.GetModuleFor(Manager, obj);
+                var module = ModuleHelper.GetModuleFor(obj);
                 if (module != null && module.IsValidDesc()) Manager.SetModule(module);
             }
             else Manager.UnlinkModule();
         }
 
-        private ModuleBase GetValidDescriptor() => CheckActiveModules().FirstOrDefault(module => module.IsPerfectDesc());
+        private static ModuleBase GetValidDescriptor() => CheckActiveModules().FirstOrDefault(module => module.IsPerfectDesc());
 
-        private List<ModuleBase> CheckActiveModules() => GestureManager.LastCheckedActiveModules = Modules.ToList();
+        private static List<ModuleBase> CheckActiveModules() => GestureManager.LastCheckedActiveModules = Modules.ToList();
 
         private static void DiscordPopup(string discord)
         {

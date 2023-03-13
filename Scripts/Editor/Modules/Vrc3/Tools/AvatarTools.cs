@@ -287,10 +287,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
             protected override void Gui(ModuleVrc3 module)
             {
-                _testMode = module.Manager.PlayingCustomAnimation;
+                _testMode = module.PlayingCustomAnimation;
                 using (new GUILayout.HorizontalScope())
                 {
-                    if (!GmgLayoutHelper.ObjectField(LabelAnimation, module.Manager.customAnim, module.Manager.SetCustomAnimation)) GUI.enabled = false;
+                    if (!GmgLayoutHelper.ObjectField(LabelAnimation, module.CustomAnim, module.SetCustomAnimation)) GUI.enabled = false;
                     if (GUILayout.Button(_testMode ? "Stop" : "Play", _options)) Toggle(module);
                     GUI.enabled = true;
                 }
@@ -298,8 +298,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
             protected internal override void Toggle(ModuleVrc3 module)
             {
-                if (_testMode) module.Manager.StopCustomAnimation();
-                else module.Manager.PlayCustomAnimation(module.Manager.customAnim);
+                if (_testMode) module.StopCustomAnimation();
+                else module.PlayCustomAnimation(module.CustomAnim);
             }
         }
 

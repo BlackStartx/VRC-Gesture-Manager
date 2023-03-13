@@ -307,9 +307,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 yield return playable.GetParameter(i);
         }
 
-        public static Vrc3ParamController CreateParamFromController(Animator animator, AnimatorControllerParameter parameter, AnimatorControllerPlayable controller)
+        public static Vrc3ParamController CreateParamFromPlayable(AnimatorControllerParameter parameter, AnimatorControllerPlayable controller)
         {
-            return new Vrc3ParamController(parameter.type, parameter.name, controller, animator);
+            return new Vrc3ParamController(parameter.type, parameter.name, controller);
         }
 
         public static Vrc3Param CreateParamFromNothing(VRCExpressionParameters.Parameter parameter)
@@ -330,7 +330,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         public static int RadialPercentage(float value, out float clamp)
         {
             clamp = Mathf.Clamp(value, 0f, 1f);
-            return (int)(clamp * 100);
+            return (int)Math.Round(clamp * 100, MidpointRounding.ToEven);
         }
 
         private static void AppendMenus(VRCExpressionsMenu menu, ICollection<VRCExpressionsMenu> menus)

@@ -24,17 +24,19 @@ namespace BlackStartX.GestureManager.Runtime.Extra
 
         public readonly GameObject Avatar;
         public readonly Animator AvatarAnimator;
-        public readonly GestureManager Manager;
+
+        private TransformData _beforeEmote;
+        public bool PlayingCustomAnimation { get; private set; }
+        public AnimationClip CustomAnim;
 
         protected int Right, Left;
         protected bool GestureDrag;
         public bool Active;
 
-        protected ModuleBase(GestureManager manager, GmgAvatarDescriptor avatarDescriptor)
+        protected ModuleBase(GmgAvatarDescriptor avatarDescriptor)
         {
             _avatarDescriptor = avatarDescriptor;
 
-            Manager = manager;
             Avatar = avatarDescriptor.gameObject;
             AvatarAnimator = Avatar.GetComponent<Animator>();
         }
@@ -49,8 +51,8 @@ namespace BlackStartX.GestureManager.Runtime.Extra
         protected abstract void OnNewLeft(int left);
         protected abstract void OnNewRight(int right);
         public abstract string GetGestureTextNameByIndex(int gestureIndex);
-        public abstract Animator OnCustomAnimationPlay(AnimationClip clip);
         public abstract bool HasGestureBeenOverridden(int gesture);
+        protected abstract Animator OnCustomAnimationPlay(AnimationClip clip);
         protected abstract List<HumanBodyBones> PoseBones { get; }
 
         public virtual bool IsInvalid() => !Avatar || !AvatarAnimator || !_avatarDescriptor;
@@ -107,5 +109,21 @@ namespace BlackStartX.GestureManager.Runtime.Extra
         public IEnumerable<string> GetErrors() => _errorList;
 
         public IEnumerable<string> GetWarnings() => _warningList;
+
+        public void StopCustomAnimation() => SetCustomAnimation(clip: null, play: true, save: false, PlayingCustomAnimation);
+
+        public void SetCustomAnimation(AnimationClip clip) => SetCustomAnimation(clip, play: false, save: true, PlayingCustomAnimation);
+
+        public void PlayCustomAnimation(AnimationClip clip) => SetCustomAnimation(clip, play: true, save: true, PlayingCustomAnimation);
+
+        private void SetCustomAnimation(AnimationClip clip, bool play, bool save, bool playing)
+        {
+            PlayingCustomAnimation = (PlayingCustomAnimation || play) && clip;
+            if (save) CustomAnim = clip;
+            var customAnimator = PlayingCustomAnimation || playing && !clip ? OnCustomAnimationPlay(clip) : null;
+            if (!customAnimator) return;
+            if (playing) _beforeEmote.ApplyTo(customAnimator.gameObject.transform);
+            else _beforeEmote = new TransformData(customAnimator.gameObject.transform);
+        }
     }
 }

@@ -8,14 +8,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 {
     public class Vrc3ParamController : Vrc3Param
     {
-        private readonly Animator _animator;
-
         private AnimatorControllerPlayable _controller;
 
-        public Vrc3ParamController(AnimatorControllerParameterType type, string name, AnimatorControllerPlayable controller, Animator animator) : base(name, type)
+        public Vrc3ParamController(AnimatorControllerParameterType type, string name, AnimatorControllerPlayable controller) : base(name, type)
         {
-            _animator = animator;
             _controller = controller;
+            Subscribe(_controller);
         }
 
         public override float Get()
@@ -39,14 +37,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
             switch (Type)
             {
                 case AnimatorControllerParameterType.Float:
-                    _animator.SetFloat(HashId, value);
+                    foreach (var controller in Playables) controller.SetFloat(HashId, value);
                     break;
                 case AnimatorControllerParameterType.Int:
-                    _animator.SetInteger(HashId, (int)value);
+                    foreach (var controller in Playables) controller.SetInteger(HashId, (int)value);
                     break;
                 case AnimatorControllerParameterType.Trigger:
                 case AnimatorControllerParameterType.Bool:
-                    _animator.SetBool(HashId, value > 0.5f);
+                    foreach (var controller in Playables) controller.SetBool(HashId, value > 0.5f);
                     break;
                 default: throw new ArgumentOutOfRangeException();
             }

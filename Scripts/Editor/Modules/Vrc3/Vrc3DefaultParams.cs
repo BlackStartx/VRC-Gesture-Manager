@@ -8,6 +8,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
     {
         internal const string GestureRightWeight = "GestureRightWeight";
         internal const string GestureLeftWeight = "GestureLeftWeight";
+        internal const string VelocityMagnitude = "VelocityMagnitude";
         internal const string AvatarVersion = "AvatarVersion";
         internal const string TrackingType = "TrackingType";
         internal const string GestureRight = "GestureRight";
@@ -25,16 +26,18 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal const string Vise = "Viseme";
         internal const string Afk = "AFK";
 
-        private const string VrcFaceBlendH = "VrcFaceBlendH";
-        private const string VrcFaceBlendV = "VrcFaceBlendV";
+        private const string VrcFaceBlendH = "VRCFaceBlendH";
+        private const string VrcFaceBlendV = "VRCFaceBlendV";
         private const string VrcEmote = "VRCEmote";
         private const string AngularY = "AngularY";
+        private const string Earmuffs = "Earmuffs";
         private const string Voice = "Voice";
 
         public static IEnumerable<(string name, AnimatorControllerParameterType type)> Parameters => new[]
         {
             (GestureRightWeight, AnimatorControllerParameterType.Float),
             (GestureLeftWeight, AnimatorControllerParameterType.Float),
+            (VelocityMagnitude, AnimatorControllerParameterType.Float),
             (VrcFaceBlendH, AnimatorControllerParameterType.Float),
             (VrcFaceBlendV, AnimatorControllerParameterType.Float),
             (AvatarVersion, AnimatorControllerParameterType.Int),
@@ -46,6 +49,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             (VelocityZ, AnimatorControllerParameterType.Float),
             (InStation, AnimatorControllerParameterType.Bool),
             (AngularY, AnimatorControllerParameterType.Float),
+            (Earmuffs, AnimatorControllerParameterType.Bool),
             (Grounded, AnimatorControllerParameterType.Bool),
             (MuteSelf, AnimatorControllerParameterType.Bool),
             (VrcEmote, AnimatorControllerParameterType.Int),

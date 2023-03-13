@@ -32,6 +32,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
     {
         [PublicAPI] public readonly VRCAvatarDescriptor AvatarDescriptor;
 
+        private const string OutputName = "Gesture Manager";
+        private const int OutputValue = 0;
+
         internal readonly AvatarTools AvatarTools;
         internal readonly OscModule OscModule;
 
@@ -47,6 +50,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         internal readonly Vrc3ParamBool PoseT;
         internal readonly Vrc3ParamBool PoseIK;
+
+        private float _isLocal = 1f;
 
         private readonly Dictionary<VRCAvatarDescriptor.AnimLayerType, LayerData> _layers = new Dictionary<VRCAvatarDescriptor.AnimLayerType, LayerData>();
         private readonly Dictionary<ScriptableObject, Vrc3WeightController> _weightControllers = new Dictionary<ScriptableObject, Vrc3WeightController>();
@@ -81,7 +86,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal float ViseAmount => AvatarDescriptor.lipSync == VRC_AvatarDescriptor.LipSyncStyle.VisemeBlendShape ? 14 : 100;
         protected override List<HumanBodyBones> PoseBones => Enum.GetValues(typeof(HumanBodyBones)).Cast<HumanBodyBones>().Where(bones => bones != HumanBodyBones.LastBone).ToList();
 
-        public ModuleVrc3(GestureManager manager, VRCAvatarDescriptor avatarDescriptor) : base(manager, avatarDescriptor)
+        public ModuleVrc3(VRCAvatarDescriptor avatarDescriptor) : base(avatarDescriptor)
         {
             AvatarTools = new AvatarTools();
             AvatarDescriptor = avatarDescriptor;
@@ -127,11 +132,16 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             var layerList = AvatarDescriptor.baseAnimationLayers.ToList();
             layerList.AddRange(AvatarDescriptor.specialAnimationLayers);
             layerList.Sort(ModuleVrc3Styles.Data.LayerSort);
+            var intCount = layerList.Count + 1;
+
+            const bool add = true;
+            const float weightOn = 1f;
+            const float weightOff = 0f;
 
             _playableGraph = PlayableGraph.Create("Gesture Manager 3.8");
-            var externalOutput = AnimationPlayableOutput.Create(_playableGraph, "Gesture Manager", AvatarAnimator);
-            var playableMixer = AnimationLayerMixerPlayable.Create(_playableGraph, layerList.Count + 1);
-            externalOutput.SetSourcePlayable(playableMixer);
+            _playableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
+            var mixer = AnimationLayerMixerPlayable.Create(_playableGraph, intCount);
+            AnimationPlayableOutput.Create(_playableGraph, OutputName, AvatarAnimator).SetSourcePlayable(mixer);
 
             _layers.Clear();
             _animators.Clear();
@@ -141,43 +151,38 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _senders.Clear();
             Receivers.Clear();
 
-            for (var i = 0; i < layerList.Count; i++)
+            for (var i = 1; i < intCount; i++)
             {
-                var vrcAnimLayer = layerList[i];
-                var intGraph = i + 1;
+                var layer = layerList[i - 1];
 
-                var isFx = vrcAnimLayer.type == VRCAvatarDescriptor.AnimLayerType.FX;
-                var isAdd = vrcAnimLayer.type == VRCAvatarDescriptor.AnimLayerType.Additive;
-                var isPose = vrcAnimLayer.type == VRCAvatarDescriptor.AnimLayerType.IKPose || vrcAnimLayer.type == VRCAvatarDescriptor.AnimLayerType.TPose;
-                var isAction = vrcAnimLayer.type == VRCAvatarDescriptor.AnimLayerType.Sitting || vrcAnimLayer.type == VRCAvatarDescriptor.AnimLayerType.Action;
+                var isFx = layer.type == VRCAvatarDescriptor.AnimLayerType.FX;
+                var isAdd = layer.type == VRCAvatarDescriptor.AnimLayerType.Additive;
+                var isPose = layer.type == VRCAvatarDescriptor.AnimLayerType.IKPose || layer.type == VRCAvatarDescriptor.AnimLayerType.TPose;
+                var isAction = layer.type == VRCAvatarDescriptor.AnimLayerType.Sitting || layer.type == VRCAvatarDescriptor.AnimLayerType.Action;
                 var isLim = isPose || isAction;
 
-                if (vrcAnimLayer.animatorController)
-                    foreach (var clip in vrcAnimLayer.animatorController.animationClips)
+                if (layer.animatorController)
+                    foreach (var clip in layer.animatorController.animationClips)
                         _avatarClips.Add(clip);
 
-                var controller = Vrc3ProxyOverride.OverrideController(vrcAnimLayer.isDefault ? RequestBuiltInController(vrcAnimLayer.type) : vrcAnimLayer.animatorController);
-                var mask = vrcAnimLayer.isDefault || !vrcAnimLayer.mask && isFx ? ModuleVrc3Styles.Data.MaskOf(vrcAnimLayer.type) : vrcAnimLayer.mask;
+                var controller = Vrc3ProxyOverride.OverrideController(layer.isDefault ? RequestBuiltInController(layer.type) : layer.animatorController);
+                var mask = layer.isDefault || !layer.mask && isFx ? ModuleVrc3Styles.Data.MaskOf(layer.type) : layer.mask;
 
                 var playable = AnimatorControllerPlayable.Create(_playableGraph, controller);
-                var weight = new AnimatorControllerWeight(playableMixer, playable, intGraph);
-                _layers[vrcAnimLayer.type] = new LayerData { Playable = playable, Weight = weight, Empty = playable.GetInput(0).IsNull() };
+                var weight = new AnimatorControllerWeight(mixer, playable, i);
+                _layers[layer.type] = new LayerData { Playable = playable, Weight = weight, Empty = playable.GetInput(0).IsNull() };
 
-                playableMixer.ConnectInput(intGraph, playable, 0, 1);
+                mixer.ConnectInput(i, playable, OutputValue, weightOn);
 
-                if (isLim) playableMixer.SetInputWeight(intGraph, 0f);
-                if (isAdd) playableMixer.SetLayerAdditive((uint)intGraph, true);
-                if (mask) playableMixer.SetLayerMaskFromAvatarMask((uint)intGraph, mask);
+                if (isLim) mixer.SetInputWeight(i, weightOff);
+                if (isAdd) mixer.SetLayerAdditive((uint)i, add);
+                if (mask) mixer.SetLayerMaskFromAvatarMask((uint)i, mask);
             }
 
-            _playableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
-            _playableGraph.Play();
-            _playableGraph.Evaluate(0f);
-
             foreach (var menu in Radials) menu.Set(Menu);
-            InitParams(AvatarAnimator, Parameters);
+            InitParams(Parameters);
 
-            GetParam(Vrc3DefaultParams.IsLocal)?.InternalSet(1f);
+            GetParam(Vrc3DefaultParams.IsLocal)?.InternalSet(_isLocal);
             GetParam(Vrc3DefaultParams.Upright)?.InternalSet(1f);
             GetParam(Vrc3DefaultParams.Grounded)?.InternalSet(1f);
             GetParam(Vrc3DefaultParams.TrackingType)?.InternalSet(3f);
@@ -185,11 +190,18 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             GetParam(Vrc3DefaultParams.GestureLeftWeight)?.InternalSet(1f);
             GetParam(Vrc3DefaultParams.GestureRightWeight)?.InternalSet(1f);
 
+            _playableGraph.Play();
+            _playableGraph.Evaluate(0f);
+
             Left = (int)(GetParam(Vrc3DefaultParams.GestureLeft)?.Get() ?? 0);
             Right = (int)(GetParam(Vrc3DefaultParams.GestureRight)?.Get() ?? 0);
 
             GetParam(Vrc3DefaultParams.Vise)?.SetOnChange(OnViseChange);
-            GetParam(Vrc3DefaultParams.Seated)?.SetOnChange(OnSeatedModeChange);
+            GetParam(Vrc3DefaultParams.Seated)?.SetOnChange(OnSeatedChange);
+            GetParam(Vrc3DefaultParams.IsLocal)?.SetOnChange(OnIsLocalChange);
+            GetParam(Vrc3DefaultParams.VelocityX)?.SetOnChange(OnVelocityChange);
+            GetParam(Vrc3DefaultParams.VelocityY)?.SetOnChange(OnVelocityChange);
+            GetParam(Vrc3DefaultParams.VelocityZ)?.SetOnChange(OnVelocityChange);
             GetParam(Vrc3DefaultParams.GestureLeft)?.SetOnChange(OnGestureLeftChange);
             GetParam(Vrc3DefaultParams.GestureRight)?.SetOnChange(OnGestureRightChange);
 
@@ -263,7 +275,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         public override string GetGestureTextNameByIndex(int gestureIndex) => GestureManagerStyles.Data.GestureNames[gestureIndex];
 
-        public override Animator OnCustomAnimationPlay(AnimationClip clip)
+        protected override Animator OnCustomAnimationPlay(AnimationClip clip)
         {
             if (!clip) return Vrc3TestMode.Disable(DummyMode);
             if (!(DummyMode is Vrc3TestMode testMode)) testMode = new Vrc3TestMode(this);
@@ -370,6 +382,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             if (_debugAvatarWindow) _debugAvatarWindow.Close();
             if (DebugOscWindow) DebugOscWindow.Close();
+        }
+
+        private void SetVelocityMag()
+        {
+            GetParam(Vrc3DefaultParams.VelocityMagnitude).Set(this, new Vector3(
+                GetParam(Vrc3DefaultParams.VelocityX).Get(),
+                GetParam(Vrc3DefaultParams.VelocityY).Get(),
+                GetParam(Vrc3DefaultParams.VelocityZ).Get()
+            ).magnitude);
         }
 
         private RuntimeAnimatorController RequestBuiltInController(VRCAvatarDescriptor.AnimLayerType type)
@@ -500,17 +521,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             if (GUI.Button(rect, GestureManagerStyles.PlusTexture, GUIStyle.none)) Vrc3FloatingMenu.Create(this);
         }
 
-        private void ReloadScene()
-        {
-            if (Manager.Module == null) return;
-            var activeScene = SceneManager.GetActiveScene();
-            LoadScene(activeScene.buildIndex, LoadSceneMode.Single, (scene, mode) =>
-            {
-                var manager = VRC.Tools.FindSceneObjectsOfTypeAll<GestureManager>().FirstOrDefault();
-                GestureManagerEditor.CreateAndPing(manager);
-            });
-        }
-
         private void RestoreDefaultControllers()
         {
             var deleted = false;
@@ -618,26 +628,31 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         internal void EnableEditMode() => DummyMode = new Vrc3EditMode(this, OriginalClips);
 
-        private void OnSeatedModeChange(Vrc3Param param, float seated) => _layers[VRCAvatarDescriptor.AnimLayerType.Sitting].Weight.Set(seated);
-
         private void OnTPoseChange(bool state) => _layers[VRCAvatarDescriptor.AnimLayerType.TPose].Weight.Set(state ? 1f : 0f);
 
         private void OnIKPoseChange(bool state) => _layers[VRCAvatarDescriptor.AnimLayerType.IKPose].Weight.Set(state ? 1f : 0f);
+
+        private void OnIsLocalChange(Vrc3Param param, float local) => _isLocal = local;
+
+        private void OnVelocityChange(Vrc3Param param, float local) => SetVelocityMag();
 
         private void OnGestureLeftChange(Vrc3Param param, float left) => Left = (int)left;
 
         private void OnGestureRightChange(Vrc3Param param, float right) => Right = (int)right;
 
+        private void OnSeatedChange(Vrc3Param param, float seated) => _layers[VRCAvatarDescriptor.AnimLayerType.Sitting].Weight.Set(seated);
+
         /*
          * Params
          */
 
-        private void InitParams(Animator animator, VRCExpressionParameters parameters)
+        private void InitParams(VRCExpressionParameters parameters)
         {
             Params.Clear();
             foreach (var pair in _layers)
             foreach (var parameter in RadialMenuUtility.GetParameters(pair.Value.Playable))
-                Params[parameter.name] = RadialMenuUtility.CreateParamFromController(animator, parameter, pair.Value.Playable);
+                if (Params.ContainsKey(parameter.name)) Params[parameter.name].Subscribe(pair.Value.Playable);
+                else Params[parameter.name] = RadialMenuUtility.CreateParamFromPlayable(parameter, pair.Value.Playable);
 
             if (parameters)
                 foreach (var parameter in parameters.parameters)
@@ -663,6 +678,18 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         }
 
         private static string NameOf(UnityEngine.Object o) => AssetDatabase.GetAssetPath(o);
+
+        private static void ReloadScene()
+        {
+            var activeScene = SceneManager.GetActiveScene();
+            LoadScene(activeScene.buildIndex, LoadSceneMode.Single, OnSceneReload);
+        }
+
+        private static void OnSceneReload(Scene scene, LoadSceneMode mode)
+        {
+            var manager = VRC.Tools.FindSceneObjectsOfTypeAll<GestureManager>().FirstOrDefault();
+            GestureManagerEditor.CreateAndPing(manager);
+        }
 
         private static void LoadScene(int sceneBuildIndex, LoadSceneMode mode, Action<Scene, LoadSceneMode> onLoad)
         {
