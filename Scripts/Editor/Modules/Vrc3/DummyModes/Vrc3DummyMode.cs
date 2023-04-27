@@ -1,6 +1,7 @@
 ﻿#if VRC_SDK_VRCSDK3
 using UnityEditor;
 using UnityEngine;
+using VRC.Core;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
 {
