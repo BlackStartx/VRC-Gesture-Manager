@@ -917,7 +917,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void PhysBoneBaseSetup(VRCPhysBoneBase vrcPhysBoneBase)
         {
             vrcPhysBoneBase.param_IsGrabbed = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_ISGRABBED);
+            vrcPhysBoneBase.param_IsPosed = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_ISPOSED);
             vrcPhysBoneBase.param_Stretch = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_STRETCH);
+            vrcPhysBoneBase.param_Squish = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_SQUISH);
             vrcPhysBoneBase.param_Angle = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_ANGLE);
         }
 
