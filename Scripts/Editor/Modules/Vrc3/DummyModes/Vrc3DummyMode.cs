@@ -26,7 +26,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
             if (!keepPose) Module.ForgetAvatar();
             if (!Avatar) Avatar = Object.Instantiate(Module.Avatar);
             if (keepPose) Module.ForgetAvatar();
-            Animator = Avatar.GetOrAddComponent<Animator>();
+            Animator = VRC.Core.ExtensionMethods.GetOrAddComponent<Animator>(Avatar);
             Avatar.name = Module.Avatar.name + " " + prefix;
             Module.Avatar.SetActive(false);
             Module.Avatar.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
