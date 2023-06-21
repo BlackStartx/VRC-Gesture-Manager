@@ -3,8 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BlackStartX.GestureManager.Data;
+using BlackStartX.GestureManager.Editor.Data;
 using BlackStartX.GestureManager.Editor.Lib;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.AvatarDynamics;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.Cache;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.VisualElements;
@@ -12,7 +15,6 @@ using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Osc;
-using BlackStartX.GestureManager.Runtime.Extra;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -21,6 +23,7 @@ using UnityEngine.Animations;
 using UnityEngine.Playables;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
+using VRC.Core;
 using VRC.Dynamics;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
@@ -44,14 +47,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal Vrc3DummyMode DummyMode;
 
         private PlayableGraph _playableGraph;
+        private (string text, string button, Action act)? _warning;
         private string _paramFilter;
-        private bool _noWarnings;
         private bool _hooked;
 
         internal readonly Vrc3ParamBool PoseT;
         internal readonly Vrc3ParamBool PoseIK;
-
-        private float _isLocal = 1f;
 
         private readonly Dictionary<VRCAvatarDescriptor.AnimLayerType, LayerData> _layers = new Dictionary<VRCAvatarDescriptor.AnimLayerType, LayerData>();
         private readonly Dictionary<ScriptableObject, Vrc3WeightController> _weightControllers = new Dictionary<ScriptableObject, Vrc3WeightController>();
@@ -81,6 +82,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private IEnumerable<AnimationClip> OriginalClips => _avatarClips.Where(clip => !clip.name.StartsWith("proxy_"));
         private VRCExpressionParameters Parameters => AvatarDescriptor.expressionParameters;
+        internal PipelineManager Pipeline => Avatar.GetComponent<PipelineManager>();
         private VRCExpressionsMenu Menu => AvatarDescriptor.expressionsMenu;
         internal IEnumerable<RadialMenu> Radials => _radialMenus.Values;
         internal float ViseAmount => AvatarDescriptor.lipSync == VRC_AvatarDescriptor.LipSyncStyle.VisemeBlendShape ? 14 : 100;
@@ -138,7 +140,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             const float weightOn = 1f;
             const float weightOff = 0f;
 
-            _playableGraph = PlayableGraph.Create("Gesture Manager 3.8");
+            _playableGraph = PlayableGraph.Create(GestureManager.Version);
             _playableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
             var mixer = AnimationLayerMixerPlayable.Create(_playableGraph, intCount);
             AnimationPlayableOutput.Create(_playableGraph, OutputName, AvatarAnimator).SetSourcePlayable(mixer);
@@ -182,16 +184,17 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             foreach (var menu in Radials) menu.Set(Menu);
             InitParams(Parameters);
 
-            GetParam(Vrc3DefaultParams.IsLocal)?.InternalSet(_isLocal);
             GetParam(Vrc3DefaultParams.Upright)?.InternalSet(1f);
             GetParam(Vrc3DefaultParams.Grounded)?.InternalSet(1f);
             GetParam(Vrc3DefaultParams.TrackingType)?.InternalSet(3f);
             GetParam(Vrc3DefaultParams.AvatarVersion)?.InternalSet(3f);
-            GetParam(Vrc3DefaultParams.GestureLeftWeight)?.InternalSet(1f);
-            GetParam(Vrc3DefaultParams.GestureRightWeight)?.InternalSet(1f);
+
+            GetParam(Vrc3DefaultParams.VRMode)?.InternalSet(Settings.vrMode ? 1f : 0f);
+            GetParam(Vrc3DefaultParams.IsLocal)?.InternalSet(Settings.isRemote ? 0f : 1f);
 
             _playableGraph.Play();
             _playableGraph.Evaluate(0f);
+            if (_brokenLayers.Count != 0) _warning = ("Some default Animator Controllers have changed!", "Restore Controllers", RestoreDefaultControllers);
 
             Left = (int)(GetParam(Vrc3DefaultParams.GestureLeft)?.Get() ?? 0);
             Right = (int)(GetParam(Vrc3DefaultParams.GestureRight)?.Get() ?? 0);
@@ -214,9 +217,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             OscModule.Resume();
         }
 
-        public override void Unlink()
+        protected override void Unlink()
         {
             CloseDebugWindows();
+            AvatarTools.Unlink(this);
             if (OscModule.Enabled) OscModule.Stop();
             DummyMode?.StopExecution();
             if (AvatarAnimator) ForgetAvatar();
@@ -226,8 +230,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         public override void EditorHeader()
         {
-            if (_brokenLayers.Count == 0 || _noWarnings || Broken) return;
-            using (new GmgLayoutHelper.GuiBackground(Color.yellow)) ShowWarnings();
+            if (_warning == null || Broken) return;
+            using (new GmgLayoutHelper.GuiBackground(Color.yellow)) ShowWarnings(_warning.Value);
         }
 
         public override void EditorContent(object editor, VisualElement element)
@@ -239,14 +243,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             var oscContainer = GetOrCreateOscContainer(customEditor);
             var weightController = GetOrCreateWeightController(customEditor);
 
-            GUI.enabled = !Broken;
-            GmgLayoutHelper.MyToolbar(ref menu.ToolBar, new (string, Action)[]
+            using (new GmgLayoutHelper.GuiEnabled(!Broken))
             {
-                ("Gestures", () => EditorContentGesture(element, weightController)),
-                ("Tools", () => AvatarTools.Gui(this)),
-                ("Debug", () => EditorContentDebug(menu))
-            });
-            GUI.enabled = true;
+                GmgLayoutHelper.MyToolbar(ref menu.ToolBar, new (string, Action)[]
+                {
+                    ("Gestures", () => EditorContentGesture(element, weightController)),
+                    ("Tools", () => AvatarTools.Gui(this)),
+                    ("Debug", () => EditorContentDebug(menu))
+                });
+            }
 
             GUILayout.Space(4);
             GmgLayoutHelper.Divisor(1);
@@ -266,7 +271,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             menu.CheckCondition(this, menu);
             oscContainer.CheckCondition(this, menu);
             weightController.CheckCondition(this, menu);
-            if (IsWatchingDebugParameters(menu)) customEditor.Repaint();
+            if (IsWatchingDebugParameters(menu) || IsWatchingAnimatorPerformance(menu)) customEditor.Repaint();
         }
 
         protected override void OnNewLeft(int left) => Params[Vrc3DefaultParams.GestureLeft].Set(this, left);
@@ -298,9 +303,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void EditorContentGesture(VisualElement element, Vrc3WeightController weightController)
         {
             using (new EditorGUILayout.HorizontalScope())
+            using (new GmgLayoutHelper.GuiEnabled(DummyMode == null && !Broken))
             {
-                GUI.enabled = DummyMode == null && !Broken;
-
                 using (new GUILayout.VerticalScope())
                 {
                     GUILayout.Label("Left Hand", GestureManagerStyles.GuiHandTitle);
@@ -322,8 +326,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                     GestureDrag = (Event.current.type == EventType.MouseDown && isContained) || Event.current.type != EventType.MouseUp && GestureDrag;
                     if (isContained && GestureDrag && Event.current.type == EventType.MouseDrag) OnNewRight((int)((Event.current.mousePosition.y - GUILayoutUtility.GetLastRect().y) / 19) + 1);
                 }
-
-                GUI.enabled = true;
             }
         }
 
@@ -339,21 +341,19 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void EditorContentDebugAvatar()
         {
             GUILayout.Label("Avatar Debug", GestureManagerStyles.GuiHandTitle);
-            GUILayout.Label(_debugAvatarWindow ? Vrc3AvatarDebugWindow.Text.W.Subtitle : Vrc3AvatarDebugWindow.Text.D.Subtitle, GestureManagerStyles.SubHeader);
+            GUILayout.Label(!_debugAvatarWindow ? Vrc3AvatarDebugWindow.Text.D.Subtitle : Vrc3AvatarDebugWindow.Text.W.Subtitle, GestureManagerStyles.Centered);
 
-            GUILayout.Space(_debugAvatarWindow ? 11 : 10);
-            if (_debugAvatarWindow) GUILayout.Label(Vrc3AvatarDebugWindow.Text.W.Message, GestureManagerStyles.SubHeader);
+            GUILayout.Space(!_debugAvatarWindow ? 10 : 11);
+            if (_debugAvatarWindow) GUILayout.Label(Vrc3AvatarDebugWindow.Text.W.Message, GestureManagerStyles.Centered);
             else DebugToolBar = Vrc3AvatarDebugWindow.Static.DebugToolbar(DebugToolBar);
-            GUILayout.Space(_debugAvatarWindow ? 11 : 10);
+            GUILayout.Space(!_debugAvatarWindow ? 10 : 11);
 
-            GUILayout.Label(_debugAvatarWindow ? Vrc3AvatarDebugWindow.Text.W.Hint : Vrc3AvatarDebugWindow.Text.D.Hint, GestureManagerStyles.SubHeader);
+            GUILayout.Label(!_debugAvatarWindow ? Vrc3AvatarDebugWindow.Text.D.Hint : Vrc3AvatarDebugWindow.Text.W.Hint, GestureManagerStyles.Centered);
             GUILayout.Space(7);
             using (new GUILayout.HorizontalScope())
-            {
-                GUILayout.FlexibleSpace();
-                if (GmgLayoutHelper.DebugButton(_debugAvatarWindow ? Vrc3AvatarDebugWindow.Text.W.Button : Vrc3AvatarDebugWindow.Text.D.Button)) SwitchDebugAvatarView();
-                GUILayout.FlexibleSpace();
-            }
+            using (new GmgLayoutHelper.FlexibleScope())
+                if (GmgLayoutHelper.DebugButton(!_debugAvatarWindow ? Vrc3AvatarDebugWindow.Text.D.Button : Vrc3AvatarDebugWindow.Text.W.Button))
+                    SwitchDebugAvatarView();
 
             GUILayout.Space(6);
         }
@@ -362,11 +362,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
          * Functions
          */
 
-        private static bool IsBroken(KeyValuePair<VRCAvatarDescriptor.AnimLayerType, LayerData> pair) => !pair.Value.Empty && pair.Value.Playable.GetInput(0).IsNull();
-
         private IEnumerable<T> AvatarComponents<T>(bool includeInactive = true) where T : Component => Avatar.GetComponentsInChildren<T>(includeInactive);
 
         private bool IsWatchingDebugParameters(RadialMenu menu) => menu.ToolBar.Selected == 2 && menu.DebugToolBar.Selected == 0 && DebugToolBar == 0;
+
+        private bool IsWatchingAnimatorPerformance(RadialMenu menu) => menu.ToolBar.Selected == 1 && AvatarTools.PerformanceAnimator.Watching;
 
         private void RemoveVise() => OnViseChange(null, 0f);
 
@@ -417,9 +417,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _radialMenus.Clear();
         }
 
-        private void SwitchDebugAvatarView() => _debugAvatarWindow = _debugAvatarWindow ? Vrc3AvatarDebugWindow.Close(_debugAvatarWindow) : Vrc3AvatarDebugWindow.Create(this);
+        private void SwitchDebugAvatarView() => _debugAvatarWindow = !_debugAvatarWindow ? Vrc3AvatarDebugWindow.Create(this) : Vrc3AvatarDebugWindow.Close(_debugAvatarWindow);
 
-        internal void SwitchDebugOscView() => DebugOscWindow = DebugOscWindow ? Vrc3OscDebugWindow.Close(DebugOscWindow) : Vrc3OscDebugWindow.Create(this);
+        internal void SwitchDebugOscView() => DebugOscWindow = !DebugOscWindow ? Vrc3OscDebugWindow.Create(this) : Vrc3OscDebugWindow.Close(DebugOscWindow);
 
         private void ShowDebugMenu(VisualElement root, VisualEpContainer holder, RadialMenu menu)
         {
@@ -452,7 +452,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             else Vrc3AvatarDebugWindow.Static.DummyLayout(DummyMode.ModeName);
         }
 
-        private void ShowWarnings()
+        private void ShowWarnings((string text, string button, Action action) warning)
         {
             using (new GUILayout.VerticalScope(GestureManagerStyles.EmoteError))
             {
@@ -461,17 +461,17 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 {
                     GUILayout.Space(15);
                     GUILayout.Label("WARNING", GestureManagerStyles.TextWarningHeader);
-                    if (GUILayout.Button("X", GUI.skin.label, GUILayout.Width(15))) _noWarnings = true;
+                    if (GUILayout.Button("X", GUI.skin.label, GUILayout.Width(15))) _warning = null;
                 }
 
                 GUILayout.Space(5);
                 using (new GUILayout.HorizontalScope())
+                using (new GmgLayoutHelper.FlexibleScope())
                 {
+                    GUILayout.Label(warning.text, GestureManagerStyles.TextWarning);
                     GUILayout.FlexibleSpace();
-                    GUILayout.Label("Some default Animator Controllers have changed!", GestureManagerStyles.TextWarning);
-                    GUILayout.FlexibleSpace();
-                    if (GUILayout.Button("Restore Controllers")) RestoreDefaultControllers();
-                    GUILayout.FlexibleSpace();
+                    if (warning.action == null) return;
+                    if (GUILayout.Button(warning.button)) warning.action();
                 }
             }
         }
@@ -482,29 +482,22 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             GUILayout.Label("Radial Menu", GestureManagerStyles.GuiHandTitle);
             using (new GmgLayoutHelper.GuiBackground(Color.red))
             using (new GUILayout.VerticalScope(SizeOptions))
+            using (new GmgLayoutHelper.FlexibleScope())
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                GUILayout.FlexibleSpace();
-                using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                GUILayout.Space(3);
+                using (new GUILayout.VerticalScope())
+                using (new GmgLayoutHelper.FlexibleScope())
                 {
-                    GUILayout.Space(3);
-                    using (new GUILayout.VerticalScope())
+                    GUILayout.Label("An Animator Controller changed during the simulation!", GestureManagerStyles.TextError);
+                    GUILayout.FlexibleSpace();
+                    using (new GUILayout.HorizontalScope())
+                    using (new GmgLayoutHelper.FlexibleScope())
                     {
-                        GUILayout.FlexibleSpace();
-                        GUILayout.Label("An Animator Controller changed during the simulation!", GestureManagerStyles.TextError);
-                        GUILayout.FlexibleSpace();
-                        using (new GUILayout.HorizontalScope())
-                        {
-                            GUILayout.FlexibleSpace();
-                            GUI.backgroundColor = RadialMenuUtility.Colors.RestartButton;
-                            if (GmgLayoutHelper.DebugButton("Click to reload scene")) ReloadScene();
-                            GUILayout.FlexibleSpace();
-                        }
-
-                        GUILayout.FlexibleSpace();
+                        GUI.backgroundColor = RadialMenuUtility.Colors.RestartButton;
+                        if (GmgLayoutHelper.DebugButton("Click to reload scene")) ReloadScene();
                     }
                 }
-
-                GUILayout.FlexibleSpace();
             }
         }
 
@@ -544,7 +537,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         internal RadialMenu GetOrCreateRadial(ScriptableObject editor, bool official)
         {
-            if (_radialMenus.ContainsKey(editor)) return _radialMenus[editor];
+            if (_radialMenus.TryGetValue(editor, out var radial)) return radial;
 
             _radialMenus[editor] = new RadialMenu(this, official);
             _radialMenus[editor].Set(Menu);
@@ -553,7 +546,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private Vrc3WeightController GetOrCreateWeightController(ScriptableObject editor)
         {
-            if (_weightControllers.ContainsKey(editor)) return _weightControllers[editor];
+            if (_weightControllers.TryGetValue(editor, out var controller)) return controller;
 
             _weightControllers[editor] = new Vrc3WeightController(this);
             return _weightControllers[editor];
@@ -561,7 +554,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private VisualEpContainer GetOrCreateOscContainer(ScriptableObject editor)
         {
-            if (_oscContainers.ContainsKey(editor)) return _oscContainers[editor];
+            if (_oscContainers.TryGetValue(editor, out var container)) return container;
 
             _oscContainers[editor] = new VisualEpContainer();
             return _oscContainers[editor];
@@ -632,13 +625,23 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void OnIKPoseChange(bool state) => _layers[VRCAvatarDescriptor.AnimLayerType.IKPose].Weight.Set(state ? 1f : 0f);
 
-        private void OnIsLocalChange(Vrc3Param param, float local) => _isLocal = local;
+        private void OnIsLocalChange(Vrc3Param param, float local) => Settings.isRemote = local < 0.5f;
 
-        private void OnVelocityChange(Vrc3Param param, float local) => SetVelocityMag();
+        private void OnVelocityChange(Vrc3Param param, float velocity) => SetVelocityMag();
 
-        private void OnGestureLeftChange(Vrc3Param param, float left) => Left = (int)left;
+        private void OnGestureLeftChange(Vrc3Param param, float left)
+        {
+            if (Left == 0) GetParam(Vrc3DefaultParams.GestureLeftWeight).Set(this, 1f);
+            if (left == 0) GetParam(Vrc3DefaultParams.GestureLeftWeight).Set(this, 0f);
+            Left = (int)left;
+        }
 
-        private void OnGestureRightChange(Vrc3Param param, float right) => Right = (int)right;
+        private void OnGestureRightChange(Vrc3Param param, float right)
+        {
+            if (Right == 0) GetParam(Vrc3DefaultParams.GestureRightWeight).Set(this, 1f);
+            if (right == 0) GetParam(Vrc3DefaultParams.GestureRightWeight).Set(this, 0f);
+            Right = (int)right;
+        }
 
         private void OnSeatedChange(Vrc3Param param, float seated) => _layers[VRCAvatarDescriptor.AnimLayerType.Sitting].Weight.Set(seated);
 
@@ -651,7 +654,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             Params.Clear();
             foreach (var pair in _layers)
             foreach (var parameter in RadialMenuUtility.GetParameters(pair.Value.Playable))
-                if (Params.ContainsKey(parameter.name)) Params[parameter.name].Subscribe(pair.Value.Playable);
+                if (Params.TryGetValue(parameter.name, out var param)) param.Subscribe(pair.Value.Playable);
                 else Params[parameter.name] = RadialMenuUtility.CreateParamFromPlayable(parameter, pair.Value.Playable);
 
             if (parameters)
@@ -667,7 +670,21 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 if (!Params.ContainsKey(nameString))
                     Params[nameString] = RadialMenuUtility.CreateParamFromNothing(nameString, type);
 
+            if (Settings.loadStored) _warning = InitStored();
+
             FilteredParams = FilterParam();
+        }
+
+        private (string text, string button, Action act)? InitStored()
+        {
+            var localString = GestureManagerSettings.UserPath(Settings.userIndex, GestureManagerSettings.LocalFolder);
+            if (localString == null) return null;
+            var fileString = Path.Combine(localString, Pipeline.blueprintId);
+            if (!File.Exists(fileString)) return ("Unable to load local stored parameters. (File doesn't exist)", null, null);
+            var file = AvatarFile.LoadData(File.ReadAllText(fileString));
+            if (file == null) return ("Unable to load local stored parameters. (JSON format error)", null, null);
+            foreach (var parameters in file.animationParameters) GetParam(parameters.name).InternalSet(parameters.value);
+            return null;
         }
 
         public Vrc3Param GetParam(string paramName)
@@ -676,6 +693,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             Params.TryGetValue(paramName, out var param);
             return param;
         }
+
+        private static bool IsBroken(KeyValuePair<VRCAvatarDescriptor.AnimLayerType, LayerData> pair) => IsBroken(pair.Value);
+
+        private static bool IsBroken(LayerData layerData) => !layerData.Empty && layerData.Playable.GetInput(0).IsNull();
 
         private static string NameOf(UnityEngine.Object o) => AssetDatabase.GetAssetPath(o);
 

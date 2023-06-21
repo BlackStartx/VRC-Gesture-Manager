@@ -1,6 +1,6 @@
 {
     "name": "vrchat.blackstartx.gesture-manager.editor",
-    "rootNamespace": "BlackStartX.GestureManager",
+    "rootNamespace": "BlackStartX.GestureManager.Editor",
     "references": [
         "GUID:184316a0752f3c74fbd758a2fb0f0d46",
         "GUID:5718fb738711cd34ea54e9553040911d"

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace BlackStartX.GestureManager.Runtime.Extra
+namespace BlackStartX.GestureManager.Data
 {
     public class TransformData
     {

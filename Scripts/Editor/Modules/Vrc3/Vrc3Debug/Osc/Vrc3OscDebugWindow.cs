@@ -1,4 +1,5 @@
 ﻿#if VRC_SDK_VRCSDK3
+using BlackStartX.GestureManager.Editor.Data;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.VisualElements;
 using UnityEditor;
 using UnityEngine;

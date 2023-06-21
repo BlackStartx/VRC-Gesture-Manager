@@ -1,4 +1,4 @@
-﻿namespace BlackStartX.GestureManager.Runtime.Extra
+﻿namespace BlackStartX.GestureManager.Data
 {
     public enum GestureHand
     {

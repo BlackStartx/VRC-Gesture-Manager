@@ -9,7 +9,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices.Dynamics
 
         public float Value
         {
-            set => _text.text = RadialMenuUtility.RadialPercentage(value) + "%";
+            set => _text.text = $"{RadialMenuUtility.RadialPercentage(value)}%";
         }
 
         public VisualRadialElement(float value)

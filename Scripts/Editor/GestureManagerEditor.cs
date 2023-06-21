@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using BlackStartX.GestureManager.Data;
+using BlackStartX.GestureManager.Editor.Data;
 using BlackStartX.GestureManager.Editor.Lib;
 using BlackStartX.GestureManager.Editor.Modules;
-using BlackStartX.GestureManager.Runtime.Extra;
 using UnityEditor;
 using UnityEngine;
 using GmgAvatarDescriptor =
@@ -28,10 +30,11 @@ namespace BlackStartX.GestureManager.Editor
         private static IEnumerable<T> FindSceneObjectsOfTypeAll<T>() where T : Component => Resources.FindObjectsOfTypeAll<T>().Where(t => IsValidObject(t.gameObject));
 
         private VisualElement _root;
+        private bool _setting;
 
         private const int AntiAliasing = 4;
 
-        private const string Discord = "BlackStartx#6593";
+        private const string Discord = "blackstartx";
         private const string StringPath = "Packages/vrchat.blackstartx.gesture-manager/GestureManager.prefab";
 
         private const string DiscordURL = "https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/master/.discord";
@@ -48,7 +51,13 @@ namespace BlackStartX.GestureManager.Editor
         private static void AddNewEmulator(UnityEngine.Object gObject)
         {
             var prefab = PrefabUtility.InstantiatePrefab(gObject) as GameObject;
-            CreateAndPing(prefab ? prefab.GetComponent<GestureManager>() : null);
+            CreateAndPing(!prefab ? null : prefab.GetComponent<GestureManager>());
+        }
+
+        private static void TogglePlaymode(bool isPlaying)
+        {
+            if (isPlaying) EditorApplication.ExitPlaymode();
+            else EditorApplication.EnterPlaymode();
         }
 
         public static void CreateAndPing(GestureManager manager = null)
@@ -65,77 +74,88 @@ namespace BlackStartX.GestureManager.Editor
             CreateAndPing();
         }
 
-        private void OnEnable()
-        {
-            if (!Application.isPlaying || !Manager.enabled || !Manager.gameObject.activeInHierarchy || Manager.Module != null) return;
-            Manager.SetModule(GetValidDescriptor());
-        }
-
         public override VisualElement CreateInspectorGUI()
         {
             _root = new VisualElement();
             _root.Add(new IMGUIContainer(ManagerGui));
+            if (Application.isPlaying) TryInitialize();
             foreach (var inspectorWindow in GmgLayoutHelper.GetInspectorWindows()) inspectorWindow.MySetAntiAliasing(AntiAliasing);
             return _root;
+        }
+
+        private void TryInitialize()
+        {
+            if (!Manager.enabled || !Manager.gameObject.activeInHierarchy || Manager.Module != null) return;
+            Manager.StartCoroutine(TryInitializeRoutine(ModuleHelper.GetModuleFor(Manager.settings.favourite)));
+        }
+
+        private IEnumerator TryInitializeRoutine(ModuleBase module)
+        {
+            yield return null;
+            module = module ?? GetValidDescriptor();
+            if (module != null) Manager.SetModule(module);
         }
 
         private void ManagerGui()
         {
             if (!Manager) return;
+            var gObject = Manager.gameObject;
+            var isPrefab = !gObject.scene.isLoaded;
+            var isActive = isPrefab ? gObject.activeSelf : gObject.activeInHierarchy;
+            var isPlaying = EditorApplication.isPlaying;
+
             Manager.SetDrag(!Event.current.alt);
 
-            GUILayout.Label("Gesture Manager 3.8", GestureManagerStyles.TitleStyle);
+            if (isPrefab || isPlaying) GUILayout.Label(GestureManager.Version, GestureManagerStyles.TitleStyle);
+            else if (GmgLayoutHelper.SettingsGearLabel(GestureManager.Version, _setting)) _setting = !_setting;
 
-            if (Manager.Module != null)
-            {
-                GmgLayoutHelper.ObjectField("Controlling Avatar: ", Manager.Module.Avatar, OnAvatarSwitch);
-                Manager.Module?.EditorHeader();
-                Manager.Module?.EditorContent(this, _root);
-            }
-            else SetupGui();
+            if (Manager.Module != null) ModuleGui();
+            else if (_setting) GestureManagerSettings.SettingGui(Manager);
+            else SetupGui(isActive, Manager.enabled, isPlaying, isPrefab);
 
             GestureManagerStyles.Sign();
         }
 
-        private void SetupGui()
+        private void ModuleGui()
         {
-            var isLoaded = Manager.gameObject.scene.isLoaded;
-            if (EditorApplication.isPlaying && isLoaded)
+            GmgLayoutHelper.ObjectField("Controlling Avatar: ", Manager.Module.Avatar, OnAvatarSwitch);
+            if (Manager.Module == null) return;
+            Manager.Module.EditorHeader();
+            Manager.Module.EditorContent(this, _root);
+        }
+
+        private void SetupGui(bool isActive, bool isEnabled, bool isPlaying, bool isPrefab)
+        {
+            if (!isActive || !isEnabled || !isPlaying || isPrefab)
             {
-                if (!Manager || !Manager.enabled || !Manager.gameObject.activeInHierarchy) GUILayout.Label("I'm disabled!", GestureManagerStyles.TextError);
-                else CheckGui();
-            }
-            else
-            {
-                GUILayout.Label(isLoaded ? "I'm a useless script if you aren't in play mode :D" : "Drag & Drop me into the scene to start testing! ♥", GestureManagerStyles.MiddleStyle);
+                if (!isEnabled || !isActive) GUILayout.Label("I'm disabled!", GestureManagerStyles.MiddleError);
+                else GUILayout.Label(isPrefab ? "Drag & Drop me into the scene to start testing! ♥" : "I'm a useless script if you aren't in play mode :D", GestureManagerStyles.MiddleStyle);
+
                 GUILayout.Space(10);
                 using (new GUILayout.HorizontalScope())
+                using (new GmgLayoutHelper.FlexibleScope())
+                using (new GmgLayoutHelper.GuiEnabled(!GestureManager.InWebClientRequest))
                 {
-                    GUILayout.FlexibleSpace();
-
-                    GUI.enabled = !GestureManager.InWebClientRequest;
-                    if (GmgLayoutHelper.DebugButton("Enter Play-Mode")) EditorApplication.EnterPlaymode();
+                    if (GmgLayoutHelper.DebugButton(isPlaying ? "Exit Play-Mode" : "Enter Play-Mode")) TogglePlaymode(isPlaying);
 
                     GUILayout.Space(20);
 
                     if (GmgLayoutHelper.DebugButton("My Discord Name")) CheckDiscordName();
-                    GUI.enabled = true;
-
-                    GUILayout.FlexibleSpace();
                 }
 
                 GUILayout.Space(5);
             }
+            else CheckGui();
         }
 
         private void CheckGui()
         {
             if (GestureManager.LastCheckedActiveModules.Count != 0)
             {
-                var eligibleList = GestureManager.LastCheckedActiveModules.Where(module => module.Avatar && module.IsValidDesc()).ToList();
-                var nonEligibleList = GestureManager.LastCheckedActiveModules.Where(module => module.Avatar && !module.IsValidDesc()).ToList();
+                var eligibleList = GestureManager.LastCheckedActiveModules.Where(module => module.IsValidDesc()).ToList();
+                var nonEligibleList = GestureManager.LastCheckedActiveModules.Where(module => !module.IsValidDesc()).ToList();
 
-                GUILayout.Label(eligibleList.Count == 0 ? "No one of your VRC_AvatarDescriptor are eligible." : "Eligible VRC_AvatarDescriptors:", GestureManagerStyles.SubHeader);
+                GUILayout.Label(eligibleList.Count == 0 ? "No one of your VRC_AvatarDescriptor are eligible." : "Eligible VRC_AvatarDescriptors:", GestureManagerStyles.Centered);
 
                 foreach (var module in eligibleList)
                 {
@@ -143,7 +163,7 @@ namespace BlackStartX.GestureManager.Editor
                     {
                         using (new GUILayout.HorizontalScope())
                         {
-                            GUILayout.Label(module.Avatar.name + ":", GUILayout.Width(Screen.width - 131));
+                            GUILayout.Label($"{module.Name}:", GUILayout.Width(Screen.width - 131));
                             if (GUILayout.Button("Set As Avatar", GUILayout.Width(100))) Manager.SetModule(module);
                         }
 
@@ -151,13 +171,13 @@ namespace BlackStartX.GestureManager.Editor
                     }
                 }
 
-                if (eligibleList.Count != 0 && nonEligibleList.Count != 0) GUILayout.Label("Non-Eligible VRC_AvatarDescriptors:", GestureManagerStyles.SubHeader);
+                if (eligibleList.Count != 0 && nonEligibleList.Count != 0) GUILayout.Label("Non-Eligible VRC_AvatarDescriptors:", GestureManagerStyles.Centered);
 
                 foreach (var module in nonEligibleList)
                 {
                     using (new GUILayout.VerticalScope(GestureManagerStyles.EmoteError))
                     {
-                        GUILayout.Label(module.Avatar.name + ":");
+                        GUILayout.Label($"{module.Name}:");
                         foreach (var errorString in module.GetErrors()) GUILayout.Label(errorString, GestureManagerStyles.TextError);
                     }
                 }
@@ -172,7 +192,7 @@ namespace BlackStartX.GestureManager.Editor
             if (obj)
             {
                 var module = ModuleHelper.GetModuleFor(obj);
-                if (module != null && module.IsValidDesc()) Manager.SetModule(module);
+                if (module != null) Manager.SetModule(module);
             }
             else Manager.UnlinkModule();
         }

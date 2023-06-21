@@ -2,10 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BlackStartX.GestureManager.Data;
+using BlackStartX.GestureManager.Editor.Data;
 using BlackStartX.GestureManager.Editor.Lib;
-using BlackStartX.GestureManager.Runtime.Extra;
 using UnityEditor;
+using UnityEditor.Profiling;
+using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Profiling;
 using VRC.Dynamics;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
@@ -15,23 +19,23 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
         private static Camera ToolCamera => Camera.allCameras.FirstOrDefault(CameraRule);
         private static bool CameraRule(Camera camera) => camera.enabled && camera.gameObject.activeInHierarchy;
 
-        private static GUIStyle _smallText;
-        private static GUIStyle SmallText => _smallText ?? (_smallText = new GUIStyle(GUI.skin.toggle) { fontSize = 10 });
-
         private UpdateSceneCamera _sceneCamera;
         public UpdateSceneCamera SceneCamera => _sceneCamera ?? (_sceneCamera = new UpdateSceneCamera());
 
         private ClickableContacts _clickableContacts;
         public ClickableContacts ContactsClickable => _clickableContacts ?? (_clickableContacts = new ClickableContacts());
 
-        private AvatarBackground _avatarBackground;
-        private AvatarBackground BackgroundAvatar => _avatarBackground ?? (_avatarBackground = new AvatarBackground());
-
         private AvatarPose _avatarPose;
         public AvatarPose PoseAvatar => _avatarPose ?? (_avatarPose = new AvatarPose());
 
+        private AvatarBackground _avatarBackground;
+        private AvatarBackground BackgroundAvatar => _avatarBackground ?? (_avatarBackground = new AvatarBackground());
+
         private TestAnimation _testAnimation;
         private TestAnimation AnimationTest => _testAnimation ?? (_testAnimation = new TestAnimation());
+
+        private AnimatorPerformance _animatorPerformance;
+        public AnimatorPerformance PerformanceAnimator => _animatorPerformance ?? (_animatorPerformance = new AnimatorPerformance());
 
         private Customization _customization;
         private Customization CustomizationTool => _customization ?? (_customization = new Customization());
@@ -43,7 +47,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
         internal void Gui(ModuleVrc3 module)
         {
             GUILayout.Label("Gesture Manager Tools", GestureManagerStyles.Header);
-            GUILayout.Label("A collection of some small utility functions~", GestureManagerStyles.SubHeader);
+            GUILayout.Label("A collection of some small utility functions~", GestureManagerStyles.Centered);
             GUILayout.Space(10);
             SceneCamera.Display(module);
             ContactsClickable.Display(module);
@@ -51,6 +55,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             GUILayout.Label("Extra Tools", GestureManagerStyles.Header);
             BackgroundAvatar.Display(module);
             AnimationTest.Display(module);
+            PerformanceAnimator.Display(module);
             GUILayout.Label("Customization", GestureManagerStyles.Header);
             CustomizationTool.Display(module);
         }
@@ -60,6 +65,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             SceneCamera.OnUpdate(module);
             BackgroundAvatar.OnUpdate(module);
             ContactsClickable.OnUpdate(module);
+            PerformanceAnimator.OnUpdate(module);
         }
 
         internal void OnLateUpdate(ModuleVrc3 module)
@@ -70,6 +76,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
         internal void OnDrawGizmos()
         {
             ContactsClickable.OnDrawGizmos();
+        }
+
+        public void Unlink(ModuleVrc3 module)
+        {
+            if (PerformanceAnimator.Active) PerformanceAnimator.Toggle(module);
         }
 
         public class UpdateSceneCamera : GmgDynamicFunction
@@ -274,39 +285,38 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             private static Vector3 ClosestPointOnLineSegment(Vector3 lineA, Vector3 lineB, Vector3 lhsRhs, float dot1, float dot) => dot <= dot1 ? lineB : lineA + lhsRhs * (dot1 / dot);
         }
 
-        private class TestAnimation : GmgDynamicFunction
+        public class AvatarPose : GmgDynamicFunction
         {
-            private readonly GUILayoutOption[] _options = { GUILayout.Width(100) };
-            private bool _testMode;
-
-            private const string LabelAnimation = "Animation: ";
-
-            protected internal override string Name => "Test Animation";
-            protected override string Description => "Use this tool to preview any animation in your project.\n\nYou can preview Emotes or Gestures.";
-            protected internal override bool Active => _testMode;
+            private bool _poseMode;
+            protected internal override string Name => "Pose Avatar";
+            protected override string Description => "This feature will mask the humanoid animations!\n\nIt allows you to control the transform of your bones!";
+            protected internal override bool Active => _poseMode;
 
             protected override void Gui(ModuleVrc3 module)
             {
-                _testMode = module.PlayingCustomAnimation;
+                _poseMode = module.PoseMode;
                 using (new GUILayout.HorizontalScope())
-                {
-                    if (!GmgLayoutHelper.ObjectField(LabelAnimation, module.CustomAnim, module.SetCustomAnimation)) GUI.enabled = false;
-                    if (GUILayout.Button(_testMode ? "Stop" : "Play", _options)) Toggle(module);
-                    GUI.enabled = true;
-                }
+                using (new GmgLayoutHelper.FlexibleScope())
+                    if (GmgLayoutHelper.DebugButton(_poseMode ? "Stop Posing" : "Start Posing"))
+                        Toggle(module);
             }
 
             protected internal override void Toggle(ModuleVrc3 module)
             {
-                if (_testMode) module.StopCustomAnimation();
-                else module.PlayCustomAnimation(module.CustomAnim);
+                _poseMode = module.PoseMode = !module.PoseMode;
+                module.AvatarAnimator.applyRootMotion = _poseMode;
+                if (!_poseMode || module.DummyMode == null) return;
+                module.SavePose(module.DummyMode.Animator);
+                var data = new TransformData(module.Avatar.transform).Difference(module.DummyMode.Avatar.transform);
+                var transform = module.AvatarAnimator.GetBoneTransform(HumanBodyBones.Hips);
+                module.DummyMode.StopExecution();
+                module.SetPose(module.AvatarAnimator);
+                data.AddTo(transform);
             }
         }
 
         private class AvatarBackground : GmgDynamicFunction
         {
-            private readonly GUILayoutOption[] _options = { GUILayout.Height(5) };
-
             private static Renderer _cover;
             private static Texture _texture;
             private static Camera _cameraOb;
@@ -315,9 +325,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
             private const string CmLabel = "Vrc Camera: ";
             private const string DstLabel = "Distance";
-            private const string ThumbnailText = "Use this tool to set a background for your avatar!";
 
-            protected override string Description => null;
+            protected override string Description => "Use this tool to set a background for your avatar!";
             protected internal override string Name => "Avatar Background";
             protected internal override bool Active => _cover != null;
             private static void ToggleOff() => UnityEngine.Object.DestroyImmediate(_cover.gameObject);
@@ -325,7 +334,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             private static bool SetUpCamera() => Exist(_cameraOb = Camera.allCameras.FirstOrDefault(VrcCameraRule));
             private static bool VrcCameraRule(Behaviour camera, GameObject cObj) => camera.enabled && cObj.activeInHierarchy && cObj.name == "VRCCam";
 
-            protected override void Gui(ModuleVrc3 module) => Gui(GUILayoutUtility.GetRect(GUIContent.none, GUI.skin.label, _options));
+            protected override void Gui(ModuleVrc3 module) => Gui();
 
             protected override void Update(ModuleVrc3 module)
             {
@@ -333,28 +342,32 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
                 FillCamera(_cameraOb, _cover.transform, _distance);
             }
 
-            private void Gui(Rect rect, bool allowSceneObjects = true, string objLabel = "", float leftValue = 0.1f, float rightValue = 20f)
+            private void Gui(bool allowSceneObjects = true, string lObj = "", float leftValue = 0.1f, float rightValue = 20f)
             {
-                rect.y -= 51;
-                rect.height = 64;
-                GUI.Label(rect, ThumbnailText, GestureManagerStyles.SubHeader);
-                rect.y -= 9;
-                if (_texture != (_texture = EditorGUI.ObjectField(rect, objLabel, _texture, typeof(Texture), allowSceneObjects) as Texture)) SetUp();
-                if (_cameraOb != (_cameraOb = EditorGUILayout.ObjectField(CmLabel, _cameraOb, typeof(Camera), allowSceneObjects) as Camera)) SetUp();
-                if (Math.Abs(_distance - (_distance = EditorGUILayout.Slider(DstLabel, _distance, leftValue, rightValue))) > 0.000001f) SetUp();
-                if (GuiToggle(rect, Active)) Toggle(null);
+                GUILayout.Space(10);
+                var option = GUILayout.Width(64);
+                using (new GUILayout.HorizontalScope())
+                {
+                    using (new GUILayout.VerticalScope())
+                    {
+                        if (_cameraOb != (_cameraOb = EditorGUILayout.ObjectField(CmLabel, _cameraOb, typeof(Camera), allowSceneObjects) as Camera)) SetUp();
+                        if (Math.Abs(_distance - (_distance = EditorGUILayout.Slider(DstLabel, _distance, leftValue, rightValue))) > 0.000001f) SetUp();
+                        if (GuiToggle(Active)) Toggle(null);
+                    }
+
+                    if (_texture != (_texture = EditorGUILayout.ObjectField(lObj, _texture, typeof(Texture), allowSceneObjects, option) as Texture)) SetUp();
+                }
             }
 
-            private static bool GuiToggle(Rect rect, bool active, string text = " Enabled", string time = " Constant")
+            private static bool GuiToggle(bool active, string text = "Enabled", string time = "Constant")
             {
-                rect.height = 15;
-                rect.width = 80;
-                rect.y -= 3;
-                rect.x -= 2;
-                var isToggle = GUI.Toggle(rect, active, text, SmallText) != active;
-                rect.y += 15;
-                _realTime = active && GUI.Toggle(rect, _realTime, time, SmallText);
-                return isToggle;
+                using (new GUILayout.HorizontalScope())
+                {
+                    var isToggle = EditorGUILayout.Toggle(text, active) != active;
+                    GUILayout.FlexibleSpace();
+                    _realTime = active && EditorGUILayout.Toggle(time, _realTime);
+                    return isToggle;
+                }
             }
 
             private static void SetUp()
@@ -393,35 +406,135 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             }
         }
 
-        public class AvatarPose : GmgDynamicFunction
+        private class TestAnimation : GmgDynamicFunction
         {
-            private bool _poseMode;
-            protected internal override string Name => "Pose Avatar";
-            protected override string Description => "This feature will mask the humanoid animations!\n\nIt allows you to control the transform of your bones!";
-            protected internal override bool Active => _poseMode;
+            private readonly GUILayoutOption[] _options = { GUILayout.Width(100) };
+            private bool _testMode;
+
+            private const string Label = "Animation: ";
+            protected internal override string Name => "Test Animation";
+            protected override string Description => "Use this tool to preview any animation in your project.\n\nYou can preview Emotes or Gestures.";
+            protected internal override bool Active => _testMode;
+            private static bool AnimationField(ModuleBase module) => !GmgLayoutHelper.ObjectField(Label, module.CustomAnim, module.SetCustomAnimation);
 
             protected override void Gui(ModuleVrc3 module)
             {
-                _poseMode = module.PoseMode;
+                _testMode = module.PlayingCustomAnimation;
                 using (new GUILayout.HorizontalScope())
-                {
-                    GUILayout.FlexibleSpace();
-                    if (GmgLayoutHelper.DebugButton(_poseMode ? "Stop Posing" : "Start Posing")) Toggle(module);
-                    GUILayout.FlexibleSpace();
-                }
+                using (new GmgLayoutHelper.GuiEnabled(!AnimationField(module)))
+                    if (GUILayout.Button(_testMode ? "Stop" : "Play", _options))
+                        Toggle(module);
             }
 
             protected internal override void Toggle(ModuleVrc3 module)
             {
-                _poseMode = module.PoseMode = !module.PoseMode;
-                module.AvatarAnimator.applyRootMotion = _poseMode;
-                if (!_poseMode || module.DummyMode == null) return;
-                module.SavePose(module.DummyMode.Animator);
-                var data = new TransformData(module.Avatar.transform).Difference(module.DummyMode.Avatar.transform);
-                var transform = module.AvatarAnimator.GetBoneTransform(HumanBodyBones.Hips);
-                module.DummyMode.StopExecution();
-                module.SetPose(module.AvatarAnimator);
-                data.AddTo(transform);
+                if (_testMode) module.StopCustomAnimation();
+                else module.PlayCustomAnimation(module.CustomAnim);
+            }
+        }
+
+        public class AnimatorPerformance : GmgDynamicFunction
+        {
+            private List<int> _cachedIds = new List<int>();
+
+            private Dictionary<string, Benchmark> _benchmark = new Dictionary<string, Benchmark>();
+            private static string PropertyName => "Animators.Update";
+            protected internal override string Name => "Animator Performance";
+            protected override string Description => "A simple benchmark using the Unity Profiler!\n\nAimed to show animator update calls usages!";
+            protected internal override bool Active => Profiler.enabled;
+            public bool Watching => Active && Foldout;
+            private Dictionary<string, Benchmark> Benchmarks => _benchmark.Count == 0 ? _dummyBenchmark : _benchmark;
+
+            private readonly Dictionary<string, Benchmark> _dummyBenchmark = new Dictionary<string, Benchmark>
+            {
+                { "Dummy1", new Benchmark() },
+                { "Dummy2", new Benchmark() }
+            };
+
+            private const int Thread = 0;
+            private const int Column = HierarchyFrameDataView.columnName;
+            private const HierarchyFrameDataView.ViewModes View = HierarchyFrameDataView.ViewModes.Default;
+            private const bool SortAscending = true;
+
+            protected override void Gui(ModuleVrc3 module)
+            {
+                using (new GmgLayoutHelper.GuiBackground(Color.cyan))
+                using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                using (new GmgLayoutHelper.GuiEnabled(Active))
+                {
+                    GUILayout.Label(PropertyName, GestureManagerStyles.MiddleStyle);
+                    foreach (var benchmarkPair in Benchmarks) benchmarkPair.Value.Render();
+                    GUILayout.Label($"\n[Result calculated on {_benchmark.FirstOrDefault().Value?.Frame ?? 0} frames]");
+                }
+
+                GUILayout.Space(10);
+
+                using (new GUILayout.HorizontalScope())
+                using (new GmgLayoutHelper.FlexibleScope())
+                    if (GmgLayoutHelper.DebugButton(Active ? "Stop Profiler" : "Start Profiler"))
+                        Toggle(module);
+            }
+
+            protected override void Update(ModuleVrc3 module)
+            {
+                using (var frameData = ProfilerDriver.GetHierarchyFrameDataView(ProfilerDriver.lastFrameIndex, Thread, View, Column, SortAscending))
+                {
+                    var idList = GetCachedIds(frameData);
+                    foreach (var intId in idList)
+                    {
+                        var dString = frameData.GetItemPath(intId);
+                        if (!_benchmark.ContainsKey(dString)) _benchmark[dString] = new Benchmark();
+                        _benchmark[dString].Record(frameData.GetItemColumnDataAsFloat(intId, HierarchyFrameDataView.columnSelfTime));
+                    }
+                }
+            }
+
+            private List<int> GetCachedIds(HierarchyFrameDataView frameData)
+            {
+                if (_cachedIds.Count != 0 && _cachedIds.All(intId => frameData.GetItemName(intId) == PropertyName)) return _cachedIds;
+                frameData.GetItemDescendantsThatHaveChildren(frameData.GetRootItemID(), _cachedIds);
+                _cachedIds = _cachedIds
+                    .Select(intId => (intId, frameData.GetItemName(intId)))
+                    .Where(tuple => tuple.Item2.Equals(PropertyName))
+                    .Select(tuple => tuple.intId)
+                    .ToList();
+                return _cachedIds;
+            }
+
+            protected internal override void Toggle(ModuleVrc3 module)
+            {
+                Profiler.enabled = ProfilerDriver.enabled = !Active;
+                if (Active) _benchmark = new Dictionary<string, Benchmark>();
+            }
+
+            private class Benchmark
+            {
+                public int Frame { get; private set; }
+
+                private float _last;
+                private float _count;
+                private float _maximum;
+                private float _average;
+
+                public void Record(float value)
+                {
+                    if (value > _maximum) _maximum = value;
+                    Frame++;
+                    _last = value;
+                    _count += value;
+                    _average = _count / Frame;
+                }
+
+                public void Render()
+                {
+                    var option = GUILayout.Width(Math.Min((Screen.width - 64) / 3f, 115));
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        GUILayout.Label($"Last: {_last:F5}", option);
+                        using (new GmgLayoutHelper.FlexibleScope()) GUILayout.Label($"Average: {_average:F5}", option);
+                        GUILayout.Label($"Maximum: {_maximum:F5}", option);
+                    }
+                }
             }
         }
 

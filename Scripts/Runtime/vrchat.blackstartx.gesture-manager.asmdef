@@ -1,6 +1,6 @@
 {
   "name": "vrchat.blackstartx.gesture-manager",
-  "rootNamespace": "BlackStartX.GestureManager.Runtime",
+  "rootNamespace": "BlackStartX.GestureManager",
   "references": [],
   "includePlatforms": [],
   "excludePlatforms": [],

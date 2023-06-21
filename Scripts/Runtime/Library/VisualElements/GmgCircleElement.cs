@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.UIElements;
-using CR = BlackStartX.GestureManager.Runtime.GmgVisualMesh.CenterRelative;
+using CR = BlackStartX.GestureManager.Library.GmgVisualMesh.CenterRelative;
 
 namespace BlackStartX.GestureManager.Runtime.VisualElements
 {

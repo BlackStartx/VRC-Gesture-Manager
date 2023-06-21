@@ -142,7 +142,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _left.style.width = _weight * style.width.value.value;
             _right.style.width = style.width.value.value - _left.style.width.value.value;
             _dot.style.left = _weight * style.width.value.value - 8;
-            _textWeight.text = (int)(_weight * 100f) + "%";
+            _textWeight.text = $"{(int)(_weight * 100f)}%";
         }
     }
 }

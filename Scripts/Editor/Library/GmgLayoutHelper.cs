@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BlackStartX.GestureManager.Editor.Data;
 using UnityEditor;
 using UnityEngine;
 
@@ -56,8 +57,22 @@ namespace BlackStartX.GestureManager.Editor.Lib
             using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Space(15 + width);
+                var option = GUILayout.Width(width);
                 GUILayout.Label(text, GestureManagerStyles.Header);
-                return GUILayout.Button(button, GestureManagerStyles.HeaderButton, GUILayout.Width(width));
+                return GUILayout.Button(button, GestureManagerStyles.HeaderButton, option);
+            }
+        }
+
+        public static bool SettingsGearLabel(string text, bool active, int pixels = 25)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Space(pixels);
+                var option = GUILayout.Width(pixels);
+                GUILayout.Label(text, GestureManagerStyles.TitleStyle);
+                using (new GUILayout.VerticalScope(option))
+                using (new FlexibleScope())
+                    return GUILayout.Button(active ? GestureManagerStyles.BackTexture : GestureManagerStyles.GearTexture, GUIStyle.none);
             }
         }
 
@@ -180,6 +195,19 @@ namespace BlackStartX.GestureManager.Editor.Lib
          * Classes...
          */
 
+        internal class GuiContent : IDisposable
+        {
+            private readonly Color _color;
+
+            public GuiContent(Color color)
+            {
+                _color = GUI.contentColor;
+                GUI.contentColor = color;
+            }
+
+            public void Dispose() => GUI.contentColor = _color;
+        }
+
         internal class GuiBackground : IDisposable
         {
             private readonly Color _color;
@@ -191,6 +219,26 @@ namespace BlackStartX.GestureManager.Editor.Lib
             }
 
             public void Dispose() => GUI.backgroundColor = _color;
+        }
+
+        internal class GuiEnabled : IDisposable
+        {
+            private readonly bool _enabled;
+
+            public GuiEnabled(bool enabled)
+            {
+                _enabled = GUI.enabled;
+                GUI.enabled = enabled;
+            }
+
+            public void Dispose() => GUI.enabled = _enabled;
+        }
+
+        internal class FlexibleScope : IDisposable
+        {
+            public FlexibleScope() => GUILayout.FlexibleSpace();
+
+            public void Dispose() => GUILayout.FlexibleSpace();
         }
 
         public static void HorizontalGrid<T1, T2>(T2 t2, float width, float sizeWidth, float sizeHeight, float divisor, IList<T1> data, Action<T2, Rect, T1> gridRect) where T1 : class
@@ -213,6 +261,45 @@ namespace BlackStartX.GestureManager.Editor.Lib
             }
 
             GUILayout.EndHorizontal();
+        }
+
+        public static bool FoldoutSection(string name, ref bool foldout, string content = null)
+        {
+            if (GUILayout.Button(name, GestureManagerStyles.ToolHeader)) foldout = !foldout;
+            var positionRect = GUILayoutUtility.GetLastRect();
+            return foldout = EditorGUI.Foldout(positionRect, foldout, content);
+        }
+
+        /*
+         * Gesture Manager's Settings
+         * Gesture Manager's Settings
+         * Gesture Manager's Settings
+         */
+
+        private const string EventName = "GestureManager's settings.";
+
+        public static T ComponentField<T>(string label, T descriptor, UnityEngine.Object o) where T : Component
+        {
+            if (descriptor == (descriptor = ObjectField(label, descriptor))) return descriptor;
+            Undo.RecordObject(o, EventName);
+            EditorUtility.SetDirty(o);
+            return descriptor;
+        }
+
+        public static int Popup(string label, int index, string[] choose, UnityEngine.Object o)
+        {
+            if (index == (index = EditorGUILayout.Popup(label, index, choose))) return index;
+            Undo.RecordObject(o, EventName);
+            EditorUtility.SetDirty(o);
+            return index;
+        }
+
+        public static bool Toggle(string label, bool index, GestureManager o)
+        {
+            if (index == (index = EditorGUILayout.Toggle(label, index))) return index;
+            Undo.RecordObject(o, EventName);
+            EditorUtility.SetDirty(o);
+            return index;
         }
     }
 }

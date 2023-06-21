@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UIEPosition = UnityEngine.UIElements.Position;
-using This = BlackStartX.GestureManager.Runtime.VisualElements.GmgTmpRichTextElement;
+using This = BlackStartX.GestureManager.Library.VisualElements.GmgTmpRichTextElement;
 
-namespace BlackStartX.GestureManager.Runtime.VisualElements
+namespace BlackStartX.GestureManager.Library.VisualElements
 {
     public class GmgTmpRichTextElement : VisualElement
     {

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BlackStartX.GestureManager.Editor.Data;
 using BlackStartX.GestureManager.Editor.Lib;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using UnityEditor;
@@ -90,13 +91,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar
 
             internal static void DummyLayout(string mode)
             {
-                GUILayout.FlexibleSpace();
-                GUILayout.Space(100);
-                GUILayout.Label($"Debug mode is disabled in {mode}-Mode!", GestureManagerStyles.TextError);
-                GUILayout.Space(20);
-                GUILayout.Label($"Exit {mode}-Mode to show the debug information of your avatar!", GestureManagerStyles.SubHeader);
-                GUILayout.Space(100);
-                GUILayout.FlexibleSpace();
+                using (new GmgLayoutHelper.FlexibleScope())
+                {
+                    GUILayout.Space(100);
+                    GUILayout.Label($"Debug mode is disabled in {mode}-Mode!", GestureManagerStyles.TextError);
+                    GUILayout.Space(20);
+                    GUILayout.Label($"Exit {mode}-Mode to show the debug information of your avatar!", GestureManagerStyles.Centered);
+                    GUILayout.Space(100);
+                }
             }
 
             private static void ParametersLayout(ModuleVrc3 module, float width)
@@ -222,19 +224,19 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar
                         {
                             using (new GUILayout.VerticalScope())
                             {
-                                GUILayout.Label("Name", GestureManagerStyles.SubHeader, innerOption);
+                                GUILayout.Label("Name", GestureManagerStyles.Centered, innerOption);
                                 foreach (var intLayer in layerList) GUILayout.Label(animator.GetLayerName(intLayer), innerOption);
                             }
 
                             using (new GUILayout.VerticalScope())
                             {
-                                GUILayout.Label("Weight", GestureManagerStyles.SubHeader, innerOption);
+                                GUILayout.Label("Weight", GestureManagerStyles.Centered, innerOption);
                                 foreach (var intLayer in layerList) GUILayout.Label(animator.GetLayerWeight(intLayer).ToString("0.00"), innerOption);
                             }
 
                             using (new GUILayout.VerticalScope())
                             {
-                                GUILayout.Label("State", GestureManagerStyles.SubHeader, innerOption);
+                                GUILayout.Label("State", GestureManagerStyles.Centered, innerOption);
                                 foreach (var infos in layerList.Select(intLayer => animator.GetCurrentAnimatorClipInfo(intLayer)))
                                     GUILayout.Label(infos.Length == 0 ? "[UNKNOWN]" : infos[0].clip.name, innerOption);
                             }

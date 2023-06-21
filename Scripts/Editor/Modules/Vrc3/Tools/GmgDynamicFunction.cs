@@ -1,4 +1,5 @@
 ﻿#if VRC_SDK_VRCSDK3
+using BlackStartX.GestureManager.Editor.Data;
 using BlackStartX.GestureManager.Editor.Lib;
 using UnityEngine;
 
@@ -11,13 +12,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
         protected abstract string Description { get; }
         protected internal abstract bool Active { get; }
 
+        protected bool Foldout;
+
         internal void Display(ModuleVrc3 module)
         {
             using (new GmgLayoutHelper.GuiBackground(Active ? Color.green : GUI.backgroundColor))
             using (new GUILayout.VerticalScope(GestureManagerStyles.EmoteError))
             {
-                GUILayout.Label(Name, GestureManagerStyles.ToolHeader);
-                GUILayout.Label(Description, GestureManagerStyles.SubHeader);
+                if (!GmgLayoutHelper.FoldoutSection(Name, ref Foldout)) return;
+                GUILayout.Label(Description, GestureManagerStyles.Centered);
                 GUILayout.Space(10);
                 Gui(module);
             }

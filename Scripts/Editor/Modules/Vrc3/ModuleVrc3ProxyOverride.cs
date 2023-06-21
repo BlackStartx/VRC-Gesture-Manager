@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using BlackStartX.GestureManager.Editor.Data;
 using UnityEngine;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3

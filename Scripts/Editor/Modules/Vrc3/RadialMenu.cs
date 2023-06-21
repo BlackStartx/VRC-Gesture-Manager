@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BlackStartX.GestureManager.Editor.Data;
 using BlackStartX.GestureManager.Editor.Lib;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
@@ -342,7 +343,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             if (!Module.PoseMode) return;
             using (new GmgLayoutHelper.GuiBackground(Color.yellow))
             using (new GUILayout.HorizontalScope(GestureManagerStyles.EmoteError))
-                GUILayout.Label("You are in Pose-Mode!\n\nYou can pose your avatar but the animations of your bones are disabled!", GestureManagerStyles.SubHeader);
+                GUILayout.Label("You are in Pose-Mode!\n\nYou can pose your avatar but the animations of your bones are disabled!", GestureManagerStyles.Centered);
         }
 
         public void Set(VRCExpressionsMenu menu)

@@ -1,4 +1,5 @@
 ﻿#if VRC_SDK_VRCSDK3
+using BlackStartX.GestureManager.Library.VisualElements;
 using BlackStartX.GestureManager.Runtime.VisualElements;
 using JetBrains.Annotations;
 using UnityEngine;

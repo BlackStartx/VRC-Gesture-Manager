@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
-using BlackStartX.GestureManager.Runtime.Extra;
+using BlackStartX.GestureManager.Data;
+using BlackStartX.GestureManager.Modules;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace BlackStartX.GestureManager
 {
     public class GestureManager : MonoBehaviour
     {
+        public const string Version = "Gesture Manager 3.8";
         public static readonly Dictionary<GameObject, ModuleBase> ControlledAvatars = new Dictionary<GameObject, ModuleBase>();
         public static List<ModuleBase> LastCheckedActiveModules = new List<ModuleBase>();
         public static bool InWebClientRequest;
@@ -14,6 +17,7 @@ namespace BlackStartX.GestureManager
         private bool _drag;
 
         public ModuleBase Module;
+        public ModuleSettings settings;
 
         private void OnDisable() => UnlinkModule();
 
@@ -41,24 +45,22 @@ namespace BlackStartX.GestureManager
 
         public void SetDrag(bool drag) => _drag = drag;
 
-        public void UnlinkModule() => SetModule(null);
-
-        public void SetModule(ModuleBase module)
+        public void UnlinkModule()
         {
-            if (Module != null)
-            {
-                Module.Unlink();
-                Module.Active = false;
-                ControlledAvatars.Remove(Module.Avatar);
-            }
-
-            Module = module;
-            Module?.Avatar.transform.ApplyTo(transform);
             if (Module == null) return;
+            Module.Disconnect();
+            Module = null;
+        }
 
-            Module.Active = true;
-            Module.InitForAvatar();
-            ControlledAvatars[module.Avatar] = module;
+        public void SetModule([NotNull] ModuleBase module)
+        {
+            if (!module.IsValidDesc()) return;
+
+            Module?.Disconnect();
+            Module = module;
+            Module.Avatar.transform.ApplyTo(transform);
+
+            Module.Connect(settings);
             _managerTransform = new TransformData(transform);
         }
     }

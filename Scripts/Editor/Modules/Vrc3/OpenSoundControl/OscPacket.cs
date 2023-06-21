@@ -272,7 +272,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
                             currentList = objectArray;
                             i = 0;
                             continue;
-                        default: throw new Exception("Unable to transmit values of type " + currentList[i].GetType());
+                        default: throw new Exception($"Unable to transmit values of type {currentList[i].GetType()}");
                     }
 
                     i++;

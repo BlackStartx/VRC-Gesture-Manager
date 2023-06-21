@@ -3,11 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BlackStartX.GestureManager.Editor.Data;
 using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.Cache;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using UnityEditor;
 using UnityEngine;
-using VRC.Core;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
 {
@@ -15,9 +16,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
     {
         private readonly ModuleVrc3 _module;
 
-        private PipelineManager Pipeline => _module.Avatar.GetComponent<PipelineManager>();
-        private static string LocalLow => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low";
-        private static string VrcDirectory => Path.Combine(LocalLow, "VRChat", "VRChat");
+        private static string VrcDirectory => GestureManagerSettings.VrcDirectory;
         private static string OscDirectory => Path.Combine(VrcDirectory, "OSC");
 
         public bool Stable => !Loaded || _fileProblem == null && _userProblem == null && _fileExist;
@@ -54,16 +53,19 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
 
         private string TryLoadUsers()
         {
-            if (string.IsNullOrEmpty(Pipeline.blueprintId)) return "The current avatar doesn't have a blueprint ID.";
+            if (string.IsNullOrEmpty(_module.Pipeline.blueprintId)) return "The current avatar doesn't have a blueprint ID.";
             if (!Directory.Exists(VrcDirectory)) return "VRChat's directory cannot be found.";
             if (!Directory.Exists(OscDirectory)) return "VRChat's OSC directory cannot be found.";
             _users = Directory.GetDirectories(OscDirectory).Select(Path.GetFileName).ToArray();
+            var vString = GestureManagerSettings.UserID(_module.Settings.userIndex);
+            _selectedUser = Array.IndexOf(_users, vString);
             return _users.Length == 0 ? "No users found in VRChat's OSC Directory." : null;
         }
 
         private string TryLoadFile()
         {
-            _fileNameString = Pipeline.blueprintId + ".json";
+            if (_selectedUser == -1) return "No default user found.";
+            _fileNameString = $"{_module.Pipeline.blueprintId}.json";
             _filePathString = Path.Combine(OscDirectory, _users[_selectedUser], "Avatars", _fileNameString);
             return !File.Exists(_filePathString) ? "OSC settings for the avatar cannot be found in this user folder." : null;
         }
@@ -96,15 +98,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 GUILayout.Space(10);
-                GUILayout.Label($"{_fileNameString}", GestureManagerStyles.SubHeader);
+                GUILayout.Label($"{_fileNameString}", GestureManagerStyles.Centered);
                 GUILayout.Space(10);
                 using (new GUILayout.HorizontalScope())
+                using (new GmgLayoutHelper.FlexibleScope())
                 {
-                    GUILayout.FlexibleSpace();
                     if (GmgLayoutHelper.DebugButton("Open in text editor!")) EditorUtility.OpenWithDefaultApp(_filePathString);
                     GUILayout.FlexibleSpace();
                     if (GmgLayoutHelper.DebugButton("Show in Explorer")) EditorUtility.RevealInFinder(_filePathString);
-                    GUILayout.FlexibleSpace();
                 }
 
                 GUILayout.Space(15);
@@ -213,44 +214,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
         {
             internal readonly Dictionary<string, (AnimatorControllerParameterType type, Action<IList<object>> execute)> Input = new Dictionary<string, (AnimatorControllerParameterType type, Action<IList<object>> execute)>();
             internal readonly Dictionary<string, (string address, AnimatorControllerParameterType type)> Output = new Dictionary<string, (string address, AnimatorControllerParameterType type)>();
-        }
-
-        [Serializable]
-        public class OscFile
-        {
-            public Parameter[] parameters;
-
-            public IEnumerable<Parameter> InputParameters => parameters.Where(parameter => parameter.input.address != null).ToList();
-            public IEnumerable<Parameter> OutputParameters => parameters.Where(parameter => parameter.output.address != null).ToList();
-        }
-
-        [Serializable]
-        public struct Parameter
-        {
-            public string name;
-            public Data input;
-            public Data output;
-        }
-
-        [Serializable]
-        public struct Data
-        {
-            public string address;
-            public string type;
-
-            private AnimatorControllerParameterType? _type;
-            internal AnimatorControllerParameterType Type => (_type ?? (_type = FetchType())).Value;
-
-            public AnimatorControllerParameterType FetchType()
-            {
-                switch (type)
-                {
-                    case "Int": return AnimatorControllerParameterType.Int;
-                    case "Bool": return AnimatorControllerParameterType.Bool;
-                    case "Float": return AnimatorControllerParameterType.Float;
-                    default: return AnimatorControllerParameterType.Float;
-                }
-            }
         }
     }
 }

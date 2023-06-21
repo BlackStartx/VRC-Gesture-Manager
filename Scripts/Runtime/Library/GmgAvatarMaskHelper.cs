@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace BlackStartX.GestureManager.Runtime
+namespace BlackStartX.GestureManager.Library
 {
     public static class GmgAvatarMaskHelper
     {

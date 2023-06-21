@@ -376,7 +376,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             return from paramName in GetParams(GetMenus(menu))
                 let isDefined = string.IsNullOrEmpty(paramName) || param.FindParameter(paramName) != null
                 where !isDefined
-                select "Menu uses a parameter that is not defined: " + paramName;
+                select $"Menu uses a parameter that is not defined: {paramName}";
         }
 
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]

@@ -1,6 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System.Collections.Generic;
-using BlackStartX.GestureManager.Runtime;
+using BlackStartX.GestureManager.Library;
 using UnityEditor.Animations;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;

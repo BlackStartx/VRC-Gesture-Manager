@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace BlackStartX.GestureManager.Runtime
+namespace BlackStartX.GestureManager.Library
 {
     public static class GmgVisualMesh
     {

@@ -1,4 +1,4 @@
-﻿using BlackStartX.GestureManager.Runtime.Extra;
+﻿using BlackStartX.GestureManager.Data;
 using GmgAvatarDescriptor =
 #if VRC_SDK_VRCSDK2 || VRC_SDK_VRCSDK3
     VRC.SDKBase.VRC_AvatarDescriptor;

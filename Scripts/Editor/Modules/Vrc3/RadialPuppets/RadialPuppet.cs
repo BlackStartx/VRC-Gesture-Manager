@@ -33,7 +33,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
         {
             var intValue = RadialMenuUtility.RadialPercentage(value, out var cValue);
             _progress.Progress = value;
-            _text.text = intValue + "%";
+            _text.text = $"{intValue}%";
             _arrow.transform.rotation = Quaternion.Euler(0, 0, cValue * 360f);
         }
 

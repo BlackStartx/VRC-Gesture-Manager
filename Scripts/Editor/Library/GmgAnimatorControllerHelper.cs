@@ -2,7 +2,7 @@
 using UnityEditor.Animations;
 using UnityEngine;
 
-namespace BlackStartX.GestureManager.Editor.Lib
+namespace BlackStartX.GestureManager.Editor.Library
 {
     public static class GmgAnimatorControllerHelper
     {

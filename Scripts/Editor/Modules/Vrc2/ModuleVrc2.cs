@@ -3,13 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using BlackStartX.GestureManager.Data;
+using BlackStartX.GestureManager.Editor.Data;
 using BlackStartX.GestureManager.Editor.Lib;
-using BlackStartX.GestureManager.Runtime.Extra;
+using BlackStartX.GestureManager.Editor.Library;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VRCSDK2;
-using GmData = BlackStartX.GestureManager.Editor.GestureManagerStyles.Data;
+using GmData = BlackStartX.GestureManager.Editor.Data.GestureManagerStyles.Data;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
 {
@@ -43,8 +45,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
         private static GUIStyle _guiGreenButton;
         private static GUIStyle GuiGreenButton => _guiGreenButton ?? (_guiGreenButton = Ggb(new GUIStyleState { textColor = Color.green }));
         private static GUIStyle Ggb(GUIStyleState state) => new GUIStyle(GUI.skin.button) { active = state, normal = state, hover = state, fixedWidth = 100 };
-        private RuntimeAnimatorController StandingControllerPreset => _standingControllerPreset ? _standingControllerPreset : _standingControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/StandingEmoteTestingTemplate");
-        private RuntimeAnimatorController SeatedControllerPreset => _seatedControllerPreset ? _seatedControllerPreset : _seatedControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/SeatedEmoteTestingTemplate");
+        private RuntimeAnimatorController StandingControllerPreset => !_standingControllerPreset ? _standingControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/StandingEmoteTestingTemplate") : _standingControllerPreset;
+        private RuntimeAnimatorController SeatedControllerPreset => !_seatedControllerPreset ? _seatedControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/SeatedEmoteTestingTemplate") : _seatedControllerPreset;
+        private bool AnimationField => !(_selectingCustomAnim = GmgLayoutHelper.ObjectField("Animation: ", _selectingCustomAnim, SetCustomAnimation));
 
         private int _controlDelay;
 
@@ -157,7 +160,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
             else if (_avatarDescriptor.CustomSittingAnims) SetupOverride(ControllerType.Seated, true);
         }
 
-        public override void Unlink()
+        protected override void Unlink()
         {
             if (!AvatarAnimator) return;
             AvatarAnimator.runtimeAnimatorController = _avatarWasUsing;
@@ -168,10 +171,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
         {
             using (new GUILayout.HorizontalScope())
             {
-                GUILayout.Label("Using Override: " + GetOverrideController().name + " [" + _usingType + "]");
-                GUI.enabled = CanSwitchController();
-                if (GUILayout.Button("Switch to " + _notUsedType.ToString().ToLower() + "!")) SwitchType();
-                GUI.enabled = true;
+                GUILayout.Label($"Using Override: {GetOverrideController().name} [{_usingType}]");
+                using (new GmgLayoutHelper.GuiEnabled(CanSwitchController()))
+                    if (GUILayout.Button($"Switch to {_notUsedType.ToString().ToLower()}!"))
+                        SwitchType();
             }
         }
 
@@ -224,19 +227,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
                 {
                     GUILayout.Label("Force animation.", GestureManagerStyles.GuiHandTitle);
                     using (new GUILayout.HorizontalScope())
+                    using (new GmgLayoutHelper.GuiEnabled(!AnimationField))
                     {
-                        if (!(_selectingCustomAnim = GmgLayoutHelper.ObjectField("Animation: ", _selectingCustomAnim, SetCustomAnimation))) GUI.enabled = false;
                         if (!PlayingCustomAnimation || _emote != 0)
                         {
-                            if (GUILayout.Button("Play", _options))
-                            {
-                                _emote = 0;
-                                PlayCustomAnimation(_selectingCustomAnim);
-                            }
+                            if (!GUILayout.Button("Play", _options)) return;
+                            _emote = 0;
+                            PlayCustomAnimation(_selectingCustomAnim);
                         }
                         else if (GUILayout.Button("Stop", GuiGreenButton)) StopCustomAnimation();
-
-                        GUI.enabled = true;
                     }
                 })
             });
@@ -262,7 +261,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
         protected override List<string> CheckWarnings()
         {
             var warningList = base.CheckWarnings();
-            if (AvatarAnimator != null && !AvatarAnimator.isHuman) warningList.Add("- The avatar has no humanoid rig!\n(Simulation could not match in-app)");
+            if (!AvatarAnimator) return warningList;
+            if (!AvatarAnimator.isHuman) warningList.Add("- The avatar has no humanoid rig!\n(Simulation could not match in-game)");
             return warningList;
         }
 
@@ -358,9 +358,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
         private void RequestGestureDuplication(int gestureIndex)
         {
             var fullGestureString = GetGestureTextNameByIndex(gestureIndex);
-            var nameString = "[" + fullGestureString.Substring(fullGestureString.IndexOf("]", StringComparison.Ordinal) + 2) + "]";
+            var nameString = $"[{fullGestureString.Substring(fullGestureString.IndexOf("]", StringComparison.Ordinal) + 2)}]";
             var newAnimation = GmgAnimationHelper.CloneAnimationAsset(GetFinalGestureByIndex(gestureIndex));
-            var pathString = EditorUtility.SaveFilePanelInProject("Creating Gesture: " + fullGestureString, nameString + ".anim", "anim", "Hi (?)");
+            var pathString = EditorUtility.SaveFilePanelInProject($"Creating Gesture: {fullGestureString}", $"{nameString}.anim", "anim", "Hi (?)");
 
             if (pathString.Length == 0) return;
 

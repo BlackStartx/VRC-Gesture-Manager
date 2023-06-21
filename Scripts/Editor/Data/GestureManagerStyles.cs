@@ -1,7 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-namespace BlackStartX.GestureManager.Editor
+namespace BlackStartX.GestureManager.Editor.Data
 {
     public static class GestureManagerStyles
     {
@@ -11,17 +11,23 @@ namespace BlackStartX.GestureManager.Editor
         private static GUIStyle _emoteError;
         private static GUIStyle _guiHandTitle;
         private static GUIStyle _guiDebugTitle;
+        private static GUIStyle _settingsText;
         private static GUIStyle _middleStyle;
+        private static GUIStyle _middleError;
         private static GUIStyle _plusButton;
         private static GUIStyle _header;
         private static GUIStyle _toolHeader;
+        private static GUIStyle _toolSubHeader;
         private static GUIStyle _headerButton;
-        private static GUIStyle _subHeader;
         private static GUIStyle _textError;
         private static GUIStyle _textWarningHeader;
         private static GUIStyle _textWarning;
         private static GUIStyle _titleStyle;
 
+        private static GUIStyle _centered;
+
+        private static Texture _gearTexture;
+        private static Texture _backTexture;
         private static Texture _plusTextureLgt;
         private static Texture _plusTexturePro;
 
@@ -29,7 +35,7 @@ namespace BlackStartX.GestureManager.Editor
         {
             fontSize = 15,
             fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.UpperCenter,
+            alignment = TextAnchor.MiddleCenter,
             padding = new RectOffset(10, 10, 10, 10)
         });
 
@@ -37,7 +43,7 @@ namespace BlackStartX.GestureManager.Editor
         {
             fontSize = 12,
             fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.UpperCenter,
+            alignment = TextAnchor.MiddleCenter,
             padding = new RectOffset(10, 10, 10, 10)
         });
 
@@ -45,14 +51,30 @@ namespace BlackStartX.GestureManager.Editor
         {
             fontSize = 12,
             fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.UpperCenter
+            alignment = TextAnchor.MiddleCenter
         });
 
         internal static GUIStyle MiddleStyle => _middleStyle ?? (_middleStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 12,
             fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.UpperCenter,
+            alignment = TextAnchor.MiddleCenter,
+            padding = new RectOffset(5, 5, 5, 5)
+        });
+
+        internal static GUIStyle SettingsText => _settingsText ?? (_settingsText = new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            padding = new RectOffset(5, 5, 5, 12)
+        });
+
+        internal static GUIStyle MiddleError => _middleError ?? (_middleError = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 12,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            active = { textColor = Color.red },
+            normal = { textColor = Color.red },
             padding = new RectOffset(5, 5, 5, 5)
         });
 
@@ -101,6 +123,13 @@ namespace BlackStartX.GestureManager.Editor
             padding = new RectOffset(10, 10, 5, 5)
         });
 
+        internal static GUIStyle ToolSubHeader => _toolSubHeader ?? (_toolSubHeader = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 15,
+            alignment = TextAnchor.MiddleCenter,
+            padding = new RectOffset(10, 10, 10, 5)
+        });
+
         public static GUIStyle HeaderButton => _headerButton ?? (_headerButton = new GUIStyle(GUI.skin.button)
         {
             fontStyle = FontStyle.Bold,
@@ -112,16 +141,18 @@ namespace BlackStartX.GestureManager.Editor
         {
             fontSize = 11,
             fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.UpperRight,
+            alignment = TextAnchor.MiddleRight,
             padding = new RectOffset(5, 5, 5, 5)
         });
 
-        internal static GUIStyle SubHeader => _subHeader ?? (_subHeader = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
+        internal static GUIStyle Centered => _centered ?? (_centered = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
         internal static GUIStyle PlusButton => _plusButton ?? (_plusButton = new GUIStyle { margin = new RectOffset(0, 20, 3, 3) });
 
+        internal static Texture GearTexture => !_gearTexture ? _gearTexture = EditorGUIUtility.IconContent("d_Settings").image : _gearTexture;
+        internal static Texture BackTexture => !_backTexture ? _backTexture = EditorGUIUtility.IconContent("d_tab_prev").image : _backTexture;
         internal static Texture PlusTexture => EditorGUIUtility.isProSkin ? PlusTexturePro : PlusTextureLgt;
-        private static Texture PlusTextureLgt => _plusTextureLgt ? _plusTextureLgt : _plusTextureLgt = Resources.Load<Texture>("Gm/BSX_GM_PlusSign");
-        private static Texture PlusTexturePro => _plusTexturePro ? _plusTexturePro : _plusTexturePro = Resources.Load<Texture>("Gm/BSX_GM_PlusSign[Pro]");
+        private static Texture PlusTextureLgt => !_plusTextureLgt ? _plusTextureLgt = Resources.Load<Texture>("Gm/BSX_GM_PlusSign") : _plusTextureLgt;
+        private static Texture PlusTexturePro => !_plusTexturePro ? _plusTexturePro = Resources.Load<Texture>("Gm/BSX_GM_PlusSign[Pro]") : _plusTexturePro;
 
         public static class Data
         {

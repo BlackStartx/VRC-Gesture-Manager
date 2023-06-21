@@ -13,7 +13,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
         internal readonly Animator Animator;
         internal readonly GameObject Avatar;
 
-        public string ExitDummyText => "Exit " + ModeName + "-Mode";
+        public string ExitDummyText => $"Exit {ModeName}-Mode";
 
         protected Vrc3DummyMode(ModuleVrc3 module, string prefix, bool keepPose = false)
         {
@@ -26,7 +26,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
             if (!Avatar) Avatar = Object.Instantiate(Module.Avatar);
             if (keepPose) Module.ForgetAvatar();
             Animator = VRC.Core.ExtensionMethods.GetOrAddComponent<Animator>(Avatar);
-            Avatar.name = Module.Avatar.name + " " + prefix;
+            Avatar.name = $"{Module.Avatar.name} {prefix}";
             Module.Avatar.SetActive(false);
             Module.Avatar.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
             EditorApplication.DirtyHierarchyWindowSorting();
