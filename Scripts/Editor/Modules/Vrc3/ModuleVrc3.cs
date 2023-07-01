@@ -683,7 +683,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             if (!File.Exists(fileString)) return ("Unable to load local stored parameters. (File doesn't exist)", null, null);
             var file = AvatarFile.LoadData(File.ReadAllText(fileString));
             if (file == null) return ("Unable to load local stored parameters. (JSON format error)", null, null);
-            foreach (var parameters in file.animationParameters) GetParam(parameters.name).InternalSet(parameters.value);
+            foreach (var parameters in file.animationParameters) GetParam(parameters.name)?.InternalSet(parameters.value);
             return null;
         }
 
