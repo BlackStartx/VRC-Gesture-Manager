@@ -48,7 +48,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar
             var isFullScreen = Screen.width > 1279;
             if (!isFullScreen) _source.DebugToolBar = Static.DebugToolbar(_source.DebugToolBar);
             _scroll = GUILayout.BeginScrollView(_scroll);
-            _source.DebugContext(rootVisualElement, null, 0, Screen.width - 60, isFullScreen);
+            _source.DebugContext(rootVisualElement, null, 0, EditorGUIUtility.currentViewWidth - 60, isFullScreen);
             GUILayout.EndScrollView();
         }
 

@@ -430,7 +430,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                     return;
             }
 
-            DebugContext(root, holder, menu.DebugToolBar.Selected, Screen.width - 60, false);
+            DebugContext(root, holder, menu.DebugToolBar.Selected, EditorGUIUtility.currentViewWidth - 60, false);
             GUILayout.Space(4);
             GmgLayoutHelper.Divisor(1);
         }
