@@ -45,7 +45,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar
         private void DebugGUI()
         {
             GUILayout.Label("Gesture Manager - Avatar Debug Window", GestureManagerStyles.Header);
-            var isFullScreen = Screen.width > 1279;
+            var isFullScreen = EditorGUIUtility.currentViewWidth > 1279;
             if (!isFullScreen) _source.DebugToolBar = Static.DebugToolbar(_source.DebugToolBar);
             _scroll = GUILayout.BeginScrollView(_scroll);
             _source.DebugContext(rootVisualElement, null, 0, EditorGUIUtility.currentViewWidth - 60, isFullScreen);
