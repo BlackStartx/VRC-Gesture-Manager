@@ -163,7 +163,7 @@ namespace BlackStartX.GestureManager.Editor
                     {
                         using (new GUILayout.HorizontalScope())
                         {
-                            GUILayout.Label($"{module.Name}:", GUILayout.Width(Screen.width - 131));
+                            GUILayout.Label($"{module.Name}:", GUILayout.Width(EditorGUIUtility.currentViewWidth - 133));
                             if (GUILayout.Button("Set As Avatar", GUILayout.Width(100))) Manager.SetModule(module);
                         }
 

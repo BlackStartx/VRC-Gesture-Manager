@@ -527,7 +527,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
                 public void Render()
                 {
-                    var option = GUILayout.Width(Math.Min((Screen.width - 64) / 3f, 115));
+                    var option = GUILayout.Width(Math.Min((EditorGUIUtility.currentViewWidth - 64) / 3f, 115));
                     using (new GUILayout.HorizontalScope())
                     {
                         GUILayout.Label($"Last: {_last:F5}", option);

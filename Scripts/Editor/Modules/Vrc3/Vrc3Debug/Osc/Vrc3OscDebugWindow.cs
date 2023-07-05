@@ -38,11 +38,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Osc
 
         private void DebugGUI()
         {
-            var isFullScreen = Screen.width > 1279;
+            var isFullScreen = EditorGUIUtility.currentViewWidth > 1279;
 
             _scroll = GUILayout.BeginScrollView(_scroll);
             GUILayout.Label("Gesture Manager - Osc Debug Window", GestureManagerStyles.Header);
-            _source.DebugContext(rootVisualElement, Holder, 1, Screen.width - 60, isFullScreen);
+            _source.DebugContext(rootVisualElement, Holder, 1, EditorGUIUtility.currentViewWidth - 60, isFullScreen);
             GUILayout.Space(25);
             GUILayout.EndScrollView();
 
