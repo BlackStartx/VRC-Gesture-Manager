@@ -21,7 +21,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
             module.DummyMode?.StopExecution();
             module.DummyMode = this;
             Module = module;
-            Module.PoseMode = false;
+            Module.AvatarTools.PoseAvatar.Disable(Module);
             if (!keepPose) Module.ForgetAvatar();
             if (!Avatar) Avatar = Object.Instantiate(Module.Avatar);
             if (keepPose) Module.ForgetAvatar();

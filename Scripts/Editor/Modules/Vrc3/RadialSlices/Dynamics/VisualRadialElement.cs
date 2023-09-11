@@ -5,18 +5,17 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices.Dynamics
 {
     public class VisualRadialElement : VisualElement
     {
+        private readonly RadialSliceControl.RadialSettings _settings;
         private readonly TextElement _text;
 
-        public float Value
-        {
-            set => _text.text = $"{RadialMenuUtility.RadialPercentage(value)}%";
-        }
-
-        public VisualRadialElement(float value)
+        public VisualRadialElement(RadialSliceControl.RadialSettings settings, float value)
         {
             RadialMenuUtility.Prefabs.SetRadialText(this, out _text, 15);
-            Value = value;
+            _settings = settings;
+            SetValue(value);
         }
+
+        public void SetValue(float value) => _text.text = _settings.Display(value);
     }
 }
 #endif

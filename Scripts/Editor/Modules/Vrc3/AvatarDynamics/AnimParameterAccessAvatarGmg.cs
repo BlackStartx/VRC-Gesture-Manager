@@ -19,19 +19,19 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.AvatarDynamics
 
         public bool boolVal
         {
-            get => (Param?.Get() ?? 0f) > 0.5f;
+            get => Param?.BoolValue() ?? false;
             set => Param?.Set(_module, value);
         }
 
         public int intVal
         {
-            get => (int)(Param?.Get() ?? 0f);
+            get => Param?.IntValue() ?? 0;
             set => Param?.Set(_module, value);
         }
 
         public float floatVal
         {
-            get => Param?.Get() ?? 0f;
+            get => Param?.FloatValue() ?? 0f;
             set => Param?.Set(_module, value);
         }
     }

@@ -22,7 +22,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public static class RadialMenuUtility
     {
+#if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
+        internal static Vector2 DataVector = new Vector2(-50, -50);
+#else                     // TEMP FIX FOR UNITY 2022 pivot change~
         internal static Vector2 DataVector = new Vector2(-50, -60);
+#endif                    // TEMP FIX FOR UNITY 2022 pivot change~
 
         public static class Colors
         {
@@ -78,6 +82,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                     {
                         width = size - 2,
                         height = 2,
+#if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
+                        transformOrigin =  new StyleTransformOrigin(),
+#endif                    // TEMP FIX FOR UNITY 2022 pivot change~
                         backgroundColor = Colors.CustomBorder,
                         position = UIEPosition.Absolute
                     }
@@ -144,7 +151,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                         width = width,
                         height = height,
                         left = -width / 2,
+#if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
+                        top = -height / 2,
+                        transformOrigin =  new StyleTransformOrigin(),
+#else                     // TEMP FIX FOR UNITY 2022 pivot change~
                         top = -height / 2 - 10,
+#endif                    // TEMP FIX FOR UNITY 2022 pivot change~
                         backgroundColor = Color.clear,
                         position = UIEPosition.Absolute,
                         alignItems = Align.Center,
@@ -221,7 +233,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                         borderBottomLeftRadius = 15,
                         borderBottomRightRadius = 15,
                         left = 60,
+#if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
+                        top = 43,
+#else                     // TEMP FIX FOR UNITY 2022 pivot change~
                         top = 50,
+#endif                    // TEMP FIX FOR UNITY 2022 pivot change~
                         backgroundColor = Colors.SubIcon,
                         position = UIEPosition.Absolute,
                         justifyContent = Justify.Center,
@@ -252,15 +268,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 return new RadialSliceControl(menu, name, null, ControlType.Toggle, activeValue, param, Array.Empty<Vrc3Param>(), null, null);
             }
 
-            public static RadialSliceBase RadialFromParam(RadialMenu menu, string name, Vrc3Param param, float amplify = 1f)
+            public static RadialSliceBase RadialFromParam(RadialMenu menu, string name, Vrc3Param param, Texture2D icon = null, float amplify = 1f, RadialSliceControl.RadialSettings settings = null)
             {
-                return new RadialSliceControl(menu, name, null, ControlType.RadialPuppet, 1f, null, new[] { param }, null, null, amplify);
+                return new RadialSliceControl(menu, name, icon, ControlType.RadialPuppet, 1f, null, new[] { param }, null, null, amplify, settings);
             }
 
-            public static RadialSliceControl AxisFromParams(RadialMenu menu, string name, Vrc3Param xParam, Vrc3Param yParam, float amplify = 1f)
+            public static RadialSliceControl AxisFromParams(RadialMenu menu, string name, Vrc3Param xParam, Vrc3Param yParam, Texture2D icon = null, float amplify = 1f)
             {
                 var subLabels = new VRCExpressionsMenu.Control.Label[4];
-                return new RadialSliceControl(menu, name, null, ControlType.TwoAxisPuppet, 1f, null, new[] { xParam, yParam }, null, subLabels, amplify);
+                return new RadialSliceControl(menu, name, icon, ControlType.TwoAxisPuppet, 1f, null, new[] { xParam, yParam }, null, subLabels, amplify);
             }
         }
 
@@ -322,17 +338,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             return new Vrc3ParamExternal(name, type);
         }
 
-        public static int RadialPercentage(float value)
-        {
-            return RadialPercentage(value, out _);
-        }
-
-        public static int RadialPercentage(float value, out float clamp)
-        {
-            clamp = Mathf.Clamp(value, 0f, 1f);
-            return (int)Math.Round(clamp * 100, MidpointRounding.ToEven);
-        }
-
         private static void AppendMenus(VRCExpressionsMenu menu, ICollection<VRCExpressionsMenu> menus)
         {
             if (!menu || menus.Contains(menu)) return;
@@ -380,10 +385,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         }
 
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
-        public static bool Is(float get, float value)
-        {
-            return get == value;
-        }
+        public static bool Is(float floatValue, float value) => floatValue == value;
     }
 }
 #endif

@@ -16,9 +16,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
             _module = module;
         }
 
-        protected override float GetValue() => _tool.Active ? 1f : 0f;
-
-        internal override float GetSubValue(int index) => 0f;
+        protected override float FloatValue() => _tool.Active ? 1f : 0f;
 
         public override void OnClickStart()
         {

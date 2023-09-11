@@ -14,7 +14,7 @@ namespace BlackStartX.GestureManager.Library.VisualElements
     {
         private static readonly Regex RegexStringPattern = new Regex("(.*?<[^<>]+>|.+)", RegexOptions.Compiled);
         private static readonly Regex RegexTokenPattern = new Regex("<[^<>]+>", RegexOptions.Compiled);
-        private static readonly Regex RegexDigitPattern = new Regex("[^\\d]+", RegexOptions.Compiled);
+        private static readonly Regex RegexDigitPattern = new Regex(@"\D+", RegexOptions.Compiled);
         private static readonly char[] NumSeparator = { 'e', 'p', ',', '%' };
         private static readonly char[] Separator = { ' ', '=' };
 
@@ -24,126 +24,12 @@ namespace BlackStartX.GestureManager.Library.VisualElements
         private const float DefaultScale = 0.5f;
 
         private string _text;
-
         private Data _data;
 
         private readonly VisualElement _textHolder;
-        private StyleColor ColorStyle() => _data.ColorStyle(style.color);
-        private StyleLength FontSize() => _data.SizeStyle(style.fontSize);
 
         private float Font => style.fontSize.value.value;
         private This This => this; // this
-
-        private class Data
-        {
-            private static Dictionary<string, Color> TextMeshProColorNames => new Dictionary<string, Color>
-            {
-                { "red", Color.red },
-                { "blue", Color.blue },
-                { "white", Color.white },
-                { "black", Color.black },
-                { "green", Color.green },
-                { "orange", new Color(1f, 0.5f, 0f) },
-                { "yellow", new Color(1f, 0.92f, 0f) },
-                { "purple", new Color(0.63f, 0.13f, 0.94f) }
-            };
-
-            public FontStyle FontStyle => Italic == 0 && Bold == 0 ? FontStyle.Normal : Italic == 0 ? FontStyle.Bold : Bold == 0 ? FontStyle.Italic : FontStyle.BoldAndItalic;
-            public StyleColor ColorStyle(StyleColor fallback) => PeekOrDefault(TextColor) ?? fallback;
-            public StyleLength SizeStyle(StyleLength fallback) => PeekOrDefault(Size) ?? fallback;
-            public StyleColor MarkStyle => new StyleColor(PeekOrDefault(Mark) ?? Color.clear);
-
-            internal readonly Stack<StyleLength?> Unsupported = new Stack<StyleLength?>();
-            internal readonly Stack<StyleLength?> Size = new Stack<StyleLength?>();
-            internal readonly Stack<Color?> TextColor = new Stack<Color?>();
-            internal readonly Stack<Color?> Mark = new Stack<Color?>();
-            internal int Italic;
-            internal int Bold;
-
-            private static bool HandleList<T>(Stack<T> list, bool close, string attribute, This element, Func<Stack<T>, string, This, bool> tryAdd)
-            {
-                if (!close) return tryAdd(list, attribute, element);
-                if (list.Count > 0) list.Pop();
-                return true;
-            }
-
-            private static T PeekOrDefault<T>(Stack<T> stack, T defaultValue = default) => stack.Count > 0 ? stack.Peek() : defaultValue;
-
-            public static bool HandleColorList(Stack<Color?> list, bool close, string attribute, This element) => HandleList(list, close, attribute, element, TryAddColor);
-
-            public static bool HandleStyleLengthList(Stack<StyleLength?> list, bool close, string attribute, This element) => HandleList(list, close, attribute, element, TryAddStyleLength);
-
-            private static bool TryAddStyleLength(Stack<StyleLength?> list, string attribute, This element)
-            {
-                if (string.IsNullOrEmpty(attribute) || !TmpNumberAttribute(attribute, element, out var length)) return false;
-                list.Push(length);
-                return true;
-            }
-
-            private static bool TryAddColor(Stack<Color?> list, string attribute, This element)
-            {
-                if (string.IsNullOrEmpty(attribute) || !ColorOf(attribute, out var color)) return false;
-                list.Push(color);
-                return true;
-            }
-
-            /*
-             * The value of the TMP attribute is strangely calculated.
-             * 
-             * It seems to be parsed until certain characters are met, choosing also the type of the value.
-             * Those characters are:
-             * - e (The parse will stop and the value will be considered em)
-             * - p (The parse will stop and the value will be considered px)
-             * - , (The parse will stop and the value will be considered numerical)
-             * - % (The parse will stop and the value will be considered a percentage)
-             * 
-             * Also all the other characters, if not numerical, seems to be ignored.
-             * 
-             * Consecutive decimal values seems to... sum up .-. (I.e: 10.9.9 is equal to 10 + 0.9 + 0.9)
-             */
-            private static bool TmpNumberAttribute(string attribute, This element, out StyleLength size, char separator = '.', float value = 0f)
-            {
-                size = new StyleLength(value);
-                var sString = GetNumString(attribute);
-                var tChar = sString.Length < attribute.Length ? attribute[sString.Length] : ',';
-                value = TmpNumberFetch(sString.Split(separator).Select(TmpNumberClean).Where(vString => !string.IsNullOrEmpty(vString)));
-                switch (tChar)
-                {
-                    case ',':
-                        value *= DefaultScale;
-                        size = new StyleLength(value);
-                        return true;
-                    case 'e':
-                        value *= element.Font;
-                        size = new StyleLength(value);
-                        return true;
-                    case 'p':
-                        var vRin = new Length(value, LengthUnit.Pixel);
-                        size = new StyleLength(vRin);
-                        return true;
-                    case '%':
-                        var vLen = new Length(value, LengthUnit.Percent);
-                        size = new StyleLength(vLen);
-                        return true;
-                    default: return false;
-                }
-            }
-
-            private static float TmpNumberFetch(IEnumerable<string> s)
-            {
-                // ReSharper disable PossibleMultipleEnumeration
-                return s.Any() ? TmpNumberParse(s.First()) + s.Skip(1).Select(sString => $"0.{sString}").Sum(TmpNumberParse) : 0;
-                // ReSharper restore PossibleMultipleEnumeration
-            }
-
-            private static string TmpNumberClean(string input) => NumberClean(input);
-
-            private static float TmpNumberParse(string number) => float.Parse(number, CultureInfo.InvariantCulture);
-
-            private static string NumberClean(string input, string replacement = "") => RegexDigitPattern.Replace(input, replacement);
-
-            private static bool ColorOf(string attribute, out Color color) => TextMeshProColorNames.TryGetValue(attribute, out color) || ColorUtility.TryParseHtmlString(attribute, out color);
-        }
 
         public string Text
         {
@@ -161,7 +47,7 @@ namespace BlackStartX.GestureManager.Library.VisualElements
             {
                 if (style.color == value) return;
                 style.color = new StyleColor(value);
-                SetUp(_text);
+                foreach (var element in _data.ParentalColors) element.style.color = new StyleColor(value);
             }
         }
 
@@ -178,18 +64,26 @@ namespace BlackStartX.GestureManager.Library.VisualElements
         {
             _data = new Data();
             foreach (var _ in Enumerable.Range(0, _textHolder.childCount)) _textHolder.RemoveAt(0);
-            foreach (var splitString in RegexStringPattern.Matches(input).OfType<Match>().Select(match => match.Value)) AddToken(splitString);
+            foreach (var ttString in RegexStringPattern.Matches(input).OfType<Match>().Select(match => match.Value)) TextToken(ttString);
         }
 
-        private void AddToken(string tokenInput, float v = 100f)
+        private void TextToken(string textToken)
         {
-            var child = new TextElement
-            {
-                style = { unityFontStyleAndWeight = _data.FontStyle, color = ColorStyle(), backgroundColor = _data.MarkStyle, fontSize = FontSize() },
-                pickingMode = PickingMode.Ignore, text = RegexTokenPattern.Split(tokenInput)[0] + EvaluateToken(RegexTokenPattern.Match(tokenInput).Value)
-            };
-            if (string.IsNullOrEmpty(child.text)) return;
-            child.style.width = new StyleLength(v);
+            AddText(RegexTokenPattern.Split(textToken)[0]);
+            AddText(EvaluateToken(RegexTokenPattern.Match(textToken).Value));
+        }
+
+        private void AddText(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+
+            var child = new TextElement { pickingMode = PickingMode.Ignore, text = text };
+
+            child.style.color = _data.ColorStyle(child, style.color);
+            child.style.fontSize = _data.LengthStyle(style.fontSize);
+            child.style.backgroundColor = _data.MarkStyle;
+            child.style.unityFontStyleAndWeight = new StyleEnum<FontStyle>(_data.FontStyle);
+
             _textHolder.Add(child);
         }
 
@@ -237,6 +131,126 @@ namespace BlackStartX.GestureManager.Library.VisualElements
                     return "☻";
                 default: return token;
             }
+        }
+
+        private class Data
+        {
+            internal readonly List<VisualElement> ParentalColors = new List<VisualElement>();
+
+            private static Dictionary<string, Color> TextMeshProColorNames => new Dictionary<string, Color>
+            {
+                { "red", Color.red },
+                { "blue", Color.blue },
+                { "white", Color.white },
+                { "black", Color.black },
+                { "green", Color.green },
+                { "orange", new Color(1f, 0.5f, 0f) },
+                { "yellow", new Color(1f, 0.92f, 0f) },
+                { "purple", new Color(0.63f, 0.13f, 0.94f) }
+            };
+
+            public StyleColor ColorStyle(VisualElement node, StyleColor fallback) => PeekOrDefault(TextColor) ?? Parental(ParentalColors, node, fallback);
+            public StyleLength LengthStyle(StyleLength fallback) => PeekOrDefault(Size) ?? fallback;
+
+            public FontStyle FontStyle => Italic == 0 && Bold == 0 ? FontStyle.Normal : Italic == 0 ? FontStyle.Bold : Bold == 0 ? FontStyle.Italic : FontStyle.BoldAndItalic;
+            public StyleColor MarkStyle => PeekOrDefault(Mark) ?? new StyleColor(Color.clear);
+
+            internal readonly Stack<StyleLength?> Unsupported = new Stack<StyleLength?>();
+            internal readonly Stack<StyleLength?> Size = new Stack<StyleLength?>();
+            internal readonly Stack<StyleColor?> TextColor = new Stack<StyleColor?>();
+            internal readonly Stack<StyleColor?> Mark = new Stack<StyleColor?>();
+            internal int Italic;
+            internal int Bold;
+
+            private static T Parental<T>(ICollection<VisualElement> list, VisualElement child, T fallback)
+            {
+                list.Add(child);
+                return fallback;
+            }
+
+            private static T PeekOrDefault<T>(Stack<T> stack, T defaultValue = default) => stack.Count > 0 ? stack.Peek() : defaultValue;
+
+            public static bool HandleColorList(Stack<StyleColor?> list, bool close, string attribute, This element) => HandleList(list, close, attribute, element, TryAddColor);
+
+            public static bool HandleStyleLengthList(Stack<StyleLength?> list, bool close, string attribute, This element) => HandleList(list, close, attribute, element, TryAddStyleLength);
+
+            private static bool HandleList<T>(Stack<T> list, bool close, string attribute, This element, Func<Stack<T>, string, This, bool> tryAdd)
+            {
+                if (!close) return tryAdd(list, attribute, element);
+                if (list.Count > 0) list.Pop();
+                return true;
+            }
+
+            private static bool TryAddStyleLength(Stack<StyleLength?> list, string attribute, This element)
+            {
+                if (string.IsNullOrEmpty(attribute) || !TmpNumberAttribute(attribute, element, out var length)) return false;
+                list.Push(length);
+                return true;
+            }
+
+            private static bool TryAddColor(Stack<StyleColor?> list, string attribute, This element)
+            {
+                if (string.IsNullOrEmpty(attribute) || !ColorOf(attribute, out var color)) return false;
+                list.Push(color);
+                return true;
+            }
+
+            /*
+             * The value of the TMP attribute is strangely calculated.
+             *
+             * It seems to be parsed until certain characters are met, choosing also the type of the value.
+             * Those characters are:
+             * - e (The parse will stop and the value will be considered em)
+             * - p (The parse will stop and the value will be considered px)
+             * - , (The parse will stop and the value will be considered numerical)
+             * - % (The parse will stop and the value will be considered a percentage)
+             *
+             * Also all the other characters, if not numerical, seems to be ignored.
+             *
+             * Consecutive decimal values seems to... sum up .-. (I.e: 10.9.9 is equal to 10 + 0.9 + 0.9)
+             */
+            private static bool TmpNumberAttribute(string attribute, This element, out StyleLength size, char separator = '.', float value = 0f)
+            {
+                size = new StyleLength(value);
+                var sString = GetNumString(attribute);
+                var tChar = sString.Length < attribute.Length ? attribute[sString.Length] : ',';
+                value = TmpNumberFetch(sString.Split(separator).Select(TmpNumberClean).Where(vString => !string.IsNullOrEmpty(vString)));
+                switch (tChar)
+                {
+                    case ',':
+                        value *= DefaultScale;
+                        size = new StyleLength(value);
+                        return true;
+                    case 'e':
+                        value *= element.Font;
+                        size = new StyleLength(value);
+                        return true;
+                    case 'p':
+                        var vRin = new Length(value, LengthUnit.Pixel);
+                        size = new StyleLength(vRin);
+                        return true;
+                    case '%':
+                        var vLen = new Length(value, LengthUnit.Percent);
+                        size = new StyleLength(vLen);
+                        return true;
+                    default: return false;
+                }
+            }
+
+            private static float TmpNumberFetch(IEnumerable<string> s)
+            {
+                // ReSharper disable PossibleMultipleEnumeration
+                return s.Any() ? TmpNumberParse(s.First()) + s.Skip(1).Select(sString => $"0.{sString}").Sum(TmpNumberParse) : 0;
+                // ReSharper restore PossibleMultipleEnumeration
+            }
+
+            private static string TmpNumberClean(string input) => NumberClean(input);
+
+            private static float TmpNumberParse(string number) => float.Parse(number, CultureInfo.InvariantCulture);
+
+            private static string NumberClean(string input, string replacement = "") => RegexDigitPattern.Replace(input, replacement);
+
+            private static bool ColorOf(string attribute, out Color color) => TextMeshProColorNames.TryGetValue(attribute, out color) || ColorUtility.TryParseHtmlString(attribute, out color);
         }
     }
 }

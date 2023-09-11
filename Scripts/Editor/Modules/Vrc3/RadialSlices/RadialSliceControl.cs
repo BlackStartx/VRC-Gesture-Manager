@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices.Dynamics;
 using UnityEngine;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using ControlType = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType;
@@ -11,6 +12,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
 {
     public class RadialSliceControl : RadialSliceDynamic
     {
+        internal readonly RadialSettings Settings;
+
         private readonly float? _amplify;
         private readonly RadialMenu _menu;
         private readonly ControlType _type;
@@ -18,6 +21,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
         private readonly Vrc3Param[] _subParameters;
         private readonly VRCExpressionsMenu _subMenu;
         private readonly VRCExpressionsMenu.Control.Label[] _subLabels;
+
+        private VisualRadialElement _radialElement;
 
         public RadialSliceControl(RadialMenu menu, VRCExpressionsMenu.Control control) : base(control.name, control.icon, RadialMenuUtility.GetSubIcon(control.type), RadialMenuUtility.GetDynamicType(control.type), control.value)
         {
@@ -27,9 +32,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
             _subLabels = control.labels;
             _parameter = menu.GetParam(control.parameter.name);
             _subParameters = control.subParameters == null ? Array.Empty<Vrc3Param>() : control.subParameters.Select(parameter => menu.GetParam(parameter.name)).ToArray();
+            Settings = RadialSettings.Base;
         }
 
-        public RadialSliceControl(RadialMenu menu, string name, Texture2D icon, ControlType type, float activeValue, Vrc3Param param, Vrc3Param[] subParams, VRCExpressionsMenu subMenu, VRCExpressionsMenu.Control.Label[] subLabels, float? amplify = null) : base(name, icon, RadialMenuUtility.GetSubIcon(type), RadialMenuUtility.GetDynamicType(type), activeValue)
+        public RadialSliceControl(RadialMenu menu, string name, Texture2D icon, ControlType type, float activeValue, Vrc3Param param, Vrc3Param[] subParams, VRCExpressionsMenu subMenu, VRCExpressionsMenu.Control.Label[] subLabels, float? amplify = null, RadialSettings settings = null) : base(name, icon, RadialMenuUtility.GetSubIcon(type), RadialMenuUtility.GetDynamicType(type), activeValue)
         {
             _menu = menu;
             _type = type;
@@ -38,7 +44,20 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
             _parameter = param;
             _subLabels = subLabels;
             _subParameters = subParams;
-            if (_parameter == null && _subParameters.All(vrc3Param => vrc3Param == null)) TextColor = Color.gray;
+            Settings = settings ?? RadialSettings.Base;
+        }
+
+        protected override void CreateExtra()
+        {
+            base.CreateExtra();
+            if ((_radialElement = _type == ControlType.RadialPuppet ? new VisualRadialElement(Settings, GetSubValue(0)) : null) == null) return;
+            Texture.Add(_radialElement);
+        }
+
+        protected internal override void CheckRunningUpdate()
+        {
+            base.CheckRunningUpdate();
+            _radialElement?.SetValue(GetSubValue(0));
         }
 
         public override void OnClickStart()
@@ -69,7 +88,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
                     SetValue(0);
                     break;
                 case ControlType.Toggle:
-                    if (RadialMenuUtility.Is(GetValue(), ActiveValue)) SetValue(0);
+                    if (RadialMenuUtility.Is(FloatValue(), ActiveValue)) SetValue(0);
                     else SetControlValue();
                     break;
                 case ControlType.SubMenu:
@@ -103,9 +122,67 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
 
         internal string GetSubParameterName(int index) => _subParameters[index].Name;
 
-        protected override float GetValue() => NonAmplifiedValue(_parameter?.Get() ?? 0);
+        protected override float FloatValue() => NonAmplifiedValue(_parameter?.FloatValue() ?? 0f);
 
-        internal override float GetSubValue(int index) => NonAmplifiedValue(_subParameters[index]?.Get() ?? 0);
+        internal float GetSubValue(int index) => NonAmplifiedValue(_subParameters[index]?.FloatValue() ?? 0f);
+
+        public class RadialSettings
+        {
+            private static RadialSettings _base;
+            public static RadialSettings Base => _base ?? (_base = new RadialSettings(DisplayType.Percentage, 0f, 1f, null));
+            public static RadialSettings Height(float checkpoint) => new RadialSettings(DisplayType.Meters, 0.2f, 5.0f, checkpoint);
+
+            private readonly DisplayType _type;
+
+            private readonly float _min;
+            private readonly float _gap;
+
+            public readonly float? Checkpoint;
+
+            private RadialSettings(DisplayType type, float min, float max, float? checkpoint)
+            {
+                _type = type;
+                Checkpoint = checkpoint;
+                _gap = max - (_min = min);
+            }
+
+            public string Display(float value)
+            {
+                switch (_type)
+                {
+                    case DisplayType.Meters: return $"{value:F}m";
+                    case DisplayType.Percentage: return $"{RangeFrom(value).Percentage}%";
+                    default: return null;
+                }
+            }
+
+            private enum DisplayType
+            {
+                Meters,
+                Percentage
+            }
+
+            public Range RangeFrom(float value) => new Range((value - _min) / _gap);
+
+            public float ValueFrom(Range range) => range.Value * _gap + _min;
+
+            public readonly struct Range
+            {
+                public static Range M1 = new Range(-1f);
+                public static Range Zero = new Range(0);
+                public static Range One = new Range(1f);
+
+                public readonly float Value;
+
+                public Range(float value) => Value = value;
+
+                public int Percentage => (int)Math.Round(Value * 100, MidpointRounding.ToEven);
+
+                public Quaternion Rotation => Quaternion.Euler(0, 0, Value * 360f);
+
+                public static Range operator -(Range lRange, Range rRange) => new Range(lRange.Value - rRange.Value);
+            }
+        }
     }
 }
 #endif

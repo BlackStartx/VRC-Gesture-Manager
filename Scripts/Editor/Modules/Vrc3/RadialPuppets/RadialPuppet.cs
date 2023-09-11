@@ -1,4 +1,5 @@
 ﻿#if VRC_SDK_VRCSDK3
+using System;
 using BlackStartX.GestureManager.Editor.Lib;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets.Base;
@@ -6,6 +7,7 @@ using BlackStartX.GestureManager.Runtime.VisualElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UIEPosition = UnityEngine.UIElements.Position;
+using Range = BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices.RadialSliceControl.RadialSettings.Range;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
 {
@@ -17,6 +19,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
         private readonly VisualElement _arrow;
         private readonly GmgCircleElement _progress;
 
+        private Range _checkpoint = Range.M1;
+
         private float Get => Control.GetSubValue(0);
 
         public RadialPuppet(RadialSliceControl control) : base(100, control)
@@ -24,17 +28,26 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
             _progress = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(96, RadialMenuUtility.Colors.CustomSelected, RadialMenuUtility.Colors.CustomSelected, UIEPosition.Absolute));
             Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
             Add(RadialMenuUtility.Prefabs.NewRadialText(out _text, 0, UIEPosition.Absolute));
+            SetupCheckpoint(control.Settings.Checkpoint);
             _arrow = this.MyAdd(ArrowElement());
 
             ShowValue(Get);
         }
 
+        private void SetupCheckpoint(float? checkpoint, float scale = 0.6f)
+        {
+            if (!checkpoint.HasValue) return;
+            var checkElement = this.MyAdd(ArrowElement(scale));
+            _checkpoint = Control.Settings.RangeFrom(checkpoint.Value);
+            checkElement.transform.rotation = _checkpoint.Rotation;
+        }
+
         private void ShowValue(float value)
         {
-            var intValue = RadialMenuUtility.RadialPercentage(value, out var cValue);
-            _progress.Progress = value;
-            _text.text = $"{intValue}%";
-            _arrow.transform.rotation = Quaternion.Euler(0, 0, cValue * 360f);
+            var range = Control.Settings.RangeFrom(value);
+            _progress.Progress = range.Value;
+            _text.text = Control.Settings.Display(value);
+            _arrow.transform.rotation = range.Rotation;
         }
 
         public override void UpdateValue(string pName, float value)
@@ -44,18 +57,20 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
 
         public override void Update(RadialCursor cursor)
         {
-            if (cursor.GetRadial(Clamp, out var radial)) TrySetValue(Get, radial);
+            if (cursor.GetRadial(Clamp, out var range)) TrySetValue(Control.Settings.RangeFrom(Get), range);
         }
 
-        private void TrySetValue(float from, float to)
+        private void TrySetValue(Range from, Range to)
         {
-            var pDistance = to - from;
-            var mDistance = from - to;
+            var pRange = to - from;
+            var mRange = from - to;
 
-            if (mDistance > 0.5f) to = 1f;
-            if (pDistance > 0.5f) to = 0f;
+            if (mRange.Value > 0.5f) to = Range.One;
+            if (pRange.Value > 0.5f) to = Range.Zero;
 
-            Control.SetSubValue(0, to);
+            if (Math.Abs((to - _checkpoint).Value) < 0.03f) to = _checkpoint;
+
+            Control.SetSubValue(0, Control.Settings.ValueFrom(to));
         }
 
         public override void AfterCursor() => _text.parent.BringToFront();
@@ -64,7 +79,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
          * Static
          */
 
-        private static VisualElement ArrowElement()
+        private static VisualElement ArrowElement(float scale = 1f)
         {
             var container = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } };
             var element = container.MyAdd(new VisualElement
@@ -72,13 +87,16 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
                 pickingMode = PickingMode.Ignore,
                 style =
                 {
-                    width = 20,
-                    height = 20,
+                    width = 20 * scale,
+                    height = 20 * scale,
+#if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
+                    transformOrigin =  new StyleTransformOrigin(),
+#endif                    // TEMP FIX FOR UNITY 2022 pivot change~
                     backgroundColor = RadialMenuUtility.Colors.CustomSelected,
-                    top = -65,
+                    top = -(50 + 15 * scale),
                     position = UIEPosition.Absolute
                 }
-            }).MyBorder(2f, 0f, RadialMenuUtility.Colors.ProgressBorder);
+            }).MyBorder(2f * scale, 0f, RadialMenuUtility.Colors.ProgressBorder);
             element.transform.rotation = Quaternion.Euler(0, 0, 45);
             return container;
         }

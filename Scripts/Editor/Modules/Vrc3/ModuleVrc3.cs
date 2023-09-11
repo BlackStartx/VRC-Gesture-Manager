@@ -12,6 +12,7 @@ using BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.VisualElements;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
+using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Osc;
@@ -41,6 +42,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal readonly AvatarTools AvatarTools;
         internal readonly OscModule OscModule;
 
+        internal RadialSliceControl.RadialSettings HeightSettings;
         private Vrc3AvatarDebugWindow _debugAvatarWindow;
         internal Vrc3OscDebugWindow DebugOscWindow;
 
@@ -49,6 +51,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private PlayableGraph _playableGraph;
         private (string text, string button, Action act)? _warning;
         private string _paramFilter;
+        private Vector3 _baseScale;
+        private Vector3 _baseView;
+        private float _baseHeight;
+        private float _scale;
         private bool _hooked;
 
         internal readonly Vrc3ParamBool PoseT;
@@ -69,9 +75,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         internal readonly Dictionary<string, VRC_AnimatorTrackingControl.TrackingType> TrackingControls = ModuleVrc3Styles.Data.DefaultTrackingState;
         internal readonly HashSet<ContactReceiver> Receivers = new HashSet<ContactReceiver>();
+        private readonly HashSet<VRCPhysBoneBase> _physBones = new HashSet<VRCPhysBoneBase>();
         private readonly HashSet<AnimationClip> _avatarClips = new HashSet<AnimationClip>();
         private readonly HashSet<ContactSender> _senders = new HashSet<ContactSender>();
         private readonly HashSet<Animator> _animators = new HashSet<Animator>();
+        private readonly HashSet<Cloth> _cloths = new HashSet<Cloth>();
 
         internal int DebugToolBar;
         internal string Edit;
@@ -116,6 +124,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         public override void LateUpdate()
         {
             if (PoseMode) SetPose(AvatarAnimator);
+            if (DummyMode == null) Avatar.transform.localScale = _baseScale * _scale;
             AvatarTools.OnLateUpdate(this);
         }
 
@@ -146,6 +155,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             AnimationPlayableOutput.Create(_playableGraph, OutputName, AvatarAnimator).SetSourcePlayable(mixer);
 
             _layers.Clear();
+            _cloths.Clear();
             _animators.Clear();
             _avatarClips.Clear();
             _brokenLayers.Clear();
@@ -181,37 +191,47 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 if (mask) mixer.SetLayerMaskFromAvatarMask((uint)i, mask);
             }
 
+            HeightSettings = RadialSliceControl.RadialSettings.Height(_baseHeight = AvatarDescriptor.ViewPosition.y);
             foreach (var menu in Radials) menu.Set(Menu);
+            _baseView = AvatarDescriptor.ViewPosition;
+            _baseScale = Avatar.transform.localScale;
             InitParams(Parameters);
 
-            GetParam(Vrc3DefaultParams.Upright)?.InternalSet(1f);
-            GetParam(Vrc3DefaultParams.Grounded)?.InternalSet(1f);
-            GetParam(Vrc3DefaultParams.TrackingType)?.InternalSet(3f);
-            GetParam(Vrc3DefaultParams.AvatarVersion)?.InternalSet(3f);
+            GetParam(Vrc3DefaultParams.Upright).InternalSet(1f);
+            GetParam(Vrc3DefaultParams.Grounded).InternalSet(1f);
+            GetParam(Vrc3DefaultParams.TrackingType).InternalSet(3f);
+            GetParam(Vrc3DefaultParams.AvatarVersion).InternalSet(3f);
+            GetParam(Vrc3DefaultParams.ScaleFactorInverse).InternalSet(1f);
 
-            GetParam(Vrc3DefaultParams.VRMode)?.InternalSet(Settings.vrMode ? 1f : 0f);
-            GetParam(Vrc3DefaultParams.IsLocal)?.InternalSet(Settings.isRemote ? 0f : 1f);
+            GetParam(Vrc3DefaultParams.ScaleFactor).InternalSet(_scale = 1f);
+            GetParam(Vrc3DefaultParams.EyeHeightAsMeters).InternalSet(_baseHeight);
+            GetParam(Vrc3DefaultParams.EyeHeightAsPercent).InternalSet((_baseHeight - 0.2f) / 4.8F);
+
+            GetParam(Vrc3DefaultParams.VRMode).InternalSet(Settings.vrMode ? 1f : 0f);
+            GetParam(Vrc3DefaultParams.IsLocal).InternalSet(Settings.isRemote ? 0f : 1f);
 
             _playableGraph.Play();
             _playableGraph.Evaluate(0f);
             if (_brokenLayers.Count != 0) _warning = ("Some default Animator Controllers have changed!", "Restore Controllers", RestoreDefaultControllers);
 
-            Left = (int)(GetParam(Vrc3DefaultParams.GestureLeft)?.Get() ?? 0);
-            Right = (int)(GetParam(Vrc3DefaultParams.GestureRight)?.Get() ?? 0);
+            Left = GetParam(Vrc3DefaultParams.GestureLeft).IntValue();
+            Right = GetParam(Vrc3DefaultParams.GestureRight).IntValue();
 
-            GetParam(Vrc3DefaultParams.Vise)?.SetOnChange(OnViseChange);
-            GetParam(Vrc3DefaultParams.Seated)?.SetOnChange(OnSeatedChange);
-            GetParam(Vrc3DefaultParams.IsLocal)?.SetOnChange(OnIsLocalChange);
-            GetParam(Vrc3DefaultParams.VelocityX)?.SetOnChange(OnVelocityChange);
-            GetParam(Vrc3DefaultParams.VelocityY)?.SetOnChange(OnVelocityChange);
-            GetParam(Vrc3DefaultParams.VelocityZ)?.SetOnChange(OnVelocityChange);
-            GetParam(Vrc3DefaultParams.GestureLeft)?.SetOnChange(OnGestureLeftChange);
-            GetParam(Vrc3DefaultParams.GestureRight)?.SetOnChange(OnGestureRightChange);
+            GetParam(Vrc3DefaultParams.Vise).SetOnChange(OnViseChange);
+            GetParam(Vrc3DefaultParams.Seated).SetOnChange(OnSeatedChange);
+            GetParam(Vrc3DefaultParams.IsLocal).SetOnChange(OnIsLocalChange);
+            GetParam(Vrc3DefaultParams.VelocityX).SetOnChange(OnVelocityChange);
+            GetParam(Vrc3DefaultParams.VelocityY).SetOnChange(OnVelocityChange);
+            GetParam(Vrc3DefaultParams.VelocityZ).SetOnChange(OnVelocityChange);
+            GetParam(Vrc3DefaultParams.GestureLeft).SetOnChange(OnGestureLeftChange);
+            GetParam(Vrc3DefaultParams.GestureRight).SetOnChange(OnGestureRightChange);
+            GetParam(Vrc3DefaultParams.EyeHeightAsMeters).SetOnChange(OnEyeHeightAsMetersChange);
 
             foreach (var physBone in AvatarComponents<VRCPhysBoneBase>()) PhysBoneBaseSetup(physBone);
             foreach (var receiver in AvatarComponents<ContactReceiver>()) ReceiverBaseSetup(receiver);
             foreach (var coSender in AvatarComponents<ContactSender>()) SenderBaseSetup(coSender);
             foreach (var animator in AvatarComponents<Animator>()) AnimatorBaseSetup(animator);
+            foreach (var cloth in AvatarComponents<Cloth>()) ClothBaseSetup(cloth);
             _animators.Add(AvatarAnimator);
 
             OscModule.Resume();
@@ -387,9 +407,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void SetVelocityMag()
         {
             GetParam(Vrc3DefaultParams.VelocityMagnitude).Set(this, new Vector3(
-                GetParam(Vrc3DefaultParams.VelocityX).Get(),
-                GetParam(Vrc3DefaultParams.VelocityY).Get(),
-                GetParam(Vrc3DefaultParams.VelocityZ).Get()
+                GetParam(Vrc3DefaultParams.VelocityX).FloatValue(),
+                GetParam(Vrc3DefaultParams.VelocityY).FloatValue(),
+                GetParam(Vrc3DefaultParams.VelocityZ).FloatValue()
             ).magnitude);
         }
 
@@ -476,31 +496,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             }
         }
 
-        private void ShowError(Vrc3VisualRender menu)
-        {
-            menu.StopRendering();
-            GUILayout.Label("Radial Menu", GestureManagerStyles.GuiHandTitle);
-            using (new GmgLayoutHelper.GuiBackground(Color.red))
-            using (new GUILayout.VerticalScope(SizeOptions))
-            using (new GmgLayoutHelper.FlexibleScope())
-            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
-            {
-                GUILayout.Space(3);
-                using (new GUILayout.VerticalScope())
-                using (new GmgLayoutHelper.FlexibleScope())
-                {
-                    GUILayout.Label("An Animator Controller changed during the simulation!", GestureManagerStyles.TextError);
-                    GUILayout.FlexibleSpace();
-                    using (new GUILayout.HorizontalScope())
-                    using (new GmgLayoutHelper.FlexibleScope())
-                    {
-                        GUI.backgroundColor = RadialMenuUtility.Colors.RestartButton;
-                        if (GmgLayoutHelper.DebugButton("Click to reload scene")) ReloadScene();
-                    }
-                }
-            }
-        }
-
         private void ShowRadialMenu(RadialMenu menu, VisualElement element)
         {
             GUILayout.Label("Radial Menu", GestureManagerStyles.GuiHandTitle);
@@ -565,21 +560,33 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             foreach (var menu in Radials) menu.UpdateRunning();
         }
 
-        public void NoExpressionRefresh()
+        private void OnScaleChanged()
         {
-            if (DummyMode != null) return;
-            if (Menu) ResetAvatar();
+            Avatar.transform.localScale = _baseScale * _scale;
+            AvatarDescriptor.ViewPosition = _baseView * _scale;
+            foreach (var cloth in _cloths) ScaleCloth(cloth);
         }
 
         public void ResetAvatar()
         {
+            ResetHeight();
             AvatarAnimator.Rebind();
             InitForAvatar();
         }
 
+        public void ResetPoses()
+        {
+            var manager = PhysBoneManager.Inst;
+            foreach (var pose in _physBones.Select(bone => manager.FindPose(bone.chainId)).Where(pose => pose != null))
+                manager.RemovePose(pose);
+        }
+
+        public void ResetHeight() => GetParam(Vrc3DefaultParams.EyeHeightAsMeters).Set(this, _baseHeight);
+
         internal void ForgetAvatar()
         {
             RemoveVise();
+            ResetHeight();
             if (OscModule.Enabled) OscModule.Forget();
             AvatarAnimator.Rebind();
             _paramFilter = null;
@@ -643,6 +650,16 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             Right = (int)right;
         }
 
+        private void OnEyeHeightAsMetersChange(Vrc3Param param, float height)
+        {
+            _scale = height / _baseHeight;
+            GetParam(Vrc3DefaultParams.ScaleModified).Set(this, !RadialMenuUtility.Is(param.FloatValue(), _baseHeight));
+            GetParam(Vrc3DefaultParams.ScaleFactor).Set(this, _scale);
+            GetParam(Vrc3DefaultParams.ScaleFactorInverse).Set(this, 1f / _scale);
+            GetParam(Vrc3DefaultParams.EyeHeightAsPercent).Set(this, (height - 0.2f) / 4.8F);
+            OnScaleChanged();
+        }
+
         private void OnSeatedChange(Vrc3Param param, float seated) => _layers[VRCAvatarDescriptor.AnimLayerType.Sitting].Weight.Set(seated);
 
         /*
@@ -700,6 +717,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private static string NameOf(UnityEngine.Object o) => AssetDatabase.GetAssetPath(o);
 
+        private static void ScaleCloth(Cloth cloth)
+        {
+            if (!cloth.enabled || !cloth.gameObject.activeInHierarchy) return;
+            cloth.gameObject.SetActive(false);
+            cloth.gameObject.SetActive(true);
+        }
+
         private static void ReloadScene()
         {
             var activeScene = SceneManager.GetActiveScene();
@@ -714,14 +738,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private static void LoadScene(int sceneBuildIndex, LoadSceneMode mode, Action<Scene, LoadSceneMode> onLoad)
         {
+            SceneManager.sceneLoaded += OnSceneManagerLoaded;
+            SceneManager.LoadScene(sceneBuildIndex, mode);
+            return;
+
             void OnSceneManagerLoaded(Scene scene, LoadSceneMode m)
             {
                 SceneManager.sceneLoaded -= OnSceneManagerLoaded;
                 onLoad(scene, m);
             }
-
-            SceneManager.sceneLoaded += OnSceneManagerLoaded;
-            SceneManager.LoadScene(sceneBuildIndex, mode);
         }
 
         private static bool CheckIntegrity(FileInfo file1, FileInfo file2)
@@ -735,6 +760,31 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                         return false;
 
             return true;
+        }
+
+        private static void ShowError(Vrc3VisualRender menu)
+        {
+            menu.StopRendering();
+            GUILayout.Label("Radial Menu", GestureManagerStyles.GuiHandTitle);
+            using (new GmgLayoutHelper.GuiBackground(Color.red))
+            using (new GUILayout.VerticalScope(SizeOptions))
+            using (new GmgLayoutHelper.FlexibleScope())
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                GUILayout.Space(3);
+                using (new GUILayout.VerticalScope())
+                using (new GmgLayoutHelper.FlexibleScope())
+                {
+                    GUILayout.Label("An Animator Controller changed during the simulation!", GestureManagerStyles.TextError);
+                    GUILayout.FlexibleSpace();
+                    using (new GUILayout.HorizontalScope())
+                    using (new GmgLayoutHelper.FlexibleScope())
+                    {
+                        GUI.backgroundColor = RadialMenuUtility.Colors.RestartButton;
+                        if (GmgLayoutHelper.DebugButton("Click to reload scene")) ReloadScene();
+                    }
+                }
+            }
         }
 
         private static void SetBlendShapeWeight(SkinnedMeshRenderer skinnedMesh, string name, float weight)
@@ -812,21 +862,21 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void AnimatorLayerControlSettings(VRC_AnimatorLayerControl control, Animator animator)
         {
-            if (!_hooked || !_animators.Contains(AvatarAnimator)) return;
+            if (!_hooked || !_animators.Contains(animator)) return;
 
             _layers[ModuleVrc3Styles.Data.AnimatorToLayer[control.playable]].Weight.Start(control);
         }
 
         private void PlayableLayerControlSettings(VRC_PlayableLayerControl control, Animator animator)
         {
-            if (!_hooked || !_animators.Contains(AvatarAnimator)) return;
+            if (!_hooked || !_animators.Contains(animator)) return;
 
             _layers[ModuleVrc3Styles.Data.PlayableToLayer[control.layer]].Weight.Start(control);
         }
 
         private void AvatarParameterDriverSettings(VRC_AvatarParameterDriver driver, Animator animator)
         {
-            if (!_hooked || !_animators.Contains(AvatarAnimator)) return;
+            if (!_hooked || !_animators.Contains(animator)) return;
 
             foreach (var parameter in driver.parameters)
             {
@@ -842,7 +892,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                         param.Add(this, parameter.value);
                         break;
                     case VRC_AvatarParameterDriver.ChangeType.Copy:
-                        param.Copy(this, GetParam(parameter.source)?.Get() ?? 0f, parameter.convertRange, parameter.sourceMin, parameter.sourceMax, parameter.destMin, parameter.destMax);
+                        param.Copy(this, GetParam(parameter.source)?.FloatValue() ?? 0f, parameter.convertRange, parameter.sourceMin, parameter.sourceMax, parameter.destMin, parameter.destMax);
                         break;
                     case VRC_AvatarParameterDriver.ChangeType.Random:
                         param.Random(this, parameter.valueMin, parameter.valueMax, parameter.chance);
@@ -854,7 +904,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void AnimatorTrackingControlSettings(VRC_AnimatorTrackingControl control, Animator animator)
         {
-            if (!_hooked || !_animators.Contains(AvatarAnimator)) return;
+            if (!_hooked || !_animators.Contains(animator)) return;
             const VRC_AnimatorTrackingControl.TrackingType noChange = VRC_AnimatorTrackingControl.TrackingType.NoChange;
 
             if (control.trackingHip != noChange) TrackingControls["Hip"] = control.trackingHip;
@@ -871,14 +921,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void AnimatorLocomotionControlSettings(VRC_AnimatorLocomotionControl control, Animator animator)
         {
-            if (!_hooked || !_animators.Contains(AvatarAnimator)) return;
+            if (!_hooked || !_animators.Contains(animator)) return;
 
             LocomotionDisabled = control.disableLocomotion;
         }
 
         private void AnimatorTemporaryPoseSpaceSettings(VRC_AnimatorTemporaryPoseSpace poseSpace, Animator animator)
         {
-            if (!_hooked || !_animators.Contains(AvatarAnimator)) return;
+            if (!_hooked || !_animators.Contains(animator)) return;
 
             PoseSpace = poseSpace.enterPoseSpace;
         }
@@ -911,6 +961,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             if (receiver.shape != null) receiver.shape.OnEnter += shape => ContactShapeCheck(receiver, shape.component as ContactSender);
         }
 
+        private void ClothBaseSetup(Cloth cloth) => _cloths.Add(cloth);
+
         private void SenderBaseSetup(ContactSender sender) => _senders.Add(sender);
 
         private void ContactShapeCheck(ContactReceiver receiver, ContactSender sender)
@@ -942,6 +994,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             vrcPhysBoneBase.param_Stretch = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_STRETCH);
             vrcPhysBoneBase.param_Squish = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_SQUISH);
             vrcPhysBoneBase.param_Angle = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_ANGLE);
+            _physBones.Add(vrcPhysBoneBase);
         }
 
         internal struct LayerData

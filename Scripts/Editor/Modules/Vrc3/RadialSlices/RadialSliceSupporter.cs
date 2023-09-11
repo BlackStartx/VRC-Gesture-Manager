@@ -23,7 +23,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
         private bool _shouldFade;
         private Vrc3Supporter.Supporter _supporter;
 
-        private RadialSliceSupporter(Vrc3Supporter.Supporter supporter, bool early, int index, int pool, int offset, Texture2D icon) : base(supporter.name, icon, null)
+        private RadialSliceSupporter(Vrc3Supporter.Supporter supporter, bool early, int index, int pool, int offset, Texture2D icon) : base(supporter.name, icon)
         {
             _pool = pool;
             _index = index;
@@ -31,11 +31,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
             _offset = offset;
             _supporter = supporter;
             if (early) return;
-            TextColor = supporter.text;
+            Text.Color = supporter.text;
             SelectedCenterColor = supporter.background;
         }
 
         public RadialSliceSupporter(bool early, int index, int pool, int offset, Texture2D icon) : this(Vrc3Supporter.SupporterData(early, index), early, index, pool, offset, icon)
+        {
+        }
+
+        protected internal override void CheckRunningUpdate()
         {
         }
 

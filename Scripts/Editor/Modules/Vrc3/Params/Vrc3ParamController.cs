@@ -16,7 +16,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
             Subscribe(_controller);
         }
 
-        public override float Get()
+        [Obsolete] public override float Get() => FloatValue();
+
+        public override float FloatValue()
         {
             if (!_controller.IsValid()) return 0;
             switch (Type)

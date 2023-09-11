@@ -42,6 +42,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             if (Active) DrawGizmos();
         }
 
+        internal void Disable(ModuleVrc3 module)
+        {
+            if (Active) Toggle(module);
+        }
+
         protected internal abstract void Toggle(ModuleVrc3 module);
 
         protected abstract void Gui(ModuleVrc3 module);

@@ -11,8 +11,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
     {
         internal bool Selected;
 
-        internal Color TextColor;
-
         private Color _idleBorderColor = RadialMenuUtility.Colors.CustomMain;
 
         [PublicAPI]
@@ -49,32 +47,46 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
             set => _selectedCenterColor = Selected ? CenterColor = value : value;
         }
 
-        public VisualElement DataHolder;
-        protected VisualElement Texture;
-        protected GmgTmpRichTextElement Text;
+        private bool _enabled = true;
 
-        private readonly string _text;
-        private readonly Texture2D _texture;
-        private readonly Texture2D _subIcon;
-
-        protected RadialSliceBase(string text, Texture2D icon, Texture2D subIcon)
+        [PublicAPI]
+        public bool Enabled
         {
-            _text = text;
-            _texture = icon ? icon : ModuleVrc3Styles.Default;
-            _subIcon = subIcon;
-            TextColor = Color.white;
+            get => _enabled;
+            set
+            {
+                if (_enabled == value) return;
+                _enabled = value;
+                Text.Color = _enabled ? Color.white : Color.gray;
+                Texture.style.unityBackgroundImageTintColor = new StyleColor(_enabled ? Color.white : Color.gray);
+            }
+        }
+
+        private readonly VisualElement _sub;
+        public readonly VisualElement DataHolder;
+        protected readonly VisualElement Texture;
+        protected readonly GmgTmpRichTextElement Text;
+
+        protected RadialSliceBase(string text, Texture2D icon, Texture2D subIcon = null, bool enabled = true)
+        {
+            DataHolder = RadialMenuUtility.Prefabs.NewData(100, 100);
+            Texture = new VisualElement { pickingMode = PickingMode.Ignore, style = { width = 50, height = 50, backgroundImage = !icon ? ModuleVrc3Styles.Default : icon } };
+            Text = new GmgTmpRichTextElement { pickingMode = PickingMode.Ignore, Text = text, style = { unityTextAlign = TextAnchor.MiddleCenter } };
             RadialMenuUtility.Prefabs.SetSlice(this, RadialMenu.Size, IdleCenterColor, IdleBorderColor, RadialMenuUtility.Colors.CustomBorder);
+            if (subIcon) _sub = RadialMenuUtility.Prefabs.NewSubIcon(subIcon);
+            Enabled = enabled;
         }
 
         public RadialSliceBase Create()
         {
-            DataHolder = RadialMenuUtility.Prefabs.NewData(100, 100);
-            DataHolder.Add(Texture = new VisualElement { pickingMode = PickingMode.Ignore, style = { width = 50, height = 50, backgroundImage = _texture } });
-            if (_subIcon) DataHolder.Add(RadialMenuUtility.Prefabs.NewSubIcon(_subIcon));
-            DataHolder.Add(Text = new GmgTmpRichTextElement { pickingMode = PickingMode.Ignore, Text = _text, style = { color = TextColor, unityTextAlign = TextAnchor.MiddleCenter } });
+            DataHolder.Add(Texture);
+            DataHolder.Add(_sub);
+            DataHolder.Add(Text);
             CreateExtra();
             return this;
         }
+
+        protected internal abstract void CheckRunningUpdate();
 
         protected abstract void CreateExtra();
 

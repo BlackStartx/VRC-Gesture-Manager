@@ -7,11 +7,16 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
     public static class Vrc3DefaultParams
     {
         internal const string GestureRightWeight = "GestureRightWeight";
+        internal const string ScaleFactorInverse = "ScaleFactorInverse";
+        internal const string EyeHeightAsPercent = "EyeHeightAsPercent";
+        internal const string EyeHeightAsMeters = "EyeHeightAsMeters";
         internal const string GestureLeftWeight = "GestureLeftWeight";
         internal const string VelocityMagnitude = "VelocityMagnitude";
+        internal const string ScaleModified = "ScaleModified";
         internal const string AvatarVersion = "AvatarVersion";
         internal const string TrackingType = "TrackingType";
         internal const string GestureRight = "GestureRight";
+        internal const string ScaleFactor = "ScaleFactor";
         internal const string GestureLeft = "GestureLeft";
         internal const string VelocityX = "VelocityX";
         internal const string VelocityY = "VelocityY";
@@ -36,13 +41,18 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         public static IEnumerable<(string name, AnimatorControllerParameterType type)> Parameters => new[]
         {
             (GestureRightWeight, AnimatorControllerParameterType.Float),
+            (ScaleFactorInverse, AnimatorControllerParameterType.Float),
+            (EyeHeightAsPercent, AnimatorControllerParameterType.Float),
+            (EyeHeightAsMeters, AnimatorControllerParameterType.Float),
             (GestureLeftWeight, AnimatorControllerParameterType.Float),
             (VelocityMagnitude, AnimatorControllerParameterType.Float),
             (VrcFaceBlendH, AnimatorControllerParameterType.Float),
             (VrcFaceBlendV, AnimatorControllerParameterType.Float),
+            (ScaleModified, AnimatorControllerParameterType.Bool),
             (AvatarVersion, AnimatorControllerParameterType.Int),
             (TrackingType, AnimatorControllerParameterType.Int),
             (GestureRight, AnimatorControllerParameterType.Int),
+            (ScaleFactor, AnimatorControllerParameterType.Float),
             (GestureLeft, AnimatorControllerParameterType.Int),
             (VelocityX, AnimatorControllerParameterType.Float),
             (VelocityY, AnimatorControllerParameterType.Float),

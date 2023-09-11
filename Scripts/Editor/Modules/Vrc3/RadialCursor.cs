@@ -6,6 +6,7 @@ using BlackStartX.GestureManager.Runtime.VisualElements;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Range = BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices.RadialSliceControl.RadialSettings.Range;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
@@ -113,12 +114,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             return true;
         }
 
-        private static bool GetRadial(Vector2 mouse, float min, out float radial)
+        private static bool GetRadial(Vector2 mouse, float min, out Range range)
         {
-            radial = -1;
+            range = Range.M1;
             if (Event.current.type == EventType.Layout || mouse.magnitude < min) return false;
 
-            radial = GetAngle(mouse) / 360f;
+            range = new Range(GetAngle(mouse) / 360f);
             return true;
         }
 
@@ -134,7 +135,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         [PublicAPI] public int GetChoice(int elements, bool puppet) => puppet ? -1 : GetChoice(_position, _min, _max, elements);
 
-        internal bool GetRadial(float min, out float radial) => GetRadial(_position, min, out radial);
+        internal bool GetRadial(float min, out Range range) => GetRadial(_position, min, out range);
 
         internal bool Get2Axis(float range, out Vector2 axis) => Get2Axis(_position, range, out axis);
 

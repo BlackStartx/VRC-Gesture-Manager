@@ -78,10 +78,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             ContactsClickable.OnDrawGizmos();
         }
 
-        public void Unlink(ModuleVrc3 module)
-        {
-            if (PerformanceAnimator.Active) PerformanceAnimator.Toggle(module);
-        }
+        public void Unlink(ModuleVrc3 module) => PerformanceAnimator.Disable(module);
 
         public class UpdateSceneCamera : GmgDynamicFunction
         {

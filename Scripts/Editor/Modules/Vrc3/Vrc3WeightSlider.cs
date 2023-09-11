@@ -68,7 +68,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             HandleFade(Event.current.mousePosition);
             if (!GUI.enabled) return;
             if (Drag) Update(Event.current.mousePosition);
-            SetWeight(_controller.Module.GetParam(_target)?.Get() ?? 0f);
+            SetWeight(_controller.Module.GetParam(_target)?.FloatValue() ?? 0f);
 
             rect.center += new Vector2((rect.width - _slider.style.width.value.value) / 2 - 10, -10);
             rect.width = _slider.style.width.value.value + 20f;

@@ -61,34 +61,41 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 
         public void SetOnChange(Action<Vrc3Param, float> onChange) => _onChange = onChange;
 
-        private bool Is(float value) => RadialMenuUtility.Is(Get(), value);
+        private bool Is(float value) => RadialMenuUtility.Is(FloatValue(), value);
 
-        public abstract float Get();
+        [Obsolete("This method be removed on 3.9, override FloatValue for now on. Kept for compilation compatibility.")]
+        public virtual float Get() => 0f;
+
+        public virtual float FloatValue() => Get();
+
+        public int IntValue() => (int)FloatValue();
+
+        public bool BoolValue() => FloatValue() > 0.5f;
 
         protected internal abstract void InternalSet(float value);
 
-        public void Add(ModuleVrc3 module, float value) => Set(module, Get() + value);
+        public void Add(ModuleVrc3 module, float value) => Set(module, FloatValue() + value);
 
-        public void Copy(ModuleVrc3 module, float get, bool range, float sourceMin, float sourceMax, float destMin, float destMax)
+        public void Copy(ModuleVrc3 module, float floatValue, bool range, float sourceMin, float sourceMax, float destMin, float destMax)
         {
-            if (range) get = RangeOf(get, sourceMin, sourceMax, destMin, destMax);
+            if (range) floatValue = RangeOf(floatValue, sourceMin, sourceMax, destMin, destMax);
             switch (Type)
             {
                 case AnimatorControllerParameterType.Float:
-                    Set(module, get);
+                    Set(module, floatValue);
                     break;
                 case AnimatorControllerParameterType.Int:
-                    Set(module, (int)get);
+                    Set(module, (int)floatValue);
                     break;
                 case AnimatorControllerParameterType.Bool:
                 case AnimatorControllerParameterType.Trigger:
-                    Set(module, !RadialMenuUtility.Is(get, 0));
+                    Set(module, !RadialMenuUtility.Is(floatValue, 0));
                     break;
                 default: throw new ArgumentOutOfRangeException();
             }
         }
 
-        private static float RangeOf(float get, float sourceMin, float sourceMax, float destMin, float destMax) => RangeOf(get - sourceMin, sourceMax - sourceMin, destMin, destMax - destMin);
+        private static float RangeOf(float value, float sourceMin, float sourceMax, float destMin, float destMax) => RangeOf(value - sourceMin, sourceMax - sourceMin, destMin, destMax - destMin);
 
         private static float RangeOf(float offset, float sourceLen, float destMin, float destLen) => destMin + destLen * (sourceLen != 0 ? Mathf.Clamp01(offset / sourceLen) : 0.0f);
 
@@ -115,12 +122,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
             switch (Type)
             {
                 case AnimatorControllerParameterType.Float:
-                    return (null, Get().ToString("0.00"));
+                    return (null, FloatValue().ToString("0.00"));
                 case AnimatorControllerParameterType.Int:
-                    return (null, ((int)Get()).ToString());
+                    return (null, IntValue().ToString());
                 case AnimatorControllerParameterType.Bool:
                 case AnimatorControllerParameterType.Trigger:
-                    return Get() > 0.5f ? (Color.green, "True") : (Color.red, "False");
+                    return BoolValue() ? (Color.green, "True") : (Color.red, "False");
                 default: throw new ArgumentOutOfRangeException();
             }
         }
@@ -131,14 +138,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
             switch (Type)
             {
                 case AnimatorControllerParameterType.Float:
-                    if (GmgLayoutHelper.UnityFieldEnterListener(Get(), module, rect, EditorGUI.FloatField, Set, module.Edit)) module.Edit = null;
+                    if (GmgLayoutHelper.UnityFieldEnterListener(FloatValue(), module, rect, EditorGUI.FloatField, Set, module.Edit)) module.Edit = null;
                     break;
                 case AnimatorControllerParameterType.Int:
-                    if (GmgLayoutHelper.UnityFieldEnterListener((int)Get(), module, rect, EditorGUI.IntField, Set, module.Edit)) module.Edit = null;
+                    if (GmgLayoutHelper.UnityFieldEnterListener(IntValue(), module, rect, EditorGUI.IntField, Set, module.Edit)) module.Edit = null;
                     break;
                 case AnimatorControllerParameterType.Bool:
                 case AnimatorControllerParameterType.Trigger:
-                    Set(module, Get() < 0.5f);
+                    Set(module, !BoolValue());
                     module.Edit = null;
                     break;
                 default: throw new ArgumentOutOfRangeException();
