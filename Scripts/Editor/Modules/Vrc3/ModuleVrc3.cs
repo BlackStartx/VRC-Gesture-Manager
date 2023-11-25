@@ -720,8 +720,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static void ScaleCloth(Cloth cloth)
         {
             if (!cloth.enabled || !cloth.gameObject.activeInHierarchy) return;
+#if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 cloth change~
+            cloth.coefficients = cloth.coefficients;
+#else                     // TEMP FIX FOR UNITY 2022 cloth change~
             cloth.gameObject.SetActive(false);
             cloth.gameObject.SetActive(true);
+#endif                    // TEMP FIX FOR UNITY 2022 cloth change~
         }
 
         private static void ReloadScene()
