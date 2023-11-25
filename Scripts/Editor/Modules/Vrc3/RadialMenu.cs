@@ -29,7 +29,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private const float Clamp = Size / 3;
         private const float ClampReset = Size / 1.7f;
 
-        private const string TrackingDocumentationUrl = "https://docs.vrchat.com/docs/animator-parameters#trackingtype-parameter";
+        private const string TrackingDocumentationUrl = "https://creators.vrchat.com/avatars/animator-parameters/#trackingtype-parameter";
 
         private Vector2 MousePosition()
         {
