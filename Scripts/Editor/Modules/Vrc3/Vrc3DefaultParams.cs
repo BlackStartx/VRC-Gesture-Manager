@@ -24,6 +24,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal const string InStation = "InStation";
         internal const string Grounded = "Grounded";
         internal const string MuteSelf = "MuteSelf";
+        internal const string Earmuffs = "Earmuffs";
         internal const string Upright = "Upright";
         internal const string IsLocal = "IsLocal";
         internal const string Seated = "Seated";
@@ -35,7 +36,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private const string VrcFaceBlendV = "VRCFaceBlendV";
         private const string VrcEmote = "VRCEmote";
         private const string AngularY = "AngularY";
-        private const string Earmuffs = "Earmuffs";
         private const string Voice = "Voice";
 
         public static IEnumerable<(string name, AnimatorControllerParameterType type)> Parameters => new[]
