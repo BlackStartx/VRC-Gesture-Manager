@@ -258,14 +258,16 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         public static class Buttons
         {
-            public static RadialSliceControl ToggleFromParam(RadialMenu menu, string name, Vrc3Param param)
+            // Note to BlackStartX: I had to make the necessary changes below to ToggleFromParam and ParamStateToggle in order to support the Icons I have implemented. Delete this comment as soon as you see this. -BluWizard
+            
+            public static RadialSliceControl ToggleFromParam(RadialMenu menu, string name, Vrc3Param param, Texture2D icon = null) // <- ToggleFromParam but with support for the New Icons.
             {
-                return ParamStateToggle(menu, name, param, 1f);
+                return new RadialSliceControl(menu, name, icon, ControlType.Toggle, 1f, param, Array.Empty<Vrc3Param>(), null, null);
             }
 
-            public static RadialSliceControl ParamStateToggle(RadialMenu menu, string name, Vrc3Param param, float activeValue)
+            public static RadialSliceControl ParamStateToggle(RadialMenu menu, string name, Vrc3Param param, float activeValue, Texture2D icon = null) // <- RadialSliceControl but with support for the New Icons.
             {
-                return new RadialSliceControl(menu, name, null, ControlType.Toggle, activeValue, param, Array.Empty<Vrc3Param>(), null, null);
+                return new RadialSliceControl(menu, name, icon, ControlType.Toggle, activeValue, param, Array.Empty<Vrc3Param>(), null, null);
             }
 
             public static RadialSliceBase RadialFromParam(RadialMenu menu, string name, Vrc3Param param, Texture2D icon = null, float amplify = 1f, RadialSliceControl.RadialSettings settings = null)

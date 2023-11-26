@@ -154,11 +154,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             OpenCustom(new RadialSliceBase[]
             {
-                new RadialSliceButton(OptionExtraMenuPrefab, "Extra", ModuleVrc3Styles.Option),
-                new RadialSliceButton(OptionTrackingMenuPrefab, "Tracking", ModuleVrc3Styles.Option),
+                new RadialSliceButton(OptionExtraMenuPrefab, "Extra", ModuleVrc3Styles.MuteSelf),
+                new RadialSliceButton(OptionTrackingMenuPrefab, "Tracking", ModuleVrc3Styles.HeadHands),
                 new RadialSliceButton(Module.EnableEditMode, "Edit-Mode", ModuleVrc3Styles.Default),
-                new RadialSliceButton(OptionStatesMenuPrefab, "States", ModuleVrc3Styles.Option),
-                new RadialSliceButton(OptionLocomotionMenuPrefab, "Locomotion", ModuleVrc3Styles.Option)
+                new RadialSliceButton(OptionStatesMenuPrefab, "States", ModuleVrc3Styles.AFK),
+                new RadialSliceButton(OptionLocomotionMenuPrefab, "Locomotion", ModuleVrc3Styles.Velocity)
             });
         }
 
@@ -166,10 +166,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             OpenCustom(new[]
             {
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "Grounded", GetParam(Vrc3DefaultParams.Grounded)),
-                RadialMenuUtility.Buttons.RadialFromParam(this, "Falling Speed", GetParam(Vrc3DefaultParams.VelocityY), amplify: -22f),
-                RadialMenuUtility.Buttons.RadialFromParam(this, "Upright", GetParam(Vrc3DefaultParams.Upright)),
-                RadialMenuUtility.Buttons.AxisFromParams(this, "Velocity", GetParam(Vrc3DefaultParams.VelocityX), GetParam(Vrc3DefaultParams.VelocityZ), amplify: 7f)
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "Grounded", GetParam(Vrc3DefaultParams.Grounded), ModuleVrc3Styles.Grounded),
+                RadialMenuUtility.Buttons.RadialFromParam(this, "Falling Speed", GetParam(Vrc3DefaultParams.VelocityY), ModuleVrc3Styles.FallingSpeed, amplify: -22f),
+                RadialMenuUtility.Buttons.RadialFromParam(this, "Upright", GetParam(Vrc3DefaultParams.Upright), ModuleVrc3Styles.Upright),
+                RadialMenuUtility.Buttons.AxisFromParams(this, "Velocity", GetParam(Vrc3DefaultParams.VelocityX), GetParam(Vrc3DefaultParams.VelocityZ), ModuleVrc3Styles.Velocity, amplify: 7f)
             });
         }
 
@@ -178,13 +178,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             var param = GetParam(Vrc3DefaultParams.TrackingType);
             OpenCustom(new RadialSliceBase[]
             {
-                RadialMenuUtility.Buttons.ParamStateToggle(this, "Uninitialized", param, 0f),
-                RadialMenuUtility.Buttons.ParamStateToggle(this, "Generic", param, 1f),
-                RadialMenuUtility.Buttons.ParamStateToggle(this, "Hands-only", param, 2f),
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "VRMode", GetParam(Vrc3DefaultParams.VRMode)),
-                RadialMenuUtility.Buttons.ParamStateToggle(this, "Head And Hands", param, 3f),
-                RadialMenuUtility.Buttons.ParamStateToggle(this, "4-Point VR", param, 4f),
-                RadialMenuUtility.Buttons.ParamStateToggle(this, "Full Body", param, 6f)
+                RadialMenuUtility.Buttons.ParamStateToggle(this, "Uninitialized", param, 0f, ModuleVrc3Styles.Uninitialized),
+                RadialMenuUtility.Buttons.ParamStateToggle(this, "Generic", param, 1f, ModuleVrc3Styles.Generic),
+                RadialMenuUtility.Buttons.ParamStateToggle(this, "Hands-only", param, 2f, ModuleVrc3Styles.HandsOnly),
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "VRMode", GetParam(Vrc3DefaultParams.VRMode), ModuleVrc3Styles.VRMode),
+                RadialMenuUtility.Buttons.ParamStateToggle(this, "Head And Hands", param, 3f, ModuleVrc3Styles.HeadHands),
+                RadialMenuUtility.Buttons.ParamStateToggle(this, "4-Point VR", param, 4f, ModuleVrc3Styles.FourPoint),
+                RadialMenuUtility.Buttons.ParamStateToggle(this, "Full Body", param, 6f, ModuleVrc3Styles.FullBody)
             });
             _radialDescription = new RadialDescription("If you don't know what those are you can check the ", "documentation!", "", Application.OpenURL, TrackingDocumentationUrl);
         }
@@ -193,11 +193,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             OpenCustom(new[]
             {
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "T Pose", Module.PoseT),
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "AFK", GetParam(Vrc3DefaultParams.Afk)),
-                RadialMenuUtility.Buttons.RadialFromParam(this, Vrc3DefaultParams.Vise, GetParam(Vrc3DefaultParams.Vise), amplify: Module.ViseAmount),
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "Seated", GetParam(Vrc3DefaultParams.Seated)),
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "IK Pose", Module.PoseIK)
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "T Pose", Module.PoseT, ModuleVrc3Styles.TPose),
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "AFK", GetParam(Vrc3DefaultParams.Afk), ModuleVrc3Styles.AFK),
+                RadialMenuUtility.Buttons.RadialFromParam(this, Vrc3DefaultParams.Vise, GetParam(Vrc3DefaultParams.Vise), ModuleVrc3Styles.Visemes, amplify: Module.ViseAmount),
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "Seated", GetParam(Vrc3DefaultParams.Seated), ModuleVrc3Styles.Seated),
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "IK Pose", Module.PoseIK, ModuleVrc3Styles.IKPose)
             });
         }
 
@@ -205,12 +205,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             OpenCustom(new[]
             {
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "IsLocal", GetParam(Vrc3DefaultParams.IsLocal)),
-                RadialMenuUtility.Buttons.RadialFromParam(this, "Gesture\nRight Weight", GetParam(Vrc3DefaultParams.GestureRightWeight)),
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "MuteSelf", GetParam(Vrc3DefaultParams.MuteSelf)),
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "Earmuffs", GetParam(Vrc3DefaultParams.Earmuffs)),
-                RadialMenuUtility.Buttons.RadialFromParam(this, "Gesture\nLeft Weight", GetParam(Vrc3DefaultParams.GestureLeftWeight)),
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "InStation", GetParam(Vrc3DefaultParams.InStation))
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "IsLocal", GetParam(Vrc3DefaultParams.IsLocal), ModuleVrc3Styles.IsLocal),
+                RadialMenuUtility.Buttons.RadialFromParam(this, "Gesture\nRight Weight", GetParam(Vrc3DefaultParams.GestureRightWeight), ModuleVrc3Styles.GestureRightWeight),
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "MuteSelf", GetParam(Vrc3DefaultParams.MuteSelf), ModuleVrc3Styles.MuteSelf),
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "Earmuffs", GetParam(Vrc3DefaultParams.Earmuffs), ModuleVrc3Styles.Earmuffs),
+                RadialMenuUtility.Buttons.RadialFromParam(this, "Gesture\nLeft Weight", GetParam(Vrc3DefaultParams.GestureLeftWeight), ModuleVrc3Styles.GestureLeftWeight),
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "InStation", GetParam(Vrc3DefaultParams.InStation), ModuleVrc3Styles.Seated)
             });
         }
 
