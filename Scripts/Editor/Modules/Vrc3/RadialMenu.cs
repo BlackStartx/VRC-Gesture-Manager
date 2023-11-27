@@ -213,6 +213,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "InStation", GetParam(Vrc3DefaultParams.InStation), ModuleVrc3Styles.Seated)
             });
         }
+        // END MODIFIED SECTION
 
         private void QuickActionsMenuPrefab()
         {
