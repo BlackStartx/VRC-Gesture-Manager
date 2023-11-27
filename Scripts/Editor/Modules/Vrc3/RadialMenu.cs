@@ -154,7 +154,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             OpenCustom(new RadialSliceBase[]
             {
-                new RadialSliceButton(OptionExtraMenuPrefab, "Extra", ModuleVrc3Styles.MuteSelf),
+                new RadialSliceButton(OptionExtraMenuPrefab, "Extra", ModuleVrc3Styles.Extras),
                 new RadialSliceButton(OptionTrackingMenuPrefab, "Tracking", ModuleVrc3Styles.HeadHands),
                 new RadialSliceButton(Module.EnableEditMode, "Edit-Mode", ModuleVrc3Styles.Default),
                 new RadialSliceButton(OptionStatesMenuPrefab, "States", ModuleVrc3Styles.AFK),
@@ -213,7 +213,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "InStation", GetParam(Vrc3DefaultParams.InStation), ModuleVrc3Styles.Seated)
             });
         }
-        // END MODIFIED SECTION
 
         private void QuickActionsMenuPrefab()
         {

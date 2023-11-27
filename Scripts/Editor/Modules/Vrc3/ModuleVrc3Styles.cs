@@ -45,7 +45,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static Texture2D _toolClick;
         private static Texture2D _toolPose;
 
-        // PR #40 - New Icon Definitions on Lines 49 thru 69 (haha funny number).
+        // PR #40 - New Icon Definitions on Lines 49 thru 70.
         private static Texture2D _earmuffs;
         private static Texture2D _fallingSpeed;
         private static Texture2D _fullBody;
@@ -67,6 +67,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static Texture2D _fourPoint;
         private static Texture2D _uninitialized;
         private static Texture2D _isLocal;
+        private static Texture2D _extras;
 
         internal static GUIStyle Url => _url ?? (_url = new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.blue } });
         internal static GUIStyle UrlPro => _urlPro ?? (_urlPro = new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.cyan } });
@@ -99,7 +100,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal static Texture2D ToolClick => _toolClick ? _toolClick : _toolClick = Resources.Load<Texture2D>("Vrc3/BSX_GM_Tool_Click");
         internal static Texture2D ToolPose => _toolPose ? _toolPose : _toolPose = Resources.Load<Texture2D>("Vrc3/BSX_GM_Tool_Pose");
 
-        // PR #40 - New Icon References on Lines 103 thru 123.
+        // PR #40 - New Icon References on Lines 104 thru 125.
         internal static Texture2D Earmuffs => _earmuffs ? _earmuffs : _earmuffs = Resources.Load<Texture2D>("Vrc3/BSX_GM_Earmuffs");
         internal static Texture2D FallingSpeed => _fallingSpeed ? _fallingSpeed : _fallingSpeed = Resources.Load<Texture2D>("Vrc3/BSX_GM_FallingSpeed");
         internal static Texture2D FullBody => _fullBody ? _fullBody : _fullBody = Resources.Load<Texture2D>("Vrc3/BSX_GM_FullBody");
@@ -121,6 +122,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal static Texture2D FourPoint => _fourPoint ? _fourPoint : _fourPoint = Resources.Load<Texture2D>("Vrc3/BSX_GM_FourPoint");
         internal static Texture2D Uninitialized => _uninitialized ? _uninitialized : _uninitialized = Resources.Load<Texture2D>("Vrc3/BSX_GM_Uninitialized");
         internal static Texture2D IsLocal => _isLocal ? _isLocal : _isLocal = Resources.Load<Texture2D>("Vrc3/BSX_GM_IsLocal");
+        internal static Texture2D Extras => _extras ? _extras : _extras = Resources.Load<Texture2D>("Vrc3/BSX_GM_Extras");
 
         public static class Data
         {
