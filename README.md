@@ -196,6 +196,7 @@ Thanks to every friend and person who helped or supported me during the developm
 - Ahri~
 - Nayu
 - ♡ GaNyan ♡
+- [BluWizard](https://github.com/BluWizard10)
 - TheIceDragonz
 - NinaV2
 - [emymin](https://github.com/emymin/)
@@ -216,6 +217,6 @@ And:
 
 - You~ ♥
 
-For any feedback fell free to contact me on Discord: BlackStartx#6593
+For any feedback fell free to contact me on Discord: blackstartx
 
 Thanks again for using my script~ ♥<br><br>

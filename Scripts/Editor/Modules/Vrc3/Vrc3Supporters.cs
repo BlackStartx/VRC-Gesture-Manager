@@ -46,7 +46,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 new Supporter { name = "lukasong" },
 
                 new Supporter { name = ".Rei." },
-                new Supporter { name = "" },
+                new Supporter { name = "BluWizard" },
                 new Supporter { name = "" }
             },
             supporter = new[]
