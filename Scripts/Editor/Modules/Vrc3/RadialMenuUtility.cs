@@ -258,14 +258,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         public static class Buttons
         {
-            public static RadialSliceControl ToggleFromParam(RadialMenu menu, string name, Vrc3Param param)
+            public static RadialSliceControl ToggleFromParam(RadialMenu menu, string name, Vrc3Param param, Texture2D icon = null, float activeValue = 1f)
             {
-                return ParamStateToggle(menu, name, param, 1f);
-            }
-
-            public static RadialSliceControl ParamStateToggle(RadialMenu menu, string name, Vrc3Param param, float activeValue)
-            {
-                return new RadialSliceControl(menu, name, null, ControlType.Toggle, activeValue, param, Array.Empty<Vrc3Param>(), null, null);
+                return new RadialSliceControl(menu, name, icon, ControlType.Toggle, activeValue, param, Array.Empty<Vrc3Param>(), null, null);
             }
 
             public static RadialSliceBase RadialFromParam(RadialMenu menu, string name, Vrc3Param param, Texture2D icon = null, float amplify = 1f, RadialSliceControl.RadialSettings settings = null)

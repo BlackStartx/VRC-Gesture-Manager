@@ -44,6 +44,28 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static Texture2D _toolCamera;
         private static Texture2D _toolClick;
         private static Texture2D _toolPose;
+        private static Texture2D _earmuffs;
+        private static Texture2D _fallingSpeed;
+        private static Texture2D _fullBody;
+        private static Texture2D _generic;
+        private static Texture2D _gestureLeftWeight;
+        private static Texture2D _gestureRightWeight;
+        private static Texture2D _grounded;
+        private static Texture2D _handsOnly;
+        private static Texture2D _headHands;
+        private static Texture2D _iKPose;
+        private static Texture2D _muteSelf;
+        private static Texture2D _seated;
+        private static Texture2D _tPose;
+        private static Texture2D _upright;
+        private static Texture2D _velocity;
+        private static Texture2D _visemes;
+        private static Texture2D _vRMode;
+        private static Texture2D _afk;
+        private static Texture2D _fourPoint;
+        private static Texture2D _uninitialized;
+        private static Texture2D _isLocal;
+        private static Texture2D _extras;
 
         internal static GUIStyle Url => _url ?? (_url = new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.blue } });
         internal static GUIStyle UrlPro => _urlPro ?? (_urlPro = new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.cyan } });
@@ -75,6 +97,28 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal static Texture2D ToolCamera => _toolCamera ? _toolCamera : _toolCamera = Resources.Load<Texture2D>("Vrc3/BSX_GM_Tool_Camera");
         internal static Texture2D ToolClick => _toolClick ? _toolClick : _toolClick = Resources.Load<Texture2D>("Vrc3/BSX_GM_Tool_Click");
         internal static Texture2D ToolPose => _toolPose ? _toolPose : _toolPose = Resources.Load<Texture2D>("Vrc3/BSX_GM_Tool_Pose");
+        internal static Texture2D Earmuffs => _earmuffs ? _earmuffs : _earmuffs = Resources.Load<Texture2D>("Vrc3/BSX_GM_Earmuffs");
+        internal static Texture2D FallingSpeed => _fallingSpeed ? _fallingSpeed : _fallingSpeed = Resources.Load<Texture2D>("Vrc3/BSX_GM_FallingSpeed");
+        internal static Texture2D FullBody => _fullBody ? _fullBody : _fullBody = Resources.Load<Texture2D>("Vrc3/BSX_GM_FullBody");
+        internal static Texture2D Generic => _generic ? _generic : _generic = Resources.Load<Texture2D>("Vrc3/BSX_GM_Generic");
+        internal static Texture2D GestureLeftWeight => _gestureLeftWeight ? _gestureLeftWeight : _gestureLeftWeight = Resources.Load<Texture2D>("Vrc3/BSX_GM_GestureLeftWeight");
+        internal static Texture2D GestureRightWeight => _gestureRightWeight ? _gestureRightWeight : _gestureRightWeight = Resources.Load<Texture2D>("Vrc3/BSX_GM_GestureRightWeight");
+        internal static Texture2D Grounded => _grounded ? _grounded : _grounded = Resources.Load<Texture2D>("Vrc3/BSX_GM_Grounded");
+        internal static Texture2D HandsOnly => _handsOnly ? _handsOnly : _handsOnly = Resources.Load<Texture2D>("Vrc3/BSX_GM_HandsOnly");
+        internal static Texture2D HeadHands => _headHands ? _headHands : _headHands = Resources.Load<Texture2D>("Vrc3/BSX_GM_HeadHands");
+        internal static Texture2D IKPose => _iKPose ? _iKPose : _iKPose = Resources.Load<Texture2D>("Vrc3/BSX_GM_IKPose");
+        internal static Texture2D MuteSelf => _muteSelf ? _muteSelf : _muteSelf = Resources.Load<Texture2D>("Vrc3/BSX_GM_MuteSelf");
+        internal static Texture2D Seated => _seated ? _seated : _seated = Resources.Load<Texture2D>("Vrc3/BSX_GM_Seated");
+        internal static Texture2D TPose => _tPose ? _tPose : _tPose = Resources.Load<Texture2D>("Vrc3/BSX_GM_TPose");
+        internal static Texture2D Upright => _upright ? _upright : _upright = Resources.Load<Texture2D>("Vrc3/BSX_GM_Upright");
+        internal static Texture2D Velocity => _velocity ? _velocity : _velocity = Resources.Load<Texture2D>("Vrc3/BSX_GM_Velocity");
+        internal static Texture2D Visemes => _visemes ? _visemes : _visemes = Resources.Load<Texture2D>("Vrc3/BSX_GM_Visemes");
+        internal static Texture2D VRMode => _vRMode ? _vRMode : _vRMode = Resources.Load<Texture2D>("Vrc3/BSX_GM_VRMode");
+        internal static Texture2D Afk => _afk ? _afk : _afk = Resources.Load<Texture2D>("Vrc3/BSX_GM_AFK");
+        internal static Texture2D FourPoint => _fourPoint ? _fourPoint : _fourPoint = Resources.Load<Texture2D>("Vrc3/BSX_GM_FourPoint");
+        internal static Texture2D Uninitialized => _uninitialized ? _uninitialized : _uninitialized = Resources.Load<Texture2D>("Vrc3/BSX_GM_Uninitialized");
+        internal static Texture2D IsLocal => _isLocal ? _isLocal : _isLocal = Resources.Load<Texture2D>("Vrc3/BSX_GM_IsLocal");
+        internal static Texture2D Extras => _extras ? _extras : _extras = Resources.Load<Texture2D>("Vrc3/BSX_GM_Extras");
 
         public static class Data
         {
