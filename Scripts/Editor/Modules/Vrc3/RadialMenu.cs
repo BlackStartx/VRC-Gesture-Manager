@@ -209,6 +209,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 RadialMenuUtility.Buttons.RadialFromParam(this, "Gesture\nRight Weight", GetParam(Vrc3DefaultParams.GestureRightWeight), ModuleVrc3Styles.GestureRightWeight),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "MuteSelf", GetParam(Vrc3DefaultParams.MuteSelf), ModuleVrc3Styles.MuteSelf),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "Earmuffs", GetParam(Vrc3DefaultParams.Earmuffs), ModuleVrc3Styles.Earmuffs),
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "IsOnFriendsList", GetParam(Vrc3DefaultParams.IsOnFriendsList), ModuleVrc3Styles.IsOnFriendsList),
                 RadialMenuUtility.Buttons.RadialFromParam(this, "Gesture\nLeft Weight", GetParam(Vrc3DefaultParams.GestureLeftWeight), ModuleVrc3Styles.GestureLeftWeight),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "InStation", GetParam(Vrc3DefaultParams.InStation), ModuleVrc3Styles.Seated)
             });

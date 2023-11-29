@@ -31,6 +31,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal const string VRMode = "VRMode";
         internal const string Vise = "Viseme";
         internal const string Afk = "AFK";
+        internal const string IsOnFriendsList = "IsOnFriendsList";
 
         private const string VrcFaceBlendH = "VRCFaceBlendH";
         private const string VrcFaceBlendV = "VRCFaceBlendV";
@@ -69,7 +70,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             (VRMode, AnimatorControllerParameterType.Int),
             (Voice, AnimatorControllerParameterType.Float),
             (Vise, AnimatorControllerParameterType.Int),
-            (Afk, AnimatorControllerParameterType.Bool)
+            (Afk, AnimatorControllerParameterType.Bool),
+            (IsOnFriendsList, AnimatorControllerParameterType.Bool),
         };
     }
 }
