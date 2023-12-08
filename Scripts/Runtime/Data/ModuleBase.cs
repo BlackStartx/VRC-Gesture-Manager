@@ -60,12 +60,16 @@ namespace BlackStartX.GestureManager.Data
 
         public virtual bool IsInvalid() => !Avatar || !AvatarAnimator || !_avatarDescriptor;
 
-        protected virtual List<string> CheckWarnings() => new List<string>();
+        protected virtual List<string> CheckWarnings()
+        {
+            var warnings = new List<string>();
+            if (GestureManager.ControlledAvatars.ContainsKey(Avatar)) warnings.Add("- The avatar is already controlled by another Gesture Manager!");
+            return warnings;
+        }
 
         protected virtual List<string> CheckErrors()
         {
             var errors = new List<string>();
-            if (GestureManager.ControlledAvatars.ContainsKey(Avatar)) errors.Add("- The avatar is already controlled by another Gesture Manager!");
             if (!Avatar) errors.Add("- The GameObject has been deleted!");
             else if (!Avatar.activeInHierarchy) errors.Add("- The GameObject is disabled!");
             if (!AvatarAnimator) errors.Add("- The model doesn't have any animator!");
