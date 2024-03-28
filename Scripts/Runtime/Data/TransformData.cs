@@ -35,14 +35,4 @@ namespace BlackStartX.GestureManager.Data
 
         public TransformData Difference(Transform t) => new TransformData(t.position - _position, t.rotation * Quaternion.Inverse(_rotation), t.localScale - _localScale);
     }
-
-    public static class Extensions
-    {
-        public static void ApplyTo(this Transform s, Transform t)
-        {
-            t.position = s.position;
-            t.rotation = s.rotation;
-            t.localScale = s.lossyScale;
-        }
-    }
 }

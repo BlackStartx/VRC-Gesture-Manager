@@ -286,6 +286,15 @@ namespace BlackStartX.GestureManager.Editor.Lib
             return descriptor;
         }
 
+        public static T EnumPopup<T>(string label, T flag, UnityEngine.Object o) where T : Enum
+        {
+            var newFlag = (T)EditorGUILayout.EnumPopup(label, flag);
+            if (Equals(flag, newFlag)) return flag;
+            Undo.RecordObject(o, EventName);
+            EditorUtility.SetDirty(o);
+            return newFlag;
+        }
+
         public static int Popup(string label, int index, string[] choose, UnityEngine.Object o)
         {
             if (index == (index = EditorGUILayout.Popup(label, index, choose))) return index;

@@ -278,7 +278,7 @@ namespace BlackStartX.GestureManager.Editor
             }
         }
 
-        private static async Task<string> GetDiscord() => await Get(DiscordURL);
-        private static async Task<string> GetSupport() => await Get(SupportURL);
+        private static Task<string> GetDiscord() => Get(DiscordURL);
+        private static Task<string> GetSupport() => Get(SupportURL);
     }
 }

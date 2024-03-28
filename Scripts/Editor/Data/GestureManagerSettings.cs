@@ -52,6 +52,9 @@ namespace BlackStartX.GestureManager.Editor.Data
             if (!GmgLayoutHelper.FoldoutSection("Simulation Settings", ref _simulationSettings)) return;
             GUILayout.Label("Do you wish to load the local stored parameters values!", GestureManagerStyles.SettingsText);
             using (new GUILayout.HorizontalScope()) LoadParametersSettings(manager);
+            GUILayout.Label("Initial Pose", GestureManagerStyles.ToolSubHeader);
+            GUILayout.Label("Set the initial pose of your avatar!", GestureManagerStyles.SettingsText);
+            manager.settings.initialPose = GmgLayoutHelper.EnumPopup("Initial Pose: ", manager.settings.initialPose, manager);
             GUILayout.Label("Default Parameters", GestureManagerStyles.ToolSubHeader);
             GUILayout.Label("Set the initial states of the default parameters!", GestureManagerStyles.SettingsText);
             using (new GUILayout.HorizontalScope()) DefaultParametersSettings(manager);

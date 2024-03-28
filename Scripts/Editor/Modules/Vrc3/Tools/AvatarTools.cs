@@ -301,6 +301,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             protected internal override void Toggle(ModuleVrc3 module)
             {
                 _poseMode = module.PoseMode = !module.PoseMode;
+                if (_poseMode) module.TryAddWarning(_poseWarning);
+                else module.TryRemoveWarning(_poseWarning);
                 module.AvatarAnimator.applyRootMotion = _poseMode;
                 if (!_poseMode || module.DummyMode == null) return;
                 module.SavePose(module.DummyMode.Animator);
@@ -310,6 +312,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
                 module.SetPose(module.AvatarAnimator);
                 data.AddTo(transform);
             }
+
+            private readonly Vrc3Warning _poseWarning = new Vrc3Warning("You are in Pose-Mode!", "You can pose your avatar but the animations of your bones are disabled!", false);
         }
 
         private class AvatarBackground : GmgDynamicFunction

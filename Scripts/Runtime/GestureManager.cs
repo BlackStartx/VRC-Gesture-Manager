@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using BlackStartX.GestureManager.Data;
+using BlackStartX.GestureManager.Editor.Lib;
 using BlackStartX.GestureManager.Modules;
 using JetBrains.Annotations;
 using UnityEngine;

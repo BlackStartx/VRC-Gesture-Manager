@@ -12,10 +12,18 @@ namespace BlackStartX.GestureManager.Modules
     public class ModuleSettings
     {
         public GmgAvatarDescriptor favourite;
+        public Pose initialPose;
         public int userIndex;
 
         public bool loadStored;
         public bool isRemote;
         public bool vrMode;
+    }
+
+    public enum Pose
+    {
+        None,
+        PoseT,
+        PoseIK
     }
 }

@@ -1,37 +1,36 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System;
 using System.Collections.Generic;
-using BlackStartX.GestureManager.Editor.Lib;
-using UnityEditor;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Animations;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 {
-    public abstract class Vrc3Param
+    public class Vrc3Param
     {
-        protected readonly HashSet<AnimatorControllerPlayable> Playables = new HashSet<AnimatorControllerPlayable>();
+        private readonly Dictionary<AnimatorControllerPlayable, int> _controllers = new Dictionary<AnimatorControllerPlayable, int>();
 
         public readonly AnimatorControllerParameterType Type;
-        private readonly Func<float, float> _converted;
-        protected readonly int HashId;
+        private readonly int _hashId;
         public readonly string Name;
         public int LastUpdate;
 
+        private float _value;
         private Action<Vrc3Param, float> _onChange;
 
-        protected Vrc3Param(string name, AnimatorControllerParameterType type)
+        public Vrc3Param(string name, AnimatorControllerParameterType type, Action<Vrc3Param, float> onChange = null)
         {
             Name = name;
             Type = type;
             LastUpdate = Time;
-            HashId = Animator.StringToHash(Name);
-            _converted = GenerateConverter();
+            _onChange = onChange;
+            _hashId = Animator.StringToHash(Name);
         }
 
         public void Set(ModuleVrc3 module, float value)
         {
-            if (Is(value = _converted(value))) return;
+            if (RadialMenuUtility.Is(FloatValue(), value)) return;
             module.OscModule.OnParameterChange(this, value);
             LastUpdate = Time;
             InternalSet(value);
@@ -43,11 +42,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 
         public static int Time => (int)(DateTime.Now.Ticks / 100000L);
 
-        private void Set(ModuleVrc3 module, bool value) => Set(module, value ? 1f : 0f);
+        public void Subscribe(AnimatorControllerPlayable playable, int index) => _controllers[playable] = index;
 
-        private void Set(ModuleVrc3 module, int value) => Set(module, (float)value);
+        public void Set(ModuleVrc3 module, bool value) => Set(module, value ? 1f : 0f);
 
-        public void Subscribe(AnimatorControllerPlayable playable) => Playables.Add(playable);
+        public void Set(ModuleVrc3 module, int value) => Set(module, (float)value);
 
         public void Set(ModuleVrc3 module, float? value)
         {
@@ -61,18 +60,36 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 
         public void SetOnChange(Action<Vrc3Param, float> onChange) => _onChange = onChange;
 
-        private bool Is(float value) => RadialMenuUtility.Is(FloatValue(), value);
-
         [Obsolete("This method be removed on 3.9, override FloatValue for now on. Kept for compilation compatibility.")]
-        public virtual float Get() => 0f;
+        public virtual float Get() => FloatValue();
 
-        public virtual float FloatValue() => Get();
+        public virtual float FloatValue() => _value;
 
         public int IntValue() => (int)FloatValue();
 
         public bool BoolValue() => FloatValue() > 0.5f;
 
-        protected internal abstract void InternalSet(float value);
+        protected internal virtual void InternalSet(float value)
+        {
+            _value = value;
+            foreach (var pair in _controllers.Where(pair => ModuleVrc3.IsValid(pair.Key)))
+            {
+                switch (pair.Key.GetParameter(pair.Value).type)
+                {
+                    case AnimatorControllerParameterType.Float:
+                        pair.Key.SetFloat(_hashId, value);
+                        break;
+                    case AnimatorControllerParameterType.Int:
+                        pair.Key.SetInteger(_hashId, (int)Math.Round(value));
+                        break;
+                    case AnimatorControllerParameterType.Trigger:
+                    case AnimatorControllerParameterType.Bool:
+                        pair.Key.SetBool(_hashId, value > 0f);
+                        break;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
 
         public void Add(ModuleVrc3 module, float value) => Set(module, FloatValue() + value);
 
@@ -113,56 +130,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
                 case AnimatorControllerParameterType.Trigger:
                     Set(module, UnityEngine.Random.Range(0.0f, 1.0f) < chance);
                     break;
-                default: throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        public (Color? color, string text) LabelTuple()
-        {
-            switch (Type)
-            {
-                case AnimatorControllerParameterType.Float:
-                    return (null, FloatValue().ToString("0.00"));
-                case AnimatorControllerParameterType.Int:
-                    return (null, IntValue().ToString());
-                case AnimatorControllerParameterType.Bool:
-                case AnimatorControllerParameterType.Trigger:
-                    return BoolValue() ? (Color.green, "True") : (Color.red, "False");
-                default: throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        public void FieldTuple(ModuleVrc3 module, GUILayoutOption innerOption)
-        {
-            var rect = GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label, innerOption);
-            switch (Type)
-            {
-                case AnimatorControllerParameterType.Float:
-                    if (GmgLayoutHelper.UnityFieldEnterListener(FloatValue(), module, rect, EditorGUI.FloatField, Set, module.Edit)) module.Edit = null;
-                    break;
-                case AnimatorControllerParameterType.Int:
-                    if (GmgLayoutHelper.UnityFieldEnterListener(IntValue(), module, rect, EditorGUI.IntField, Set, module.Edit)) module.Edit = null;
-                    break;
-                case AnimatorControllerParameterType.Bool:
-                case AnimatorControllerParameterType.Trigger:
-                    Set(module, !BoolValue());
-                    module.Edit = null;
-                    break;
-                default: throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        private Func<float, float> GenerateConverter()
-        {
-            switch (Type)
-            {
-                case AnimatorControllerParameterType.Float:
-                    return value => value;
-                case AnimatorControllerParameterType.Int:
-                    return value => (int)value;
-                case AnimatorControllerParameterType.Bool:
-                case AnimatorControllerParameterType.Trigger:
-                    return value => value > 0.5f ? 1f : 0f;
                 default: throw new ArgumentOutOfRangeException();
             }
         }

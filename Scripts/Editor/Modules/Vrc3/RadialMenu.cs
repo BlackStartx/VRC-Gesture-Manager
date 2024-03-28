@@ -358,10 +358,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             GUILayout.Space(10);
             _radialDescription?.Show();
-            if (!Module.PoseMode) return;
-            using (new GmgLayoutHelper.GuiBackground(Color.yellow))
-            using (new GUILayout.HorizontalScope(GestureManagerStyles.EmoteError))
-                GUILayout.Label("You are in Pose-Mode!\n\nYou can pose your avatar but the animations of your bones are disabled!", GestureManagerStyles.Centered);
         }
 
         public void Set(VRCExpressionsMenu menu)

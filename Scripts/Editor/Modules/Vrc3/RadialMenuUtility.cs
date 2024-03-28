@@ -83,7 +83,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                         width = size - 2,
                         height = 2,
 #if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
-                        transformOrigin =  new StyleTransformOrigin(),
+                        transformOrigin = new StyleTransformOrigin(),
 #endif                    // TEMP FIX FOR UNITY 2022 pivot change~
                         backgroundColor = Colors.CustomBorder,
                         position = UIEPosition.Absolute
@@ -153,7 +153,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                         left = -width / 2,
 #if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
                         top = -height / 2,
-                        transformOrigin =  new StyleTransformOrigin(),
+                        transformOrigin = new StyleTransformOrigin(),
 #else                     // TEMP FIX FOR UNITY 2022 pivot change~
                         top = -height / 2 - 10,
 #endif                    // TEMP FIX FOR UNITY 2022 pivot change~
@@ -311,26 +311,28 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             }
         }
 
-        public static IEnumerable<AnimatorControllerParameter> GetParameters(AnimatorControllerPlayable playable)
+        public static IEnumerable<(int, AnimatorControllerParameter)> GetParameters(AnimatorControllerPlayable playable)
         {
             if (playable.IsNull()) yield break;
             for (var i = 0; i < playable.GetParameterCount(); i++)
-                yield return playable.GetParameter(i);
+                yield return (i, playable.GetParameter(i));
         }
 
-        public static Vrc3ParamController CreateParamFromPlayable(AnimatorControllerParameter parameter, AnimatorControllerPlayable controller)
+        public static Vrc3Param CreateParamFromPlayable(AnimatorControllerParameter parameter, AnimatorControllerPlayable controller, int index)
         {
-            return new Vrc3ParamController(parameter.type, parameter.name, controller);
+            var param = new Vrc3Param(parameter.name, parameter.type);
+            param.Subscribe(controller, index);
+            return param;
         }
 
         public static Vrc3Param CreateParamFromNothing(VRCExpressionParameters.Parameter parameter)
         {
-            return new Vrc3ParamExternal(parameter.name, ModuleVrc3Styles.Data.TypeOf[parameter.valueType]);
+            return new Vrc3Param(parameter.name, ModuleVrc3Styles.Data.TypeOf[parameter.valueType]);
         }
 
         public static Vrc3Param CreateParamFromNothing(string name, AnimatorControllerParameterType type)
         {
-            return new Vrc3ParamExternal(name, type);
+            return new Vrc3Param(name, type);
         }
 
         private static void AppendMenus(VRCExpressionsMenu menu, ICollection<VRCExpressionsMenu> menus)

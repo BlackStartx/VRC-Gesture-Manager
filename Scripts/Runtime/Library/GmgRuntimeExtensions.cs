@@ -1,11 +1,9 @@
-﻿using UnityEditor;
-using UnityEditor.UIElements;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace BlackStartX.GestureManager.Editor.Lib
 {
-    public static class GmgVisualElementExtensions
+    public static class GmgRuntimeExtensions
     {
         public static T MyAdd<T>(this VisualElement visualElement, T element) where T : VisualElement
         {
@@ -42,13 +40,11 @@ namespace BlackStartX.GestureManager.Editor.Lib
             visualElement.style.display = new StyleEnum<DisplayStyle>(f ? DisplayStyle.Flex : DisplayStyle.None);
         }
 
-        public static void MySetAntiAliasing(this EditorWindow window, int antiAliasing)
+        public static void ApplyTo(this Transform s, Transform t)
         {
-            if (!window || window.GetAntiAliasing() == antiAliasing) return;
-
-            window.SetAntiAliasing(antiAliasing);
-            // Dumb workaround method to trigger the internal MakeParentsSettingsMatchMe() method on the EditorWindow.
-            window.minSize = window.minSize;
+            t.position = s.position;
+            t.rotation = s.rotation;
+            t.localScale = s.lossyScale;
         }
     }
 }

@@ -45,6 +45,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   settings:
     favourite: {fileID: 0}
+    initialPose: 0
     userIndex: 0
     loadStored: 0
     isRemote: 0
