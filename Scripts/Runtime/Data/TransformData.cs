@@ -33,6 +33,6 @@ namespace BlackStartX.GestureManager.Data
             t.localScale = _localScale;
         }
 
-        public TransformData Difference(Transform t) => new TransformData(t.position - _position, t.rotation * Quaternion.Inverse(_rotation), t.localScale - _localScale);
+        public TransformData Difference(Transform t) => new(t.position - _position, t.rotation * Quaternion.Inverse(_rotation), t.localScale - _localScale);
     }
 }

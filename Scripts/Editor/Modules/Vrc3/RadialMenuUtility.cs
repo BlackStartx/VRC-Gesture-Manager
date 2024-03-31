@@ -3,10 +3,10 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using BlackStartX.GestureManager.Editor.Lib;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
-using BlackStartX.GestureManager.Runtime.VisualElements;
+using BlackStartX.GestureManager.Library;
+using BlackStartX.GestureManager.Library.VisualElements;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
@@ -22,24 +22,18 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public static class RadialMenuUtility
     {
-#if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
-        internal static Vector2 DataVector = new Vector2(-50, -50);
-#else                     // TEMP FIX FOR UNITY 2022 pivot change~
-        internal static Vector2 DataVector = new Vector2(-50, -60);
-#endif                    // TEMP FIX FOR UNITY 2022 pivot change~
-
         public static class Colors
         {
             public static class Default
             {
-                public static readonly Color Main = new Color(0.14f, 0.18f, 0.2f);
-                public static readonly Color Border = new Color(0.1f, 0.35f, 0.38f);
-                public static readonly Color Selected = new Color(0.07f, 0.55f, 0.58f);
+                public static readonly Color Main = new(0.14f, 0.18f, 0.2f);
+                public static readonly Color Border = new(0.1f, 0.35f, 0.38f);
+                public static readonly Color Selected = new(0.07f, 0.55f, 0.58f);
             }
 
-            public static readonly Color CenterSelected = new Color(0.06f, 0.2f, 0.22f);
-            public static readonly Color RadialInner = new Color(0.21f, 0.24f, 0.27f);
-            public static readonly Color CenterIdle = new Color(0.06f, 0.27f, 0.29f);
+            public static readonly Color CenterSelected = new(0.06f, 0.2f, 0.22f);
+            public static readonly Color RadialInner = new(0.21f, 0.24f, 0.27f);
+            public static readonly Color CenterIdle = new(0.06f, 0.27f, 0.29f);
 
             private const string MainKeyName = "GM3 Main Color";
             private const string BorderKeyName = "GM3 Border Color";
@@ -47,12 +41,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             private static Color PrefColor(string name, Color defaultColor) => ColorUtility.TryParseHtmlString(EditorPrefs.GetString(name), out var color) ? color : defaultColor;
 
-            internal static readonly Color RadialTextBackground = new Color(0.11f, 0.11f, 0.11f, 0.49f);
-            internal static readonly Color RestartButton = new Color(1f, 0.72f, 0.41f);
-            internal static readonly Color SubIcon = new Color(0.22f, 0.24f, 0.27f);
+            internal static readonly Color RadialTextBackground = new(0.11f, 0.11f, 0.11f, 0.49f);
+            internal static readonly Color RestartButton = new(1f, 0.72f, 0.41f);
+            internal static readonly Color SubIcon = new(0.22f, 0.24f, 0.27f);
 
-            internal static Color Cursor => new Color(CustomMain.r, CustomMain.g, CustomMain.b, CustomMain.a - 0.3f);
-            internal static Color CursorBorder => new Color(CustomBorder.r, CustomBorder.g, CustomBorder.b, CustomBorder.a - 0.5f);
+            internal static Color Cursor => new(CustomMain.r, CustomMain.g, CustomMain.b, CustomMain.a - 0.3f);
+            internal static Color CursorBorder => new(CustomBorder.r, CustomBorder.g, CustomBorder.b, CustomBorder.a - 0.5f);
             internal static Color ProgressBorder => CustomSelected * 1.5f;
 
             public static Color CustomMain = PrefColor(MainKeyName, Default.Main);
@@ -82,9 +76,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                     {
                         width = size - 2,
                         height = 2,
-#if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
                         transformOrigin = new StyleTransformOrigin(),
-#endif                    // TEMP FIX FOR UNITY 2022 pivot change~
                         backgroundColor = Colors.CustomBorder,
                         position = UIEPosition.Absolute
                     }
@@ -151,12 +143,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                         width = width,
                         height = height,
                         left = -width / 2,
-#if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
                         top = -height / 2,
-                        transformOrigin = new StyleTransformOrigin(),
-#else                     // TEMP FIX FOR UNITY 2022 pivot change~
-                        top = -height / 2 - 10,
-#endif                    // TEMP FIX FOR UNITY 2022 pivot change~
                         backgroundColor = Color.clear,
                         position = UIEPosition.Absolute,
                         alignItems = Align.Center,
@@ -226,18 +213,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                     pickingMode = PickingMode.Ignore,
                     style =
                     {
+                        top = 43,
+                        left = 60,
                         width = 25,
                         height = 25,
                         borderTopLeftRadius = 15,
                         borderTopRightRadius = 15,
                         borderBottomLeftRadius = 15,
                         borderBottomRightRadius = 15,
-                        left = 60,
-#if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
-                        top = 43,
-#else                     // TEMP FIX FOR UNITY 2022 pivot change~
-                        top = 50,
-#endif                    // TEMP FIX FOR UNITY 2022 pivot change~
                         backgroundColor = Colors.SubIcon,
                         position = UIEPosition.Absolute,
                         justifyContent = Justify.Center,
@@ -275,41 +258,27 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             }
         }
 
-        public static Texture2D GetSubIcon(ControlType type)
+        public static Texture2D GetSubIcon(ControlType type) => type switch
         {
-            switch (type)
-            {
-                case ControlType.Button:
-                    return null;
-                case ControlType.Toggle:
-                    return ModuleVrc3Styles.Toggle;
-                case ControlType.SubMenu:
-                    return ModuleVrc3Styles.Option;
-                case ControlType.TwoAxisPuppet:
-                    return ModuleVrc3Styles.TwoAxis;
-                case ControlType.FourAxisPuppet:
-                    return ModuleVrc3Styles.FourAxis;
-                case ControlType.RadialPuppet:
-                    return ModuleVrc3Styles.Radial;
-                default: return null;
-            }
-        }
+            ControlType.Button => null,
+            ControlType.Toggle => ModuleVrc3Styles.Toggle,
+            ControlType.SubMenu => ModuleVrc3Styles.Option,
+            ControlType.TwoAxisPuppet => ModuleVrc3Styles.TwoAxis,
+            ControlType.FourAxisPuppet => ModuleVrc3Styles.FourAxis,
+            ControlType.RadialPuppet => ModuleVrc3Styles.Radial,
+            _ => null
+        };
 
-        public static DynamicType GetDynamicType(ControlType type)
+        public static DynamicType GetDynamicType(ControlType type) => type switch
         {
-            switch (type)
-            {
-                case ControlType.Button:
-                case ControlType.Toggle:
-                    return DynamicType.Running;
-                case ControlType.RadialPuppet:
-                    return DynamicType.Radial;
-                case ControlType.SubMenu:
-                case ControlType.TwoAxisPuppet:
-                case ControlType.FourAxisPuppet:
-                default: return DynamicType.None;
-            }
-        }
+            ControlType.Button => DynamicType.Running,
+            ControlType.Toggle => DynamicType.Running,
+            ControlType.RadialPuppet => DynamicType.Radial,
+            ControlType.SubMenu => DynamicType.None,
+            ControlType.TwoAxisPuppet => DynamicType.None,
+            ControlType.FourAxisPuppet => DynamicType.None,
+            _ => DynamicType.None
+        };
 
         public static IEnumerable<(int, AnimatorControllerParameter)> GetParameters(AnimatorControllerPlayable playable)
         {
@@ -375,10 +344,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public static IEnumerable<string> CheckWarnings(VRCExpressionsMenu menu, VRCExpressionParameters param)
         {
-            return from paramName in GetParams(GetMenus(menu))
-                let isDefined = string.IsNullOrEmpty(paramName) || param.FindParameter(paramName) != null
+            return from paramString in GetParams(GetMenus(menu))
+                let isDefined = string.IsNullOrEmpty(paramString) || param.FindParameter(paramString) != null
                 where !isDefined
-                select $"Menu uses a parameter that is not defined: {paramName}";
+                select $"Menu uses a parameter that is not defined: {paramString}";
         }
 
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]

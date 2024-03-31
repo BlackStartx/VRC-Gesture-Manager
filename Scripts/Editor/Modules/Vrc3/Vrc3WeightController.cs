@@ -1,5 +1,5 @@
 ﻿#if VRC_SDK_VRCSDK3
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Library;
 using UnityEngine;
 using UnityEngine.UIElements;
 

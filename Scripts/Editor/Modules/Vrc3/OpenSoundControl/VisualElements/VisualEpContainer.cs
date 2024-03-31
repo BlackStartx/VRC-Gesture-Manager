@@ -8,7 +8,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.Visual
 {
     public class VisualEpContainer : Vrc3VisualRender
     {
-        private readonly Dictionary<EndpointControl, VisualElement> _elements = new Dictionary<EndpointControl, VisualElement>();
+        private readonly Dictionary<EndpointControl, VisualElement> _elements = new();
 
         public VisualEpContainer() => style.position = UIEPosition.Absolute;
 

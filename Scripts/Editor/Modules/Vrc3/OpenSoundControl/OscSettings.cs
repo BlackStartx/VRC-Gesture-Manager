@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BlackStartX.GestureManager.Editor.Data;
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Library;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Cache;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using UnityEditor;
@@ -195,25 +195,19 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
             }
         }
 
-        private static OscPacket.Message Message(string address, AnimatorControllerParameterType type, float value)
+        private static OscPacket.Message Message(string address, AnimatorControllerParameterType type, float value) => type switch
         {
-            switch (type)
-            {
-                case AnimatorControllerParameterType.Float:
-                    return new OscPacket.Message(address, value);
-                case AnimatorControllerParameterType.Int:
-                    return new OscPacket.Message(address, (int)value);
-                case AnimatorControllerParameterType.Bool:
-                case AnimatorControllerParameterType.Trigger:
-                    return new OscPacket.Message(address, value > 0.5);
-                default: throw new ArgumentOutOfRangeException();
-            }
-        }
+            AnimatorControllerParameterType.Float => new OscPacket.Message(address, value),
+            AnimatorControllerParameterType.Int => new OscPacket.Message(address, (int)value),
+            AnimatorControllerParameterType.Bool => new OscPacket.Message(address, value > 0.5),
+            AnimatorControllerParameterType.Trigger => new OscPacket.Message(address, value > 0.5),
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
         private class InputOutputData
         {
-            internal readonly Dictionary<string, (AnimatorControllerParameterType type, Action<IList<object>> execute)> Input = new Dictionary<string, (AnimatorControllerParameterType type, Action<IList<object>> execute)>();
-            internal readonly Dictionary<string, (string address, AnimatorControllerParameterType type)> Output = new Dictionary<string, (string address, AnimatorControllerParameterType type)>();
+            internal readonly Dictionary<string, (AnimatorControllerParameterType type, Action<IList<object>> execute)> Input = new();
+            internal readonly Dictionary<string, (string address, AnimatorControllerParameterType type)> Output = new();
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using BlackStartX.GestureManager.Data;
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Library;
 using BlackStartX.GestureManager.Modules;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -9,9 +9,9 @@ namespace BlackStartX.GestureManager
 {
     public class GestureManager : MonoBehaviour
     {
-        public const string Version = "Gesture Manager 3.8";
-        public static readonly Dictionary<GameObject, ModuleBase> ControlledAvatars = new Dictionary<GameObject, ModuleBase>();
-        public static List<ModuleBase> LastCheckedActiveModules = new List<ModuleBase>();
+        public const string Version = "Gesture Manager 3.9";
+        public static readonly Dictionary<GameObject, ModuleBase> ControlledAvatars = new();
+        public static List<ModuleBase> LastCheckedActiveModules = new();
         public static bool InWebClientRequest;
 
         private TransformData _managerTransform;

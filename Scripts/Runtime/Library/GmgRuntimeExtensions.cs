@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace BlackStartX.GestureManager.Editor.Lib
+namespace BlackStartX.GestureManager.Library
 {
     public static class GmgRuntimeExtensions
     {

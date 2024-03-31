@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Library;
 using UnityEditor;
 using UnityEngine;
 

@@ -53,10 +53,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static Texture2D _grounded;
         private static Texture2D _handsOnly;
         private static Texture2D _headHands;
-        private static Texture2D _iKPose;
+        private static Texture2D _poseIk;
         private static Texture2D _muteSelf;
         private static Texture2D _seated;
-        private static Texture2D _tPose;
+        private static Texture2D _poseT;
         private static Texture2D _upright;
         private static Texture2D _velocity;
         private static Texture2D _visemes;
@@ -68,8 +68,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static Texture2D _extras;
         private static Texture2D _isOnFriendsList;
 
-        internal static GUIStyle Url => _url ?? (_url = new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.blue } });
-        internal static GUIStyle UrlPro => _urlPro ?? (_urlPro = new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.cyan } });
+        internal static GUIStyle Url => _url ??= new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.blue } };
+        internal static GUIStyle UrlPro => _urlPro ??= new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.cyan } };
 
         internal static Texture2D Emojis => _emojis ? _emojis : _emojis = Resources.Load<Texture2D>("Vrc3/BSX_GM_Emojis");
         internal static Texture2D Option => _option ? _option : _option = Resources.Load<Texture2D>("Vrc3/BSX_GM_Option");
@@ -107,10 +107,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal static Texture2D Grounded => _grounded ? _grounded : _grounded = Resources.Load<Texture2D>("Vrc3/BSX_GM_Grounded");
         internal static Texture2D HandsOnly => _handsOnly ? _handsOnly : _handsOnly = Resources.Load<Texture2D>("Vrc3/BSX_GM_HandsOnly");
         internal static Texture2D HeadHands => _headHands ? _headHands : _headHands = Resources.Load<Texture2D>("Vrc3/BSX_GM_HeadHands");
-        internal static Texture2D IKPose => _iKPose ? _iKPose : _iKPose = Resources.Load<Texture2D>("Vrc3/BSX_GM_IKPose");
+        internal static Texture2D PoseIK => _poseIk ? _poseIk : _poseIk = Resources.Load<Texture2D>("Vrc3/BSX_GM_Pose_IK");
         internal static Texture2D MuteSelf => _muteSelf ? _muteSelf : _muteSelf = Resources.Load<Texture2D>("Vrc3/BSX_GM_MuteSelf");
         internal static Texture2D Seated => _seated ? _seated : _seated = Resources.Load<Texture2D>("Vrc3/BSX_GM_Seated");
-        internal static Texture2D TPose => _tPose ? _tPose : _tPose = Resources.Load<Texture2D>("Vrc3/BSX_GM_TPose");
+        internal static Texture2D PoseT => _poseT ? _poseT : _poseT = Resources.Load<Texture2D>("Vrc3/BSX_GM_Pose_T");
         internal static Texture2D Upright => _upright ? _upright : _upright = Resources.Load<Texture2D>("Vrc3/BSX_GM_Upright");
         internal static Texture2D Velocity => _velocity ? _velocity : _velocity = Resources.Load<Texture2D>("Vrc3/BSX_GM_Velocity");
         internal static Texture2D Visemes => _visemes ? _visemes : _visemes = Resources.Load<Texture2D>("Vrc3/BSX_GM_Visemes");
@@ -137,24 +137,21 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             internal static int LayerSort(VRCAvatarDescriptor.CustomAnimLayer x, VRCAvatarDescriptor.CustomAnimLayer y) => SortValue[x.type] - SortValue[y.type];
 
-            internal static AvatarMask MaskOf(AnimLayerType type)
+            internal static AvatarMask MaskOf(AnimLayerType type) => type switch
             {
-                switch (type)
-                {
-                    case AnimLayerType.Gesture: return Masks.Hands;
-                    case AnimLayerType.IKPose: return Masks.Armature;
-                    case AnimLayerType.TPose: return Masks.Armature;
-                    case AnimLayerType.FX: return Masks.Empty;
-                    case AnimLayerType.Deprecated0:
-                    case AnimLayerType.Additive:
-                    case AnimLayerType.Sitting:
-                    case AnimLayerType.Action:
-                    case AnimLayerType.Base:
-                    default: return null;
-                }
-            }
+                AnimLayerType.Gesture => Masks.Hands,
+                AnimLayerType.IKPose => Masks.Armature,
+                AnimLayerType.TPose => Masks.Armature,
+                AnimLayerType.FX => Masks.Empty,
+                AnimLayerType.Deprecated0 => null,
+                AnimLayerType.Additive => null,
+                AnimLayerType.Sitting => null,
+                AnimLayerType.Action => null,
+                AnimLayerType.Base => null,
+                _ => null
+            };
 
-            private static readonly Dictionary<AnimLayerType, string> NameOf = new Dictionary<AnimLayerType, string>
+            private static readonly Dictionary<AnimLayerType, string> NameOf = new()
             {
                 { AnimLayerType.FX, "GmgFxLayer" },
                 { AnimLayerType.Base, "GmgBaseLayer" },
@@ -166,7 +163,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 { AnimLayerType.Additive, "GmgAdditiveLayer" }
             };
 
-            internal static readonly Dictionary<BlendableAnimatorLayer, AnimLayerType> AnimatorToLayer = new Dictionary<BlendableAnimatorLayer, AnimLayerType>
+            internal static readonly Dictionary<BlendableAnimatorLayer, AnimLayerType> AnimatorToLayer = new()
             {
                 { BlendableAnimatorLayer.FX, AnimLayerType.FX },
                 { BlendableAnimatorLayer.Action, AnimLayerType.Action },
@@ -174,7 +171,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 { BlendableAnimatorLayer.Additive, AnimLayerType.Additive }
             };
 
-            internal static readonly Dictionary<BlendablePlayableLayer, AnimLayerType> PlayableToLayer = new Dictionary<BlendablePlayableLayer, AnimLayerType>
+            internal static readonly Dictionary<BlendablePlayableLayer, AnimLayerType> PlayableToLayer = new()
             {
                 { BlendablePlayableLayer.FX, AnimLayerType.FX },
                 { BlendablePlayableLayer.Action, AnimLayerType.Action },
@@ -182,7 +179,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 { BlendablePlayableLayer.Additive, AnimLayerType.Additive }
             };
 
-            internal static readonly Dictionary<AnimLayerType, int> SortValue = new Dictionary<AnimLayerType, int>
+            internal static readonly Dictionary<AnimLayerType, int> SortValue = new()
             {
                 { AnimLayerType.Base, 0 },
                 { AnimLayerType.Additive, 1 },
@@ -194,14 +191,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 { AnimLayerType.FX, 7 }
             };
 
-            internal static readonly Dictionary<ValueType, AnimatorControllerParameterType> TypeOf = new Dictionary<ValueType, AnimatorControllerParameterType>
+            internal static readonly Dictionary<ValueType, AnimatorControllerParameterType> TypeOf = new()
             {
                 { ValueType.Int, AnimatorControllerParameterType.Int },
                 { ValueType.Bool, AnimatorControllerParameterType.Bool },
                 { ValueType.Float, AnimatorControllerParameterType.Float }
             };
 
-            public static Dictionary<string, TrackingType> DefaultTrackingState => new Dictionary<string, TrackingType>
+            public static Dictionary<string, TrackingType> DefaultTrackingState => new()
             {
                 { "Head", TrackingType.Tracking },
                 { "Left Hand", TrackingType.Tracking },

@@ -10,8 +10,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public class AnimatorControllerWeight
     {
-        private readonly List<int> _subCompleted = new List<int>();
-        private readonly Dictionary<int, SubTimer> _subControls = new Dictionary<int, SubTimer>();
+        private readonly List<int> _subCompleted = new();
+        private readonly Dictionary<int, SubTimer> _subControls = new();
         private readonly AnimationLayerMixerPlayable _playableMixer;
         private readonly int _index;
 

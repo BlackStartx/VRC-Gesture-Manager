@@ -1,9 +1,9 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System;
-using BlackStartX.GestureManager.Editor.Lib;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets.Base;
-using BlackStartX.GestureManager.Runtime.VisualElements;
+using BlackStartX.GestureManager.Library;
+using BlackStartX.GestureManager.Library.VisualElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UIEPosition = UnityEngine.UIElements.Position;
@@ -89,12 +89,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
                 {
                     width = 20 * scale,
                     height = 20 * scale,
-#if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
-                    transformOrigin =  new StyleTransformOrigin(),
-#endif                    // TEMP FIX FOR UNITY 2022 pivot change~
-                    backgroundColor = RadialMenuUtility.Colors.CustomSelected,
                     top = -(50 + 15 * scale),
-                    position = UIEPosition.Absolute
+                    left = -20 * scale / 2,
+                    position = UIEPosition.Absolute,
+                    backgroundColor = RadialMenuUtility.Colors.CustomSelected
                 }
             }).MyBorder(2f * scale, 0f, RadialMenuUtility.Colors.ProgressBorder);
             element.transform.rotation = Quaternion.Euler(0, 0, 45);

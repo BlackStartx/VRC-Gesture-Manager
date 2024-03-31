@@ -13,7 +13,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Osc
         private Vector2 _scroll;
 
         private VisualEpContainer _holder;
-        private VisualEpContainer Holder => _holder ?? (_holder = new VisualEpContainer());
+        private VisualEpContainer Holder => _holder ??= new VisualEpContainer();
 
         internal static Vrc3OscDebugWindow Create(ModuleVrc3 source)
         {

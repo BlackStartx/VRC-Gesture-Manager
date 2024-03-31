@@ -6,13 +6,6 @@ namespace BlackStartX.GestureManager.Editor.Library
 {
     public static class GmgAnimatorControllerHelper
     {
-        public static IEnumerable<KeyValuePair<AnimationClip, AnimationClip>> GetOverrides(AnimatorOverrideController overrideController)
-        {
-            var overrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
-            overrideController.GetOverrides(overrides);
-            return overrides;
-        }
-
         public static AnimatorController CreateControllerWith(IEnumerable<AnimationClip> clips)
         {
             var controller = CreateControllerWith(new AnimationClip { name = "[SELECT YOUR ANIMATION!]" });

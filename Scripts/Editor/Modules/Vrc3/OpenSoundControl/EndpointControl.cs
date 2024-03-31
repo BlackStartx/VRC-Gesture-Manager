@@ -8,7 +8,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
     public class EndpointControl
     {
         internal readonly string HorizontalEndpoint;
-        internal readonly List<(float? min, object value, float? max)> Values = new List<(float? min, object value, float? max)>();
+        internal readonly List<(float? min, object value, float? max)> Values = new();
 
         private readonly List<VisualEp> _visualElements;
 
@@ -20,38 +20,29 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
             HorizontalEndpoint = horizontalEndpoint;
         }
 
-        internal static bool? BoolValue(object value)
+        internal static bool? BoolValue(object value) => value switch
         {
-            switch (value)
-            {
-                case bool b: return b;
-                case float f: return f > 0.5f;
-                case int i: return i == 1;
-                default: return null;
-            }
-        }
+            bool b => b,
+            float f => f > 0.5f,
+            int i => i == 1,
+            _ => null
+        };
 
-        internal static int? IntValue(object value)
+        internal static int? IntValue(object value) => value switch
         {
-            switch (value)
-            {
-                case bool b: return b ? 1 : 0;
-                case float f: return (int)f;
-                case int i: return i;
-                default: return null;
-            }
-        }
+            bool b => b ? 1 : 0,
+            float f => (int)f,
+            int i => i,
+            _ => null
+        };
 
-        internal static float? FloatValue(object value)
+        internal static float? FloatValue(object value) => value switch
         {
-            switch (value)
-            {
-                case bool b: return b ? 1 : 0;
-                case float f: return f;
-                case int i: return i;
-                default: return null;
-            }
-        }
+            bool b => b ? 1 : 0,
+            float f => f,
+            int i => i,
+            _ => null
+        };
 
         public void OnMessage(OscPacket.Message message)
         {

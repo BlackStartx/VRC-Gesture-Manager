@@ -1,7 +1,7 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System;
 using BlackStartX.GestureManager.Editor.Data;
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Library;
 using UnityEditor;
 using UnityEngine;
 

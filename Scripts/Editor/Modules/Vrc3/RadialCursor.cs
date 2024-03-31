@@ -1,8 +1,8 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System.Collections.Generic;
-using BlackStartX.GestureManager.Editor.Lib;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
-using BlackStartX.GestureManager.Runtime.VisualElements;
+using BlackStartX.GestureManager.Library;
+using BlackStartX.GestureManager.Library.VisualElements;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -71,17 +71,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             oldElement.Selected = false;
             oldElement.DataHolder.experimental.animation.Scale(1f, 100);
-            oldElement.DataHolder.experimental.animation.TopLeft(RadialMenuUtility.DataVector, 100);
             oldElement.CenterColor = oldElement.IdleCenterColor;
             oldElement.VertexColor = oldElement.IdleBorderColor;
         }
 
-        internal static void Sel(RadialSliceBase newElement, bool instant = false, float scale = 0.10f)
+        internal static void Sel(RadialSliceBase newElement, float scale = 0.10f)
         {
             newElement.Selected = true;
-            var topLeftVector = RadialMenuUtility.DataVector + RadialMenuUtility.DataVector * scale;
             newElement.DataHolder.experimental.animation.Scale(1f + scale, 100);
-            newElement.DataHolder.experimental.animation.TopLeft(topLeftVector, instant ? 0 : 100);
             newElement.CenterColor = newElement.SelectedCenterColor;
             newElement.VertexColor = newElement.SelectedBorderColor;
         }

@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using CR = BlackStartX.GestureManager.Library.GmgVisualMesh.CenterRelative;
 
-namespace BlackStartX.GestureManager.Runtime.VisualElements
+namespace BlackStartX.GestureManager.Library.VisualElements
 {
     public class GmgCircleElement : VisualElement
     {

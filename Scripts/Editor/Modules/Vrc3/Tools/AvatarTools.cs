@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BlackStartX.GestureManager.Data;
 using BlackStartX.GestureManager.Editor.Data;
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Library;
 using UnityEditor;
 using UnityEditor.Profiling;
 using UnityEditorInternal;
@@ -20,25 +20,25 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
         private static bool CameraRule(Camera camera) => camera.enabled && camera.gameObject.activeInHierarchy;
 
         private UpdateSceneCamera _sceneCamera;
-        public UpdateSceneCamera SceneCamera => _sceneCamera ?? (_sceneCamera = new UpdateSceneCamera());
+        public UpdateSceneCamera SceneCamera => _sceneCamera ??= new UpdateSceneCamera();
 
         private ClickableContacts _clickableContacts;
-        public ClickableContacts ContactsClickable => _clickableContacts ?? (_clickableContacts = new ClickableContacts());
+        public ClickableContacts ContactsClickable => _clickableContacts ??= new ClickableContacts();
 
         private AvatarPose _avatarPose;
-        public AvatarPose PoseAvatar => _avatarPose ?? (_avatarPose = new AvatarPose());
+        public AvatarPose PoseAvatar => _avatarPose ??= new AvatarPose();
 
         private AvatarBackground _avatarBackground;
-        private AvatarBackground BackgroundAvatar => _avatarBackground ?? (_avatarBackground = new AvatarBackground());
+        private AvatarBackground BackgroundAvatar => _avatarBackground ??= new AvatarBackground();
 
         private TestAnimation _testAnimation;
-        private TestAnimation AnimationTest => _testAnimation ?? (_testAnimation = new TestAnimation());
+        private TestAnimation AnimationTest => _testAnimation ??= new TestAnimation();
 
         private AnimatorPerformance _animatorPerformance;
-        public AnimatorPerformance PerformanceAnimator => _animatorPerformance ?? (_animatorPerformance = new AnimatorPerformance());
+        public AnimatorPerformance PerformanceAnimator => _animatorPerformance ??= new AnimatorPerformance();
 
         private Customization _customization;
-        private Customization CustomizationTool => _customization ?? (_customization = new Customization());
+        private Customization CustomizationTool => _customization ??= new Customization();
 
         // This is silly but otherwise Rider will prompt casting hints on screen... I hate those more~
         private static bool Exist(UnityEngine.Object uObject) => !NExist(uObject);
@@ -83,7 +83,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
         public class UpdateSceneCamera : GmgDynamicFunction
         {
             private static Camera _camera;
-            private static readonly BoolProperty IsActive = new BoolProperty("GM3 SceneCamera");
+            private static readonly BoolProperty IsActive = new("GM3 SceneCamera");
 
             protected internal override string Name => "Scene Camera";
             protected override string Description => "This will match your game view with your scene view!\n\nClick the button to setup the main camera automatically~";
@@ -132,9 +132,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
                 public float Float;
             }
 
-            private readonly BoolProperty _isActive = new BoolProperty("GM3 ClickableContacts");
-            private readonly StringProperty _tag = new StringProperty("GM3 ClickableContacts Tag");
-            private readonly Dictionary<ContactReceiver, Flat> _activeContact = new Dictionary<ContactReceiver, Flat>();
+            private readonly BoolProperty _isActive = new("GM3 ClickableContacts");
+            private readonly StringProperty _tag = new("GM3 ClickableContacts Tag");
+            private readonly Dictionary<ContactReceiver, Flat> _activeContact = new();
 
             protected internal override string Name => "Clickable Contacts";
             protected override string Description => "Click and trigger Avatar Contacts with your mouse!\n\nLike you can do with PhysBones~";
@@ -313,7 +313,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
                 data.AddTo(transform);
             }
 
-            private readonly Vrc3Warning _poseWarning = new Vrc3Warning("You are in Pose-Mode!", "You can pose your avatar but the animations of your bones are disabled!", false);
+            private readonly Vrc3Warning _poseWarning = new("You are in Pose-Mode!", "You can pose your avatar but the animations of your bones are disabled!", false);
         }
 
         private class AvatarBackground : GmgDynamicFunction
@@ -436,9 +436,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
         public class AnimatorPerformance : GmgDynamicFunction
         {
-            private List<int> _cachedIds = new List<int>();
+            private List<int> _cachedIds = new();
 
-            private Dictionary<string, Benchmark> _benchmark = new Dictionary<string, Benchmark>();
+            private Dictionary<string, Benchmark> _benchmark = new();
             private static string PropertyName => "Animators.Update";
             protected internal override string Name => "Animator Performance";
             protected override string Description => "A simple benchmark using the Unity Profiler!\n\nAimed to show animator update calls usages!";
@@ -446,7 +446,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             public bool Watching => Active && Foldout;
             private Dictionary<string, Benchmark> Benchmarks => _benchmark.Count == 0 ? _dummyBenchmark : _benchmark;
 
-            private readonly Dictionary<string, Benchmark> _dummyBenchmark = new Dictionary<string, Benchmark>
+            private readonly Dictionary<string, Benchmark> _dummyBenchmark = new()
             {
                 { "Dummy1", new Benchmark() },
                 { "Dummy2", new Benchmark() }
@@ -478,15 +478,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
             protected override void Update(ModuleVrc3 module)
             {
-                using (var frameData = ProfilerDriver.GetHierarchyFrameDataView(ProfilerDriver.lastFrameIndex, Thread, View, Column, SortAscending))
+                using var frameData = ProfilerDriver.GetHierarchyFrameDataView(ProfilerDriver.lastFrameIndex, Thread, View, Column, SortAscending);
+                var idList = GetCachedIds(frameData);
+                foreach (var intId in idList)
                 {
-                    var idList = GetCachedIds(frameData);
-                    foreach (var intId in idList)
-                    {
-                        var dString = frameData.GetItemPath(intId);
-                        if (!_benchmark.ContainsKey(dString)) _benchmark[dString] = new Benchmark();
-                        _benchmark[dString].Record(frameData.GetItemColumnDataAsFloat(intId, HierarchyFrameDataView.columnSelfTime));
-                    }
+                    var dString = frameData.GetItemPath(intId);
+                    if (!_benchmark.ContainsKey(dString)) _benchmark[dString] = new Benchmark();
+                    _benchmark[dString].Record(frameData.GetItemColumnDataAsFloat(intId, HierarchyFrameDataView.columnSelfTime));
                 }
             }
 

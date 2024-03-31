@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BlackStartX.GestureManager.Editor.Data;
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Library;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.VisualElements;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar;
@@ -27,7 +27,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
 
         private UdpSender _sender;
         private UdpListener _listener;
-        private readonly List<byte[]> _queue = new List<byte[]>();
+        private readonly List<byte[]> _queue = new();
 
         private bool _customSelection;
         private string _customAddress = VrcReceiverAddress;
@@ -36,7 +36,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
         private (string address, int listenerPort, int senderPort)? _forgotData;
 
         private IEnumerable<OscPacket.Message> Messages => _messages.Select(tuple => new OscPacket.Message(tuple.address, tuple.data));
-        private readonly List<(string address, List<object> data)> _messages = new List<(string address, List<object> data)>();
+        private readonly List<(string address, List<object> data)> _messages = new();
         private bool _sendingBundle;
         private int _addIndex = -1;
         private ulong _timeTag = 1;
@@ -45,8 +45,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
         private static string VrcReceiverPortUsed => $"The VRChat default port {VrcListenerPort} is already in use.";
         internal bool Enabled => _listener != null && _sender != null;
 
-        private readonly Dictionary<string, EndpointControl> _dataDictionary = new Dictionary<string, EndpointControl>();
-        private readonly List<EndpointControl> _chronological = new List<EndpointControl>();
+        private readonly Dictionary<string, EndpointControl> _dataDictionary = new();
+        private readonly List<EndpointControl> _chronological = new();
 
         public OscModule(ModuleVrc3 module)
         {

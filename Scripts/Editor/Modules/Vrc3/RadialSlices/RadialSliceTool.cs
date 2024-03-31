@@ -6,7 +6,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
 {
     public class RadialSliceTool : RadialSliceDynamic
     {
-        private readonly Color _activeColor = new Color(0.5f, 1f, 0.5f);
+        private readonly Color _activeColor = new(0.5f, 1f, 0.5f);
         private readonly GmgDynamicFunction _tool;
         private readonly ModuleVrc3 _module;
 

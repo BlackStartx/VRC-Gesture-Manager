@@ -3,10 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BlackStartX.GestureManager.Editor.Data;
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Library;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets.Base;
+using BlackStartX.GestureManager.Library;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VRC.SDK3.Avatars.ScriptableObjects;
@@ -38,7 +39,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             return vector2;
         }
 
-        private readonly List<RadialPage> _menuPath = new List<RadialPage>();
+        private readonly List<RadialPage> _menuPath = new();
 
         private VRCExpressionsMenu _menu;
 
@@ -193,11 +194,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             OpenCustom(new[]
             {
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "T Pose", Module.PoseT, ModuleVrc3Styles.TPose),
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "T Pose", Module.PoseT, ModuleVrc3Styles.PoseT),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "AFK", GetParam(Vrc3DefaultParams.Afk), ModuleVrc3Styles.Afk),
                 RadialMenuUtility.Buttons.RadialFromParam(this, Vrc3DefaultParams.Vise, GetParam(Vrc3DefaultParams.Vise), ModuleVrc3Styles.Visemes, amplify: Module.ViseAmount),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "Seated", GetParam(Vrc3DefaultParams.Seated), ModuleVrc3Styles.Seated),
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "IK Pose", Module.PoseIK, ModuleVrc3Styles.IKPose)
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "IK Pose", Module.PoseIK, ModuleVrc3Styles.PoseIK)
             });
         }
 
@@ -276,14 +277,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             var intCount = menu.controls.Count + defaultButtonsInt;
             var intMax = defaultButtonsInt + 8;
 
-            SetButtons(intCount, intMax, intCurrent =>
+            SetButtons(intCount, intMax, intCurrent => intCurrent switch
             {
-                switch (intCurrent)
-                {
-                    case 0: return new RadialSliceButton(GoBack, "Back", isMain ? ModuleVrc3Styles.BackHome : ModuleVrc3Styles.Back);
-                    case 1 when isMain: return new RadialSliceButton(QuickActionsMenuPrefab, "Quick Actions", ModuleVrc3Styles.Gear);
-                    default: return new RadialSliceControl(this, menu.controls[intCurrent - defaultButtonsInt]);
-                }
+                0 => new RadialSliceButton(GoBack, "Back", isMain ? ModuleVrc3Styles.BackHome : ModuleVrc3Styles.Back),
+                1 when isMain => new RadialSliceButton(QuickActionsMenuPrefab, "Quick Actions", ModuleVrc3Styles.Gear),
+                _ => new RadialSliceControl(this, menu.controls[intCurrent - defaultButtonsInt])
             });
         }
 
@@ -300,13 +298,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal void SetCustom(IReadOnlyList<RadialSliceBase> controls)
         {
             var isMain = _menuPath.Count == 1;
-            SetButtons(controls.Count + 1, 10, i =>
+            SetButtons(controls.Count + 1, 10, i => i switch
             {
-                switch (i)
-                {
-                    case 0: return new RadialSliceButton(GoBack, "Back", isMain ? ModuleVrc3Styles.BackHome : ModuleVrc3Styles.Back);
-                    default: return controls[i - 1];
-                }
+                0 => new RadialSliceButton(GoBack, "Back", isMain ? ModuleVrc3Styles.BackHome : ModuleVrc3Styles.Back),
+                _ => controls[i - 1]
             });
         }
 
@@ -324,7 +319,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             RemoveMenu(_menuPath.Count - 1);
             if (_menuPath.Count == 0) MainMenuPrefab();
-            else _menuPath[_menuPath.Count - 1].Open();
+            else _menuPath[^1].Open();
         }
 
         private void RemoveMenu(int index)
@@ -391,7 +386,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _buttons = buttons;
             SetButtons(buttons.Length, ButtonCreationDefault);
             _cursor.Selection = _cursor.GetChoice(buttons.Length, Puppet);
-            if (_cursor.Selection != deSel) RadialCursor.Sel(_buttons[_cursor.Selection], true);
+            if (_cursor.Selection != deSel) RadialCursor.Sel(_buttons[_cursor.Selection]);
         }
 
         private void SetButtons(int len, Action<int, float, float, float> create) => SetButtons(len, Mathf.Rad2Deg, Mathf.PI, create);
@@ -436,7 +431,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             if (list.Count == _menuPath.Count) return false;
 
             for (var iInt = list.Count; iInt < _menuPath.Count; iInt++) RemoveMenu(list.Count);
-            _menuPath[_menuPath.Count - 1].Open();
+            _menuPath[^1].Open();
             return true;
         }
 

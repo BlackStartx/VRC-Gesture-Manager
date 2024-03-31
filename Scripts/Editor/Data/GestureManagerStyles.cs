@@ -32,44 +32,44 @@ namespace BlackStartX.GestureManager.Editor.Data
         private static Texture _plusTextureLgt;
         private static Texture _plusTexturePro;
 
-        internal static GUIStyle TitleStyle => _titleStyle ?? (_titleStyle = new GUIStyle(GUI.skin.label)
+        internal static GUIStyle TitleStyle => _titleStyle ??= new GUIStyle(GUI.skin.label)
         {
             fontSize = 15,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
             padding = new RectOffset(10, 10, 10, 10)
-        });
+        };
 
-        internal static GUIStyle GuiHandTitle => _guiHandTitle ?? (_guiHandTitle = new GUIStyle(GUI.skin.label)
+        internal static GUIStyle GuiHandTitle => _guiHandTitle ??= new GUIStyle(GUI.skin.label)
         {
             fontSize = 12,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
             padding = new RectOffset(10, 10, 10, 10)
-        });
+        };
 
-        internal static GUIStyle GuiDebugTitle => _guiDebugTitle ?? (_guiDebugTitle = new GUIStyle(GUI.skin.label)
+        internal static GUIStyle GuiDebugTitle => _guiDebugTitle ??= new GUIStyle(GUI.skin.label)
         {
             fontSize = 12,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter
-        });
+        };
 
-        internal static GUIStyle MiddleStyle => _middleStyle ?? (_middleStyle = new GUIStyle(GUI.skin.label)
+        internal static GUIStyle MiddleStyle => _middleStyle ??= new GUIStyle(GUI.skin.label)
         {
             fontSize = 12,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
             padding = new RectOffset(5, 5, 5, 5)
-        });
+        };
 
-        internal static GUIStyle SettingsText => _settingsText ?? (_settingsText = new GUIStyle(GUI.skin.label)
+        internal static GUIStyle SettingsText => _settingsText ??= new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter,
             padding = new RectOffset(5, 5, 5, 12)
-        });
+        };
 
-        internal static GUIStyle MiddleError => _middleError ?? (_middleError = new GUIStyle(GUI.skin.label)
+        internal static GUIStyle MiddleError => _middleError ??= new GUIStyle(GUI.skin.label)
         {
             fontSize = 12,
             fontStyle = FontStyle.Bold,
@@ -77,73 +77,73 @@ namespace BlackStartX.GestureManager.Editor.Data
             active = { textColor = Color.red },
             normal = { textColor = Color.red },
             padding = new RectOffset(5, 5, 5, 5)
-        });
+        };
 
-        internal static GUIStyle EmoteError => _emoteError ?? (_emoteError = new GUIStyle(EditorStyles.helpBox)
+        internal static GUIStyle EmoteError => _emoteError ??= new GUIStyle(EditorStyles.helpBox)
         {
             padding = new RectOffset(5, 5, 5, 5),
             margin = new RectOffset(5, 5, 5, 5)
-        });
+        };
 
-        internal static GUIStyle TextError => _textError ?? (_textError = new GUIStyle(GUI.skin.label)
+        internal static GUIStyle TextError => _textError ??= new GUIStyle(GUI.skin.label)
         {
             active = { textColor = Color.red },
             normal = { textColor = Color.red },
             fontSize = 13,
             alignment = TextAnchor.MiddleCenter
-        });
+        };
 
-        internal static GUIStyle TextWarningHeader => _textWarningHeader ?? (_textWarningHeader = new GUIStyle(GUI.skin.label)
+        internal static GUIStyle TextWarningHeader => _textWarningHeader ??= new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter,
             fontSize = 14
-        });
+        };
 
-        internal static GUIStyle TextWarning => _textWarning ?? (_textWarning = new GUIStyle(GUI.skin.label)
+        internal static GUIStyle TextWarning => _textWarning ??= new GUIStyle(GUI.skin.label)
         {
             alignment = TextAnchor.MiddleCenter
-        });
+        };
 
-        internal static GUIStyle Header => _header ?? (_header = new GUIStyle(GUI.skin.label)
+        internal static GUIStyle Header => _header ??= new GUIStyle(GUI.skin.label)
         {
             fontSize = 15,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
             padding = new RectOffset(10, 10, 10, 10)
-        });
+        };
 
-        internal static GUIStyle ToolHeader => _toolHeader ?? (_toolHeader = new GUIStyle(GUI.skin.label)
+        internal static GUIStyle ToolHeader => _toolHeader ??= new GUIStyle(GUI.skin.label)
         {
             fontSize = 15,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
             padding = new RectOffset(10, 10, 5, 5)
-        });
+        };
 
-        internal static GUIStyle ToolSubHeader => _toolSubHeader ?? (_toolSubHeader = new GUIStyle(GUI.skin.label)
+        internal static GUIStyle ToolSubHeader => _toolSubHeader ??= new GUIStyle(GUI.skin.label)
         {
             fontSize = 15,
             alignment = TextAnchor.MiddleCenter,
             padding = new RectOffset(10, 10, 10, 5)
-        });
+        };
 
-        public static GUIStyle HeaderButton => _headerButton ?? (_headerButton = new GUIStyle(GUI.skin.button)
+        public static GUIStyle HeaderButton => _headerButton ??= new GUIStyle(GUI.skin.button)
         {
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
             margin = new RectOffset(0, 10, 12, 0)
-        });
+        };
 
-        private static GUIStyle BottomStyle => _bottomStyle ?? (_bottomStyle = new GUIStyle(GUI.skin.label)
+        private static GUIStyle BottomStyle => _bottomStyle ??= new GUIStyle(GUI.skin.label)
         {
             fontSize = 11,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleRight,
             padding = new RectOffset(5, 5, 5, 5)
-        });
+        };
 
-        internal static GUIStyle Centered => _centered ?? (_centered = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter });
-        internal static GUIStyle PlusButton => _plusButton ?? (_plusButton = new GUIStyle { margin = new RectOffset(0, 20, 3, 3) });
+        internal static GUIStyle Centered => _centered ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
+        internal static GUIStyle PlusButton => _plusButton ??= new GUIStyle { margin = new RectOffset(0, 20, 3, 3) };
 
         internal static Texture GearTexture => !_gearTexture ? _gearTexture = EditorGUIUtility.IconContent("d_Settings").image : _gearTexture;
         internal static Texture BackTexture => !_backTexture ? _backTexture = EditorGUIUtility.IconContent("d_tab_prev").image : _backTexture;

@@ -9,7 +9,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 {
     public class Vrc3Param
     {
-        private readonly Dictionary<AnimatorControllerPlayable, int> _controllers = new Dictionary<AnimatorControllerPlayable, int>();
+        private readonly Dictionary<AnimatorControllerPlayable, int> _controllers = new();
 
         public readonly AnimatorControllerParameterType Type;
         private readonly int _hashId;
@@ -67,7 +67,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 
         public int IntValue() => (int)FloatValue();
 
-        public bool BoolValue() => FloatValue() > 0.5f;
+        public bool BoolValue() => FloatValue() != 0f;
 
         protected internal virtual void InternalSet(float value)
         {
@@ -84,7 +84,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
                         break;
                     case AnimatorControllerParameterType.Trigger:
                     case AnimatorControllerParameterType.Bool:
-                        pair.Key.SetBool(_hashId, value > 0f);
+                        pair.Key.SetBool(_hashId, value != 0f);
                         break;
                     default: throw new ArgumentOutOfRangeException();
                 }
@@ -106,7 +106,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
                     break;
                 case AnimatorControllerParameterType.Bool:
                 case AnimatorControllerParameterType.Trigger:
-                    Set(module, !RadialMenuUtility.Is(floatValue, 0));
+                    Set(module, floatValue != 0f);
                     break;
                 default: throw new ArgumentOutOfRangeException();
             }

@@ -10,25 +10,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices.Dynamics
         public VisualRunningElement(bool active)
         {
             pickingMode = PickingMode.Ignore;
-#if UNITY_2022_1_OR_NEWER // TEMP FIX FOR UNITY 2022 pivot change~
-            style.transformOrigin = new StyleTransformOrigin();
-#endif                    // TEMP FIX FOR UNITY 2022 pivot change~
-            style.left = 25;
-            style.top = 25;
-
-            Add(new VisualElement
-            {
-                pickingMode = PickingMode.Ignore,
-                style =
-                {
-                    width = 50,
-                    height = 50,
-                    left = -25,
-                    top = -25,
-                    position = UIEPosition.Absolute,
-                    backgroundImage = ModuleVrc3Styles.RunningParam
-                }
-            });
+            style.width = 50;
+            style.height = 50;
+            style.position = UIEPosition.Absolute;
+            style.backgroundImage = ModuleVrc3Styles.RunningParam;
 
             visible = active;
 

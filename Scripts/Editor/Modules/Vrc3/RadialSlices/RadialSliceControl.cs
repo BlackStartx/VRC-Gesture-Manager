@@ -105,6 +105,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
                 case ControlType.RadialPuppet:
                     _menu.OpenPuppet(new RadialPuppet(this));
                     break;
+                default: return;
             }
         }
 
@@ -129,8 +130,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
         public class RadialSettings
         {
             private static RadialSettings _base;
-            public static RadialSettings Base => _base ?? (_base = new RadialSettings(DisplayType.Percentage, 0f, 1f, null));
-            public static RadialSettings Height(float checkpoint) => new RadialSettings(DisplayType.Meters, 0.2f, 5.0f, checkpoint);
+            public static RadialSettings Base => _base ??= new RadialSettings(DisplayType.Percentage, 0f, 1f, null);
+            public static RadialSettings Height(float checkpoint) => new(DisplayType.Meters, 0.2f, 5.0f, checkpoint);
 
             private readonly DisplayType _type;
 
@@ -146,15 +147,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
                 _gap = max - (_min = min);
             }
 
-            public string Display(float value)
+            public string Display(float value) => _type switch
             {
-                switch (_type)
-                {
-                    case DisplayType.Meters: return $"{value:F}m";
-                    case DisplayType.Percentage: return $"{RangeFrom(value).Percentage}%";
-                    default: return null;
-                }
-            }
+                DisplayType.Meters => $"{value:F}m",
+                DisplayType.Percentage => $"{RangeFrom(value).Percentage}%",
+                _ => null
+            };
 
             private enum DisplayType
             {
@@ -162,15 +160,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
                 Percentage
             }
 
-            public Range RangeFrom(float value) => new Range((value - _min) / _gap);
+            public Range RangeFrom(float value) => new((value - _min) / _gap);
 
             public float ValueFrom(Range range) => range.Value * _gap + _min;
 
             public readonly struct Range
             {
-                public static Range M1 = new Range(-1f);
-                public static Range Zero = new Range(0);
-                public static Range One = new Range(1f);
+                public static Range M1 = new(-1f);
+                public static Range Zero = new(0);
+                public static Range One = new(1f);
 
                 public readonly float Value;
 
@@ -180,7 +178,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
 
                 public Quaternion Rotation => Quaternion.Euler(0, 0, Value * 360f);
 
-                public static Range operator -(Range lRange, Range rRange) => new Range(lRange.Value - rRange.Value);
+                public static Range operator -(Range lRange, Range rRange) => new(lRange.Value - rRange.Value);
             }
         }
     }

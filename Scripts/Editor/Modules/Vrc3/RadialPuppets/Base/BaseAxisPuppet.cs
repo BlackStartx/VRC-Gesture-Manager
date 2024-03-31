@@ -1,6 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
-using BlackStartX.GestureManager.Editor.Lib;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
+using BlackStartX.GestureManager.Library;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VRC.SDK3.Avatars.ScriptableObjects;

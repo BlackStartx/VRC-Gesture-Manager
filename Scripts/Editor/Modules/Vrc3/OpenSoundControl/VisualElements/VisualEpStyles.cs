@@ -1,7 +1,7 @@
 ﻿#if VRC_SDK_VRCSDK3
 using UnityEngine;
 using UnityEngine.UIElements;
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Library;
 using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.VisualElements
@@ -17,7 +17,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.Visual
 
         public static StyleColor BgColor = new Color(0.21f, 0.52f, 0.57f);
 
-        internal static VisualElement Center => new VisualElement
+        internal static VisualElement Center => new()
         {
             pickingMode = PickingMode.Ignore,
             style = { height = InnerSize, width = InnerSize, left = TextHeight + TextMargin }

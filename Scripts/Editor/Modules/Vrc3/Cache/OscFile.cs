@@ -30,18 +30,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Cache
         public string type;
 
         private AnimatorControllerParameterType? _type;
-        internal AnimatorControllerParameterType Type => (_type ?? (_type = FetchType())).Value;
+        internal AnimatorControllerParameterType Type => _type ??= FetchType();
 
-        public AnimatorControllerParameterType FetchType()
+        public AnimatorControllerParameterType FetchType() => type switch
         {
-            switch (type)
-            {
-                case "Int": return AnimatorControllerParameterType.Int;
-                case "Bool": return AnimatorControllerParameterType.Bool;
-                case "Float": return AnimatorControllerParameterType.Float;
-                default: return AnimatorControllerParameterType.Float;
-            }
-        }
+            "Int" => AnimatorControllerParameterType.Int,
+            "Bool" => AnimatorControllerParameterType.Bool,
+            "Float" => AnimatorControllerParameterType.Float,
+            _ => AnimatorControllerParameterType.Float
+        };
     }
 }
 #endif

@@ -5,7 +5,7 @@ using BlackStartX.GestureManager.Editor.Data;
 using UnityEditor;
 using UnityEngine;
 
-namespace BlackStartX.GestureManager.Editor.Lib
+namespace BlackStartX.GestureManager.Editor.Library
 {
     public static class GmgLayoutHelper
     {
@@ -16,7 +16,7 @@ namespace BlackStartX.GestureManager.Editor.Lib
         {
             private GUIContent[] _contents;
 
-            public GUIContent[] Contents(IEnumerable<(string, Action)> field) => _contents ?? (_contents = field.Select(tuple => new GUIContent(tuple.Item1)).ToArray());
+            public GUIContent[] Contents(IEnumerable<(string, Action)> field) => _contents ??= field.Select(tuple => new GUIContent(tuple.Item1)).ToArray();
             public int Selected;
         }
 
@@ -34,7 +34,7 @@ namespace BlackStartX.GestureManager.Editor.Lib
 
         private static void GuiLabel(Color? color, string text, GUIStyle style = null, params GUILayoutOption[] options)
         {
-            style = style ?? GUI.skin.label;
+            style ??= GUI.skin.label;
             if (color != null)
             {
                 var textColor = GUI.contentColor;
@@ -84,7 +84,7 @@ namespace BlackStartX.GestureManager.Editor.Lib
             _unityFieldEnterListenerName = controlName;
             GUI.SetNextControlName(controlName);
             GUI.FocusControl(controlName);
-            if (_unityFieldEnterListenerData == null) _unityFieldEnterListenerData = initialText;
+            _unityFieldEnterListenerData ??= initialText;
             var t = field(rect, _unityFieldEnterListenerData is T1 d ? d : default);
             if (isEnter) onEscape(argument, _unityFieldEnterListenerData is T1 data ? data : default);
             else _unityFieldEnterListenerData = t;

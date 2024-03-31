@@ -1,7 +1,7 @@
 ﻿#if VRC_SDK_VRCSDK3
 using UnityEngine;
 using UnityEngine.UIElements;
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Library;
 using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.VisualElements
@@ -69,7 +69,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.Visual
                 Add(_max = Create(TextAnchor.MiddleRight));
             }
 
-            private static TextElement Create(TextAnchor anchor) => new TextElement
+            private static TextElement Create(TextAnchor anchor) => new()
             {
                 style = { color = Color.white, position = UIEPosition.Absolute, fontSize = 10, width = VisualEpStyles.InnerSize - 8, marginLeft = 3, unityTextAlign = anchor }
             };

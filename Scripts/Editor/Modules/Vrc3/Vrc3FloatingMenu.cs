@@ -1,5 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Library;
+using BlackStartX.GestureManager.Library;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -13,15 +14,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private ModuleVrc3 _module;
 
         private RadialMenu _menu;
-        private RadialMenu Menu => _menu ?? (_menu = _module.GetOrCreateRadial(this, true));
+        private RadialMenu Menu => _menu ??= _module.GetOrCreateRadial(this, true);
 
         private readonly GUILayoutOption[] _options = { GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true) };
-        private static Vector2 HeaderSize => new Vector2(0, 21);
+        private static Vector2 HeaderSize => new(0, 21);
 
         private TextElement _focusElement;
-        private TextElement FocusElement => _focusElement ?? (_focusElement = rootVisualElement.MyAdd(TextElement));
+        private TextElement FocusElement => _focusElement ??= rootVisualElement.MyAdd(TextElement);
 
-        private static TextElement TextElement => new TextElement
+        private static TextElement TextElement => new()
         {
             text = "The window is not focused!",
             style =
@@ -77,7 +78,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void OnGUI()
         {
-            if (_module == null || !_module.Active || _module.Broken) Close();
+            if (_module is not { Active: true } || _module.Broken) Close();
             else if (Focused) Gui();
         }
 

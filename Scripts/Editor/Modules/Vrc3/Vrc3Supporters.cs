@@ -25,7 +25,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static readonly SupportersList Supporters = new SupportersList
+        private static readonly SupportersList Supporters = new()
         {
             early = new[]
             {

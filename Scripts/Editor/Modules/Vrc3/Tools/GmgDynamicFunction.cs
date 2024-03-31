@@ -1,6 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
 using BlackStartX.GestureManager.Editor.Data;
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Library;
 using UnityEngine;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools

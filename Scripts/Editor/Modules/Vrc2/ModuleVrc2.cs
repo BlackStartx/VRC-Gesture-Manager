@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BlackStartX.GestureManager.Data;
 using BlackStartX.GestureManager.Editor.Data;
-using BlackStartX.GestureManager.Editor.Lib;
 using BlackStartX.GestureManager.Editor.Library;
 using UnityEditor;
 using UnityEngine;
@@ -43,8 +42,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
         private GmgLayoutHelper.Toolbar _toolBar;
 
         private static GUIStyle _guiGreenButton;
-        private static GUIStyle GuiGreenButton => _guiGreenButton ?? (_guiGreenButton = Ggb(new GUIStyleState { textColor = Color.green }));
-        private static GUIStyle Ggb(GUIStyleState state) => new GUIStyle(GUI.skin.button) { active = state, normal = state, hover = state, fixedWidth = 100 };
+        private static GUIStyle GuiGreenButton => _guiGreenButton ??= Ggb(new GUIStyleState { textColor = Color.green });
+        private static GUIStyle Ggb(GUIStyleState state) => new(GUI.skin.button) { active = state, normal = state, hover = state, fixedWidth = 100 };
         private RuntimeAnimatorController StandingControllerPreset => !_standingControllerPreset ? _standingControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/StandingEmoteTestingTemplate") : _standingControllerPreset;
         private RuntimeAnimatorController SeatedControllerPreset => !_seatedControllerPreset ? _seatedControllerPreset = Resources.Load<RuntimeAnimatorController>("Vrc2/SeatedEmoteTestingTemplate") : _seatedControllerPreset;
         private bool AnimationField => !(_selectingCustomAnim = GmgLayoutHelper.ObjectField("Animation: ", _selectingCustomAnim, SetCustomAnimation));
@@ -54,35 +53,35 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
         private readonly AnimationBind[] _gestureBinds =
         {
-            new AnimationBind(null, GmData.GestureNames[0]),
-            new AnimationBind("FIST", GmData.GestureNames[1]),
-            new AnimationBind("HANDOPEN", GmData.GestureNames[2]),
-            new AnimationBind("FINGERPOINT", GmData.GestureNames[3]),
-            new AnimationBind("VICTORY", GmData.GestureNames[4]),
-            new AnimationBind("ROCKNROLL", GmData.GestureNames[5]),
-            new AnimationBind("HANDGUN", GmData.GestureNames[6]),
-            new AnimationBind("THUMBSUP", GmData.GestureNames[7])
+            new(null, GmData.GestureNames[0]),
+            new("FIST", GmData.GestureNames[1]),
+            new("HANDOPEN", GmData.GestureNames[2]),
+            new("FINGERPOINT", GmData.GestureNames[3]),
+            new("VICTORY", GmData.GestureNames[4]),
+            new("ROCKNROLL", GmData.GestureNames[5]),
+            new("HANDGUN", GmData.GestureNames[6]),
+            new("THUMBSUP", GmData.GestureNames[7])
         };
 
         private readonly AnimationBind[] _emoteBinds =
         {
-            new AnimationBind("EMOTE1", GmData.EmoteStandingName[0], GmData.EmoteSeatedName[0]),
-            new AnimationBind("EMOTE2", GmData.EmoteStandingName[1], GmData.EmoteSeatedName[1]),
-            new AnimationBind("EMOTE3", GmData.EmoteStandingName[2], GmData.EmoteSeatedName[2]),
-            new AnimationBind("EMOTE4", GmData.EmoteStandingName[3], GmData.EmoteSeatedName[3]),
-            new AnimationBind("EMOTE5", GmData.EmoteStandingName[4], GmData.EmoteSeatedName[4]),
-            new AnimationBind("EMOTE6", GmData.EmoteStandingName[5], GmData.EmoteSeatedName[5]),
-            new AnimationBind("EMOTE7", GmData.EmoteStandingName[6], GmData.EmoteSeatedName[6]),
-            new AnimationBind("EMOTE8", GmData.EmoteStandingName[7], GmData.EmoteSeatedName[7])
+            new("EMOTE1", GmData.EmoteStandingName[0], GmData.EmoteSeatedName[0]),
+            new("EMOTE2", GmData.EmoteStandingName[1], GmData.EmoteSeatedName[1]),
+            new("EMOTE3", GmData.EmoteStandingName[2], GmData.EmoteSeatedName[2]),
+            new("EMOTE4", GmData.EmoteStandingName[3], GmData.EmoteSeatedName[3]),
+            new("EMOTE5", GmData.EmoteStandingName[4], GmData.EmoteSeatedName[4]),
+            new("EMOTE6", GmData.EmoteStandingName[5], GmData.EmoteSeatedName[5]),
+            new("EMOTE7", GmData.EmoteStandingName[6], GmData.EmoteSeatedName[6]),
+            new("EMOTE8", GmData.EmoteStandingName[7], GmData.EmoteSeatedName[7])
         };
 
         /**
          *     This dictionary is needed just because I hate the original animation names.
-         *     It will just translate the name of the original animation to the my version of the name. 
+         *     It will just translate the name of the original animation to the my version of the name.
          */
         private Dictionary<string, string> _myTranslateDictionary;
 
-        private Dictionary<string, string> TranslateDictionary => _myTranslateDictionary ?? (_myTranslateDictionary = new Dictionary<string, string>
+        private Dictionary<string, string> TranslateDictionary => _myTranslateDictionary ??= new Dictionary<string, string>
         {
             { _gestureBinds[1].GetOriginalName(), _gestureBinds[1].GetMyName(_usingType) },
             { _gestureBinds[2].GetOriginalName(), _gestureBinds[2].GetMyName(_usingType) },
@@ -100,9 +99,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
             { _emoteBinds[5].GetOriginalName(), _emoteBinds[5].GetMyName(_usingType) },
             { _emoteBinds[6].GetOriginalName(), _emoteBinds[6].GetMyName(_usingType) },
             { _emoteBinds[7].GetOriginalName(), _emoteBinds[7].GetMyName(_usingType) }
-        });
+        };
 
-        protected override List<HumanBodyBones> PoseBones => new List<HumanBodyBones>
+        protected override List<HumanBodyBones> PoseBones => new()
         {
             HumanBodyBones.Hips,
             HumanBodyBones.LeftUpperLeg,
@@ -200,13 +199,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
                         using (new GUILayout.VerticalScope())
                         {
                             GUILayout.Label("Left Hand", GestureManagerStyles.GuiHandTitle);
-                            GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Left, Left, RequestGestureDuplication);
+                            GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Left, Left, RequestGestureDuplication, HasGestureBeenOverridden);
                         }
 
                         using (new GUILayout.VerticalScope())
                         {
                             GUILayout.Label("Right Hand", GestureManagerStyles.GuiHandTitle);
-                            GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Right, Right, RequestGestureDuplication);
+                            GestureManagerEditor.OnCheckBoxGuiHand(this, GestureHand.Right, Right, RequestGestureDuplication, HasGestureBeenOverridden);
                         }
                     }
                 }),
@@ -254,8 +253,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
             return AvatarAnimator;
         }
 
-        public override bool HasGestureBeenOverridden(int gestureIndex) => _hasBeenOverridden.ContainsKey(_gestureBinds[gestureIndex].GetMyName(_usingType));
-
         public override bool IsInvalid() => base.IsInvalid() || !Avatar.activeInHierarchy;
 
         protected override List<string> CheckWarnings()
@@ -276,6 +273,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
         private AnimationClip GetFinalGestureByIndex(int gestureIndex) => _myRuntimeOverrideController[_gestureBinds[gestureIndex].GetMyName(_usingType)];
 
         private AnimationClip GetEmoteByIndex(int emoteIndex) => _myRuntimeOverrideController[_emoteBinds[emoteIndex].GetMyName(_usingType)];
+
+        private bool HasGestureBeenOverridden(int gestureIndex) => _hasBeenOverridden.ContainsKey(_gestureBinds[gestureIndex].GetMyName(_usingType));
 
         private void AddGestureToOverrideController(int gestureIndex, AnimationClip newAnimation)
         {
@@ -325,7 +324,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
 
             var finalOverride = new List<KeyValuePair<AnimationClip, AnimationClip>>
             {
-                new KeyValuePair<AnimationClip, AnimationClip>(_myRuntimeOverrideController["[EXTRA] CustomAnimation"], CustomAnim)
+                new(_myRuntimeOverrideController["[EXTRA] CustomAnimation"], CustomAnim)
             };
 
             var validOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
@@ -358,7 +357,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
         private void RequestGestureDuplication(int gestureIndex)
         {
             var fullGestureString = GetGestureTextNameByIndex(gestureIndex);
-            var nameString = $"[{fullGestureString.Substring(fullGestureString.IndexOf("]", StringComparison.Ordinal) + 2)}]";
+            var nameString = $"[{fullGestureString[(fullGestureString.IndexOf("]", StringComparison.Ordinal) + 2)..]}]";
             var newAnimation = GmgAnimationHelper.CloneAnimationAsset(GetFinalGestureByIndex(gestureIndex));
             var pathString = EditorUtility.SaveFilePanelInProject($"Creating Gesture: {fullGestureString}", $"{nameString}.anim", "anim", "Hi (?)");
 
@@ -374,6 +373,31 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
         private void SwitchType() => SetupOverride(_notUsedType, false);
 
         private bool CanSwitchController() => _notUsedType == ControllerType.Seated ? _avatarDescriptor.CustomSittingAnims : _avatarDescriptor.CustomStandingAnims;
+    }
+
+    public static class GmgAnimatorControllerHelper
+    {
+        public static IEnumerable<KeyValuePair<AnimationClip, AnimationClip>> GetOverrides(AnimatorOverrideController overrideController)
+        {
+            var overrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+            overrideController.GetOverrides(overrides);
+            return overrides;
+        }
+    }
+
+    public static class GmgAnimationHelper
+    {
+        public static AnimationClip CloneAnimationAsset(AnimationClip toClone)
+        {
+            var toRet = new AnimationClip { name = toClone.name, frameRate = toClone.frameRate, legacy = toClone.legacy, localBounds = toClone.localBounds, wrapMode = toClone.wrapMode };
+
+            foreach (var binding in AnimationUtility.GetCurveBindings(toClone)) AnimationUtility.SetEditorCurve(toRet, binding, AnimationUtility.GetEditorCurve(toClone, binding));
+            foreach (var binding in AnimationUtility.GetObjectReferenceCurveBindings(toClone)) AnimationUtility.SetObjectReferenceCurve(toRet, binding, Keyframes(toClone, binding));
+
+            return toRet;
+        }
+
+        private static ObjectReferenceKeyframe[] Keyframes(AnimationClip toClone, EditorCurveBinding binding) => AnimationUtility.GetObjectReferenceCurve(toClone, binding);
     }
 
     public enum ControllerType

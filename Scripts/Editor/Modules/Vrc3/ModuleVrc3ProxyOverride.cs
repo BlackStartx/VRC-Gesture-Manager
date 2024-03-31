@@ -26,7 +26,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static Dictionary<string, AnimationClip> _overrideOf;
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static Dictionary<string, AnimationClip> OverrideOf => _overrideOf ?? (_overrideOf = new Dictionary<string, AnimationClip>
+        private static Dictionary<string, AnimationClip> OverrideOf => _overrideOf ??= new Dictionary<string, AnimationClip>
         {
             // Locomotion
             { "proxy_low_crawl_still", null },
@@ -97,7 +97,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             { "proxy_mood_surprised", null },
             { "proxy_mood_sad", null },
             { "proxy_mood_angry", null }
-        });
+        };
     }
 }
 #endif

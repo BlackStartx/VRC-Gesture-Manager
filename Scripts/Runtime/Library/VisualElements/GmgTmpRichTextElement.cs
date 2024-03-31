@@ -12,9 +12,9 @@ namespace BlackStartX.GestureManager.Library.VisualElements
 {
     public class GmgTmpRichTextElement : VisualElement
     {
-        private static readonly Regex RegexStringPattern = new Regex("(.*?<[^<>]+>|.+)", RegexOptions.Compiled);
-        private static readonly Regex RegexTokenPattern = new Regex("<[^<>]+>", RegexOptions.Compiled);
-        private static readonly Regex RegexDigitPattern = new Regex(@"\D+", RegexOptions.Compiled);
+        private static readonly Regex RegexStringPattern = new("(.*?<[^<>]+>|.+)", RegexOptions.Compiled);
+        private static readonly Regex RegexTokenPattern = new("<[^<>]+>", RegexOptions.Compiled);
+        private static readonly Regex RegexDigitPattern = new(@"\D+", RegexOptions.Compiled);
         private static readonly char[] NumSeparator = { 'e', 'p', ',', '%' };
         private static readonly char[] Separator = { ' ', '=' };
 
@@ -64,7 +64,7 @@ namespace BlackStartX.GestureManager.Library.VisualElements
         {
             _data = new Data();
             foreach (var _ in Enumerable.Range(0, _textHolder.childCount)) _textHolder.RemoveAt(0);
-            foreach (var ttString in RegexStringPattern.Matches(input).OfType<Match>().Select(match => match.Value)) TextToken(ttString);
+            foreach (var ttString in RegexStringPattern.Matches(input).Select(match => match.Value)) TextToken(ttString);
         }
 
         private void TextToken(string textToken)
@@ -135,9 +135,9 @@ namespace BlackStartX.GestureManager.Library.VisualElements
 
         private class Data
         {
-            internal readonly List<VisualElement> ParentalColors = new List<VisualElement>();
+            internal readonly List<VisualElement> ParentalColors = new();
 
-            private static Dictionary<string, Color> TextMeshProColorNames => new Dictionary<string, Color>
+            private static Dictionary<string, Color> TextMeshProColorNames => new()
             {
                 { "red", Color.red },
                 { "blue", Color.blue },
@@ -155,10 +155,10 @@ namespace BlackStartX.GestureManager.Library.VisualElements
             public FontStyle FontStyle => Italic == 0 && Bold == 0 ? FontStyle.Normal : Italic == 0 ? FontStyle.Bold : Bold == 0 ? FontStyle.Italic : FontStyle.BoldAndItalic;
             public StyleColor MarkStyle => PeekOrDefault(Mark) ?? new StyleColor(Color.clear);
 
-            internal readonly Stack<StyleLength?> Unsupported = new Stack<StyleLength?>();
-            internal readonly Stack<StyleLength?> Size = new Stack<StyleLength?>();
-            internal readonly Stack<StyleColor?> TextColor = new Stack<StyleColor?>();
-            internal readonly Stack<StyleColor?> Mark = new Stack<StyleColor?>();
+            internal readonly Stack<StyleLength?> Unsupported = new();
+            internal readonly Stack<StyleLength?> Size = new();
+            internal readonly Stack<StyleColor?> TextColor = new();
+            internal readonly Stack<StyleColor?> Mark = new();
             internal int Italic;
             internal int Bold;
 

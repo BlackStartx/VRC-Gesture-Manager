@@ -1,7 +1,7 @@
 ﻿#if VRC_SDK_VRCSDK3
 using UnityEngine;
 using UnityEngine.UIElements;
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Library;
 using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3

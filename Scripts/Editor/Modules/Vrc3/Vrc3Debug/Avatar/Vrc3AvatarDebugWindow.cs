@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BlackStartX.GestureManager.Editor.Data;
-using BlackStartX.GestureManager.Editor.Lib;
+using BlackStartX.GestureManager.Editor.Library;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using UnityEditor;
 using UnityEngine;
@@ -245,34 +245,22 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar
                 }
             }
 
-            private static (Color? color, string text) TrackingTuple(VRC_AnimatorTrackingControl.TrackingType trackingType)
+            private static (Color? color, string text) TrackingTuple(VRC_AnimatorTrackingControl.TrackingType trackingType) => trackingType switch
             {
-                switch (trackingType)
-                {
-                    case VRC_AnimatorTrackingControl.TrackingType.NoChange:
-                        return (Color.yellow, "No Change");
-                    case VRC_AnimatorTrackingControl.TrackingType.Tracking:
-                        return (Color.green, "Tracking");
-                    case VRC_AnimatorTrackingControl.TrackingType.Animation:
-                        return (Color.red, "Animation");
-                    default: throw new ArgumentOutOfRangeException(nameof(trackingType), trackingType, null);
-                }
-            }
+                VRC_AnimatorTrackingControl.TrackingType.NoChange => (Color.yellow, "No Change"),
+                VRC_AnimatorTrackingControl.TrackingType.Tracking => (Color.green, "Tracking"),
+                VRC_AnimatorTrackingControl.TrackingType.Animation => (Color.red, "Animation"),
+                _ => throw new ArgumentOutOfRangeException(nameof(trackingType), trackingType, null)
+            };
 
-            private static (Color? color, string text) LabelTuple(Vrc3Param param)
+            private static (Color? color, string text) LabelTuple(Vrc3Param param) => param.Type switch
             {
-                switch (param.Type)
-                {
-                    case AnimatorControllerParameterType.Float:
-                        return (null, param.FloatValue().ToString("0.00"));
-                    case AnimatorControllerParameterType.Int:
-                        return (null, param.IntValue().ToString());
-                    case AnimatorControllerParameterType.Bool:
-                    case AnimatorControllerParameterType.Trigger:
-                        return param.BoolValue() ? (Color.green, "True") : (Color.red, "False");
-                    default: throw new ArgumentOutOfRangeException();
-                }
-            }
+                AnimatorControllerParameterType.Float => (null, param.FloatValue().ToString("0.00")),
+                AnimatorControllerParameterType.Int => (null, param.IntValue().ToString()),
+                AnimatorControllerParameterType.Bool => param.BoolValue() ? (Color.green, "True") : (Color.red, "False"),
+                AnimatorControllerParameterType.Trigger => param.BoolValue() ? (Color.green, "True") : (Color.red, "False"),
+                _ => throw new ArgumentOutOfRangeException()
+            };
 
             private static void FieldTuple(Vrc3Param param, ModuleVrc3 module, GUILayoutOption innerOption)
             {
