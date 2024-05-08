@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Animations;
+using UnityEngine.Playables;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 {
@@ -27,6 +28,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
             _onChange = onChange;
             _hashId = Animator.StringToHash(Name);
         }
+
+        public Vrc3Param(string name, AnimatorControllerParameterType type, AnimatorControllerPlayable playable, int index) : this(name, type) => Subscribe(playable, index);
 
         public void Set(ModuleVrc3 module, float value)
         {
@@ -60,14 +63,23 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 
         public void SetOnChange(Action<Vrc3Param, float> onChange) => _onChange = onChange;
 
-        [Obsolete("This method be removed on 3.9, override FloatValue for now on. Kept for compilation compatibility.")]
-        public virtual float Get() => FloatValue();
-
-        public virtual float FloatValue() => _value;
+        public virtual float FloatValue()
+        {
+            var (playable, intIndex) = _controllers.FirstOrDefault();
+            return playable.IsValid() ? PlayableValue(playable, intIndex) : _value;
+        }
 
         public int IntValue() => (int)FloatValue();
 
         public bool BoolValue() => FloatValue() != 0f;
+
+        private float PlayableValue(AnimatorControllerPlayable playable, int intIndex) => playable.GetParameter(intIndex).type switch
+        {
+            AnimatorControllerParameterType.Float => playable.GetFloat(_hashId),
+            AnimatorControllerParameterType.Int => playable.GetInteger(_hashId),
+            AnimatorControllerParameterType.Bool => playable.GetBool(_hashId) ? 1f : 0f,
+            _ => _value
+        };
 
         protected internal virtual void InternalSet(float value)
         {

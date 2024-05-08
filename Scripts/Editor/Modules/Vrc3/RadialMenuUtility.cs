@@ -287,23 +287,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 yield return (i, playable.GetParameter(i));
         }
 
-        public static Vrc3Param CreateParamFromPlayable(AnimatorControllerParameter parameter, AnimatorControllerPlayable controller, int index)
-        {
-            var param = new Vrc3Param(parameter.name, parameter.type);
-            param.Subscribe(controller, index);
-            return param;
-        }
-
-        public static Vrc3Param CreateParamFromNothing(VRCExpressionParameters.Parameter parameter)
-        {
-            return new Vrc3Param(parameter.name, ModuleVrc3Styles.Data.TypeOf[parameter.valueType]);
-        }
-
-        public static Vrc3Param CreateParamFromNothing(string name, AnimatorControllerParameterType type)
-        {
-            return new Vrc3Param(name, type);
-        }
-
         private static void AppendMenus(VRCExpressionsMenu menu, ICollection<VRCExpressionsMenu> menus)
         {
             if (!menu || menus.Contains(menu)) return;

@@ -25,7 +25,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static readonly SupportersList Supporters = new()
+        private static readonly SupportersList SupObject = new()
         {
             early = new[]
             {
@@ -53,18 +53,22 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             {
                 new Supporter { name = "Hiro N.", text = new Color(1f, 0.69f, 0.02f), background = new Color(1f, 0.4f, 0.82f) },
                 new Supporter { name = "Dominhiho", text = new Color(1f, 0.46f, 0f), background = new Color(0f, 1f, 0.69f) },
-                new Supporter { name = "maple", text = new Color(0f, 0.89f, 0.03f), background = new Color(0f, 0f, 0.51f) }
+                new Supporter { name = "maple", text = new Color(0f, 0.89f, 0.03f), background = new Color(0f, 0f, 0.51f) },
+
+                new Supporter { name = "", text = Color.clear, background = Color.clear },
+                new Supporter { name = "SashTheDee", text = new Color(0.76f, 0.4f, 1f), background = new Color(0.59f, 0f, 1f) },
+                new Supporter { name = "Feldarin", text = Color.red, background = Color.red }
             }
         };
 
-        internal static Supporter SupporterData(bool early, int index) => early ? Supporters.early[index % Supporters.early.Length] : Supporters.supporter[index % Supporters.supporter.Length];
+        internal static Supporter SupporterData(bool early, int index) => early ? SupObject.early[index % SupObject.early.Length] : SupObject.supporter[index % SupObject.supporter.Length];
 
-        internal static bool ShouldFade(bool early, int size) => early ? Supporters.early.Length > size : Supporters.supporter.Length > size;
+        internal static bool ShouldFade(bool early, int size) => early ? SupObject.early.Length > size : SupObject.supporter.Length > size;
 
         private static void OnSupporters(string supporters)
         {
             _checkedForSupporter = true;
-            JsonUtility.FromJsonOverwrite(supporters, Supporters);
+            JsonUtility.FromJsonOverwrite(supporters, SupObject);
         }
 
         public static void Check()

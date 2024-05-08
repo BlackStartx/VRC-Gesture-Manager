@@ -1,7 +1,9 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System.Collections.Generic;
+using System.Linq;
 using BlackStartX.GestureManager.Editor.Library;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
@@ -16,23 +18,45 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
         private const string Link = "select your avatar";
         private const string Tail = " to directly edit your animations!";
 
+        private readonly Dictionary<Motion, Motion> _convert = new();
+
+        private AnimationWindow _animation;
+        private AnimationWindow Animation => _animation ? _animation : _animation = EditorWindow.GetWindow<AnimationWindow>();
+
         private RadialDescription _description;
         private RadialDescription Description => _description ??= new RadialDescription(Text, Link, Tail, SelectAvatarAction);
 
-        private static RuntimeAnimatorController Controller(IEnumerable<AnimationClip> clips) => GmgAnimatorControllerHelper.CreateControllerWith(clips);
+        private readonly AnimatorState _state;
 
-        internal Vrc3EditMode(ModuleVrc3 module, IEnumerable<AnimationClip> clips) : base(module, Prefix) => Animator.runtimeAnimatorController = Controller(clips);
+        internal Vrc3EditMode(ModuleVrc3 module, IEnumerable<MotionItem> motions) : base(module, Prefix)
+        {
+            var controller = GmgAnimatorControllerHelper.CreateController();
+            _state = GmgAnimatorControllerHelper.AddMotionWith(controller, motions.Select(Create));
+            Animator.runtimeAnimatorController = controller;
+        }
+
+        private Motion Create(MotionItem motion)
+        {
+            var clip = new AnimationClip { name = motion.FullName };
+            _convert[clip] = motion.Motion;
+            return clip;
+        }
 
         public override RadialDescription DummyDescription() => Description;
+
+        protected override void OnUpdate()
+        {
+            var clip = Animation?.animationClip;
+            if (!clip || !_convert.TryGetValue(clip, out var motion)) return;
+            if (clip != motion) Animation.animationClip = (AnimationClip)(_state.motion = motion);
+        }
 
         private void SelectAvatarAction(string obj)
         {
             if (Avatar == null) return;
 
             Selection.activeGameObject = Avatar;
-            // Unity is too shy and hide too much stuff in his internal scope...
-            // this is a sad and fragile work around for opening the Animation Window.
-            EditorApplication.ExecuteMenuItem("Window/Animation/Animation");
+            EditorWindow.GetWindow<AnimationWindow>().Focus();
         }
     }
 }

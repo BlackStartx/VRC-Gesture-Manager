@@ -33,6 +33,16 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
             foreach (var radialMenu in module.Radials) radialMenu.MainMenuPrefab();
         }
 
+        internal void Update(GameObject avatar)
+        {
+            if (!Avatar || avatar.activeSelf) StopExecution();
+            else OnUpdate();
+        }
+
+        protected virtual void OnUpdate()
+        {
+        }
+
         internal void Close()
         {
             if (Avatar) Object.DestroyImmediate(Avatar);

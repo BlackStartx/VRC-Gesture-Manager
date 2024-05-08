@@ -212,6 +212,8 @@ Special thanks to:
 - Hiro N.
 - Dominhiho
 - maple
+- Feldarin
+- [SashTheDee](https://twitter.com/SashTheDee)
 
 And:
 

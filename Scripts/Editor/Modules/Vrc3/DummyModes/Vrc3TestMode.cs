@@ -22,10 +22,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
             return null;
         }
 
-        public Animator Test(AnimationClip clip)
+        public Animator Test(Motion motion)
         {
-            Animator.runtimeAnimatorController = GmgAnimatorControllerHelper.CreateControllerWith(clip);
-            Animator.applyRootMotion = clip;
+            Animator.runtimeAnimatorController = GmgAnimatorControllerHelper.CreateControllerWith(motion);
+            Animator.applyRootMotion = motion;
             return Animator;
         }
     }

@@ -246,10 +246,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
 
         public override string GetGestureTextNameByIndex(int gestureIndex) => GetFinalGestureByIndex(gestureIndex).name;
 
-        protected override Animator OnCustomAnimationPlay(AnimationClip animationClip)
+        protected override Animator OnCustomAnimationPlay(AnimationClip clip)
         {
             SetupOverride(_usingType, false);
-            AvatarAnimator.applyRootMotion = animationClip;
+            AvatarAnimator.applyRootMotion = clip;
             return AvatarAnimator;
         }
 

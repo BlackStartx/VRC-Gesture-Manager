@@ -28,7 +28,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private const float MinSize = InnerSize / 2f;
 
         private const float Clamp = Size / 3;
-        private const float ClampReset = Size / 1.7f;
+        private const float ClampReset = Size / 2f;
 
         private const string TrackingDocumentationUrl = "https://creators.vrchat.com/avatars/animator-parameters/#trackingtype-parameter";
 

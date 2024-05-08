@@ -78,8 +78,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal readonly Dictionary<int, VRCAvatarDescriptor.DebugHash> AnimationHashSet = new();
         internal readonly HashSet<ContactReceiver> Receivers = new();
         private readonly HashSet<VRCPhysBoneBase> _physBones = new();
-        private readonly HashSet<AnimationClip> _avatarClips = new();
         private readonly HashSet<ContactSender> _senders = new();
+        private readonly HashSet<MotionItem> _motions = new();
         private readonly HashSet<Animator> _animators = new();
         private readonly HashSet<Cloth> _cloths = new();
 
@@ -90,7 +90,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static readonly GUILayoutOption SizeOptions = GUILayout.Height(RadialMenu.Size);
         private static readonly GUILayoutOption[] Options = { GUILayout.ExpandWidth(true), SizeOptions };
 
-        private IEnumerable<AnimationClip> OriginalClips => _avatarClips.Where(clip => !clip.name.StartsWith("proxy_"));
+        private IEnumerable<MotionItem> OriginalClips => _motions.Where(motion => !motion.Default);
         private VRCExpressionParameters Parameters => AvatarDescriptor.expressionParameters;
         internal PipelineManager Pipeline => Avatar.GetComponent<PipelineManager>();
         private VRCExpressionsMenu Menu => AvatarDescriptor.expressionsMenu;
@@ -116,8 +116,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 OscModule.Update();
                 AvatarTools.OnUpdate(this);
                 if (PoseMode) SavePose(AvatarAnimator);
-                if (DummyMode == null && _layers.Any(IsBroken)) OnBrokenSimulation();
-                if (DummyMode != null && (!DummyMode.Avatar || Avatar.activeSelf)) DummyMode.StopExecution();
+                if (DummyMode != null) DummyMode.Update(Avatar);
+                else if (_layers.Any(IsBroken)) OnBrokenSimulation();
                 foreach (var pair in _layers) pair.Value.Weight.Update();
             }
             else DestroyGraphs();
@@ -135,8 +135,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         public override void InitForAvatar()
         {
             StartVrcHooks();
-
-            OnEditorPauseChange(EditorApplication.isPaused, Vrc3Warning.PausedEditor);
 
             AvatarAnimator.applyRootMotion = false;
             AvatarAnimator.runtimeAnimatorController = null;
@@ -160,8 +158,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             _layers.Clear();
             _cloths.Clear();
+            _motions.Clear();
             _animators.Clear();
-            _avatarClips.Clear();
             _brokenLayers.Clear();
 
             _senders.Clear();
@@ -179,7 +177,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
                 if (layer.animatorController)
                     foreach (var clip in layer.animatorController.animationClips)
-                        _avatarClips.Add(clip);
+                        _motions.Add(new MotionItem(clip, layer.type));
 
                 var controller = Vrc3ProxyOverride.OverrideController(layer.isDefault ? RequestBuiltInController(layer.type) : layer.animatorController);
                 var mask = layer.isDefault || !layer.mask && isFx ? ModuleVrc3Styles.Data.MaskOf(layer.type) : layer.mask;
@@ -694,12 +692,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             foreach (var pair in _layers)
             foreach (var (intIndex, parameter) in RadialMenuUtility.GetParameters(pair.Value.Playable))
                 if (Params.TryGetValue(parameter.name, out var param)) param.Subscribe(pair.Value.Playable, intIndex);
-                else Params[parameter.name] = RadialMenuUtility.CreateParamFromPlayable(parameter, pair.Value.Playable, intIndex);
+                else Params[parameter.name] = new Vrc3Param(parameter.name, parameter.type, pair.Value.Playable, intIndex);
 
             if (parameters)
                 foreach (var parameter in parameters.parameters)
                     if (!Params.ContainsKey(parameter.name))
-                        Params[parameter.name] = RadialMenuUtility.CreateParamFromNothing(parameter);
+                        Params[parameter.name] = new Vrc3Param(parameter.name, ModuleVrc3Styles.Data.TypeOf[parameter.valueType]);
 
             if (parameters)
                 foreach (var parameter in parameters.parameters)
@@ -707,7 +705,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             foreach (var (nameString, type) in Vrc3DefaultParams.Parameters)
                 if (!Params.ContainsKey(nameString))
-                    Params[nameString] = RadialMenuUtility.CreateParamFromNothing(nameString, type);
+                    Params[nameString] = new Vrc3Param(nameString, type);
 
             if (Settings.loadStored) TryAddWarning(InitStored());
 
@@ -761,13 +759,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private static void LoadScene(int sceneBuildIndex, LoadSceneMode mode, Action<Scene, LoadSceneMode> onLoad)
         {
-            SceneManager.sceneLoaded += OnSceneManagerLoaded;
+            SceneManager.sceneLoaded += SceneLoaded;
             SceneManager.LoadScene(sceneBuildIndex, mode);
             return;
 
-            void OnSceneManagerLoaded(Scene scene, LoadSceneMode m)
+            void SceneLoaded(Scene scene, LoadSceneMode m)
             {
-                SceneManager.sceneLoaded -= OnSceneManagerLoaded;
+                SceneManager.sceneLoaded -= SceneLoaded;
                 onLoad(scene, m);
             }
         }
@@ -844,6 +842,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             AvatarDynamicReset.CheckSceneCollisions();
 
             EditorApplication.pauseStateChanged += OnEditorPauseChange;
+            OnEditorPauseChange(EditorApplication.isPaused, Vrc3Warning.PausedEditor);
 
             ContactBase.OnInitialize += ContactBaseInit;
             VRCPhysBoneBase.OnInitialize += PhysBoneBaseInit;
