@@ -436,10 +436,24 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
         public class AnimatorPerformance : GmgDynamicFunction
         {
-            private List<int> _cachedIds = new();
+            private readonly List<int> _cachedIds = new();
+            private readonly List<(int id, string name)> _idsNames = new();
+            private static readonly Dictionary<int, string> MarkerIds = new();
+            private static int _playerLoopMarkerId;
+            private const string PlayerLoopName = "PlayerLoop";
+            private const string PropertyName = "Animators.Update";
 
             private Dictionary<string, Benchmark> _benchmark = new();
-            private static string PropertyName => "Animators.Update";
+
+            private static readonly string[] MarkerNames =
+            {
+                "Update.DirectorUpdate",
+                "PreLateUpdate.DirectorUpdateAnimationBegin",
+                "PreLateUpdate.DirectorUpdateAnimationEnd"
+            };
+
+            private static readonly int[] Markers = new int[MarkerNames.Length];
+
             protected internal override string Name => "Animator Performance";
             protected override string Description => "A simple benchmark using the Unity Profiler!\n\nAimed to show animator update calls usages!";
             protected internal override bool Active => Profiler.enabled;
@@ -454,7 +468,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
             private const int Thread = 0;
             private const int Column = HierarchyFrameDataView.columnName;
-            private const HierarchyFrameDataView.ViewModes View = HierarchyFrameDataView.ViewModes.Default;
+            private const HierarchyFrameDataView.ViewModes View = HierarchyFrameDataView.ViewModes.MergeSamplesWithTheSameName;
             private const bool SortAscending = true;
 
             protected override void Gui(ModuleVrc3 module)
@@ -478,26 +492,56 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
             protected override void Update(ModuleVrc3 module)
             {
+                CacheMarkerIds();
                 using var frameData = ProfilerDriver.GetHierarchyFrameDataView(ProfilerDriver.lastFrameIndex, Thread, View, Column, SortAscending);
-                var idList = GetCachedIds(frameData);
-                foreach (var intId in idList)
+                GetIds(frameData);
+                foreach (var (intId, name) in _idsNames)
                 {
-                    var dString = frameData.GetItemPath(intId);
-                    if (!_benchmark.ContainsKey(dString)) _benchmark[dString] = new Benchmark();
-                    _benchmark[dString].Record(frameData.GetItemColumnDataAsFloat(intId, HierarchyFrameDataView.columnSelfTime));
+                    if (!_benchmark.TryGetValue(name, out var benchmark)) benchmark = _benchmark[name] = new Benchmark();
+                    benchmark.Record(frameData.GetItemColumnDataAsFloat(intId, HierarchyFrameDataView.columnTotalTime));
                 }
             }
 
-            private List<int> GetCachedIds(HierarchyFrameDataView frameData)
+            private static void CacheMarkerIds()
             {
-                if (_cachedIds.Count != 0 && _cachedIds.All(intId => frameData.GetItemName(intId) == PropertyName)) return _cachedIds;
-                frameData.GetItemDescendantsThatHaveChildren(frameData.GetRootItemID(), _cachedIds);
-                _cachedIds = _cachedIds
-                    .Select(intId => (intId, frameData.GetItemName(intId)))
-                    .Where(tuple => tuple.Item2.Equals(PropertyName))
-                    .Select(tuple => tuple.intId)
-                    .ToList();
-                return _cachedIds;
+                if (MarkerIds.Count != 0) return;
+                using var frameData = ProfilerDriver.GetRawFrameDataView(ProfilerDriver.lastFrameIndex, Thread);
+                _playerLoopMarkerId = frameData.GetMarkerId(PlayerLoopName);
+                for (var i = 0; i < MarkerNames.Length; i++)
+                {
+                    var name = MarkerNames[i];
+                    var intValue = frameData.GetMarkerId(name);
+                    MarkerIds.Add(intValue, name);
+                    Markers[i] = intValue;
+                }
+            }
+
+            private void GetIds(HierarchyFrameDataView frameData)
+            {
+                frameData.GetItemChildren(frameData.GetRootItemID(), _cachedIds);
+                var playerLoopId = 0;
+                foreach (var intId in _cachedIds)
+                {
+                    if (frameData.GetItemMarkerID(intId) != _playerLoopMarkerId) continue;
+                    playerLoopId = intId;
+                    break;
+                }
+
+                _idsNames.Clear();
+                var found = 0;
+                frameData.GetItemChildren(playerLoopId, _cachedIds);
+                for (var jInt = _cachedIds.Count - 1; jInt >= 0; jInt--)
+                {
+                    var markerInt = frameData.GetItemMarkerID(_cachedIds[jInt]);
+                    if (MarkerIds.TryGetValue(markerInt, out var name))
+                    {
+                        var intId = _cachedIds[jInt];
+                        _idsNames.Add((intId, name));
+                        found++;
+                    }
+
+                    if (found == MarkerNames.Length) return;
+                }
             }
 
             protected internal override void Toggle(ModuleVrc3 module)
