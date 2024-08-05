@@ -15,6 +15,6 @@
 		"Assets\\GestureManager" : "73dec07c46a7d41409b0c389860fb28e"
 	},
 	"vpmDependencies" : {
-		"com.vrchat.avatars" : ">=3.5.2 < 3.7.X"
+		"com.vrchat.avatars" : "^3.5.2"
 	}
 }
