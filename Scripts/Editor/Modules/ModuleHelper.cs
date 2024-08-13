@@ -11,6 +11,13 @@ namespace BlackStartX.GestureManager.Editor.Modules
 {
     public static class ModuleHelper
     {
+        public static readonly string LocalLowPath =
+#if VRC_SDK_VRCSDK3
+            VRC.SDKBase.Editor.VRC_SdkBuilder.GetLocalLowPath();
+#else
+            null;
+#endif
+
         public static ModuleBase GetModuleFor(GameObject gameObject) => GetModuleFor(gameObject.GetComponent<GmgAvatarDescriptor>());
 
         public static ModuleBase GetModuleFor(GmgAvatarDescriptor descriptorComponent) => descriptorComponent switch
