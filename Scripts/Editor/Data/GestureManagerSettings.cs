@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BlackStartX.GestureManager.Editor.Library;
+using BlackStartX.GestureManager.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,12 +13,11 @@ namespace BlackStartX.GestureManager.Editor.Data
         public const string LocalFolder = "LocalAvatarData";
 
         private static string UserPath(string folder, string user) => user == null ? null : Path.Combine(VrcDirectory, folder, user);
-        private static string LocalLow => $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}Low";
         private static string UserID(int index, IReadOnlyList<string> users) => index < users.Count ? users[index] : null;
         private static IEnumerable<string> Users => Directory.GetDirectories(DataDirectory).Select(Path.GetFileName);
+        public static string VrcDirectory => Path.Combine(ModuleHelper.LocalLowPath, "VRChat", "VRChat");
         public static string UserPath(int index, string folder) => UserPath(folder, UserID(index));
         public static string UserID(int index) => index < 1 ? null : UserID(index, Choose);
-        public static string VrcDirectory => Path.Combine(LocalLow, "VRChat", "VRChat");
         private static string DataDirectory => Path.Combine(VrcDirectory, LocalFolder);
         private static string[] Choose => new[] { "[Unset]" }.Concat(Users).ToArray();
 
