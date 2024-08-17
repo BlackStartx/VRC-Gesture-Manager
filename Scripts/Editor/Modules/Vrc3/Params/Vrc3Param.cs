@@ -33,11 +33,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 
         public void Set(ModuleVrc3 module, float value)
         {
-            if (RadialMenuUtility.Is(FloatValue(), value)) return;
-            module.OscModule.OnParameterChange(this, value);
+            var isSame = RadialMenuUtility.Is(FloatValue(), value);
             LastUpdate = Time;
             InternalSet(value);
+            if (isSame) return;
             _onChange?.Invoke(this, value);
+            module.OscModule.OnParameterChange(this, value);
             foreach (var menu in module.Radials) menu.UpdateValue(Name, value);
         }
 
@@ -77,6 +78,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
         {
             AnimatorControllerParameterType.Float => playable.GetFloat(_hashId),
             AnimatorControllerParameterType.Int => playable.GetInteger(_hashId),
+            AnimatorControllerParameterType.Trigger => playable.GetBool(_hashId) ? 1f : 0f,
             AnimatorControllerParameterType.Bool => playable.GetBool(_hashId) ? 1f : 0f,
             _ => _value
         };
@@ -95,6 +97,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
                         pair.Key.SetInteger(_hashId, (int)Math.Round(value));
                         break;
                     case AnimatorControllerParameterType.Trigger:
+                        pair.Key.SetTrigger(_hashId);
+                        break;
                     case AnimatorControllerParameterType.Bool:
                         pair.Key.SetBool(_hashId, value != 0f);
                         break;

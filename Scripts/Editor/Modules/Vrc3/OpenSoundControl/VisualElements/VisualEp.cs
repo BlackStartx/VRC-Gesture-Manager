@@ -2,17 +2,20 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 using BlackStartX.GestureManager.Library;
+using UnityEngine.UIElements.Experimental;
 using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.VisualElements
 {
     public class VisualEp : VisualElement
     {
+        private const int AnimDuration = 750;
         private readonly VisualElement _dataHolder;
-        private readonly VisualElement _dataBorder;
+        private readonly ValueAnimation<float> _animation;
 
         internal VisualEp(EndpointControl endpoint)
         {
+            VisualElement dataBorder;
             VisualElement center;
             TextElement horizontal;
 
@@ -21,7 +24,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.Visual
 
             Add(center = VisualEpStyles.Center);
             center.Add(_dataHolder = VisualEpStyles.Holder);
-            center.Add(_dataBorder = VisualEpStyles.Outline);
+            center.Add(dataBorder = VisualEpStyles.Outline);
+
+            _animation = dataBorder.experimental.animation.Start(1f, 0.5f, AnimDuration, Animation).KeepAlive();
 
             Add(VisualEpStyles.VerticalText);
             Add(horizontal = VisualEpStyles.HorizontalText);
@@ -31,7 +36,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl.Visual
 
         public void OnMessage(EndpointControl control)
         {
-            _dataBorder.experimental.animation.Start(1f, 0.5f, 500, Animation);
+            _animation.Start();
             if (control.Values.Count > _dataHolder.childCount) SetValueCount(control.Values.Count);
             for (var i = 0; i < control.Values.Count; i++) (_dataHolder[i] as Data)?.SetValue(control.Values[i]);
         }

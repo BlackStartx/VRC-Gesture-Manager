@@ -61,6 +61,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal readonly Vrc3Param PoseIK;
 
         private readonly Dictionary<VRCAvatarDescriptor.AnimLayerType, LayerData> _layers = new();
+        private readonly Dictionary<(Motion, VRCAvatarDescriptor.AnimLayerType), MotionItem> _motions = new();
         private readonly Dictionary<ScriptableObject, Vrc3WeightController> _weightControllers = new();
         private readonly Dictionary<ScriptableObject, VisualEpContainer> _oscContainers = new();
         private readonly Dictionary<ScriptableObject, RadialMenu> _radialMenus = new();
@@ -79,7 +80,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal readonly HashSet<ContactReceiver> Receivers = new();
         private readonly HashSet<VRCPhysBoneBase> _physBones = new();
         private readonly HashSet<ContactSender> _senders = new();
-        private readonly HashSet<MotionItem> _motions = new();
         private readonly HashSet<Animator> _animators = new();
         private readonly HashSet<Cloth> _cloths = new();
 
@@ -90,7 +90,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static readonly GUILayoutOption SizeOptions = GUILayout.Height(RadialMenu.Size);
         private static readonly GUILayoutOption[] Options = { GUILayout.ExpandWidth(true), SizeOptions };
 
-        private IEnumerable<MotionItem> OriginalClips => _motions.Where(motion => !motion.Default);
         private VRCExpressionParameters Parameters => AvatarDescriptor.expressionParameters;
         internal PipelineManager Pipeline => Avatar.GetComponent<PipelineManager>();
         private VRCExpressionsMenu Menu => AvatarDescriptor.expressionsMenu;
@@ -177,7 +176,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
                 if (layer.animatorController)
                     foreach (var clip in layer.animatorController.animationClips)
-                        _motions.Add(new MotionItem(clip, layer.type));
+                        if (!_motions.ContainsKey((clip, layer.type)))
+                            _motions[(clip, layer.type)] = new MotionItem(clip, layer.type);
 
                 var controller = Vrc3ProxyOverride.OverrideController(layer.isDefault ? RequestBuiltInController(layer.type) : layer.animatorController);
                 var mask = layer.isDefault || !layer.mask && isFx ? ModuleVrc3Styles.Data.MaskOf(layer.type) : layer.mask;
@@ -638,7 +638,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _ => null
         };
 
-        internal void EnableEditMode() => DummyMode = new Vrc3EditMode(this, OriginalClips);
+        internal void EnableEditMode() => DummyMode = new Vrc3EditMode(this, _motions.Values);
 
         private void OnEditorPauseChange(PauseState obj) => OnEditorPauseChange(obj == PauseState.Paused, Vrc3Warning.PausedEditor);
 

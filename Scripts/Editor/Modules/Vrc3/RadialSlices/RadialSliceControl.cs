@@ -121,7 +121,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
 
         public VRCExpressionsMenu.Control.Label[] GetSubLabels() => _subLabels;
 
-        internal string GetSubParameterName(int index) => _subParameters[index].Name;
+        internal string GetSubParameterName(int index) => _subParameters[index]?.Name;
 
         protected override float FloatValue() => NonAmplifiedValue(_parameter?.FloatValue() ?? 0f);
 

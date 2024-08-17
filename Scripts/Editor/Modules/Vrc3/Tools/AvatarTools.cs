@@ -227,36 +227,36 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
              * RayCast Calculation~
              */
 
-            private void CheckRay(ModuleVrc3 module, Vector3 s, Vector3 e)
+            private void CheckRay(ModuleVrc3 module, Vector3 s, Vector3 b)
             {
                 var manager = ContactManager.Inst;
                 if (!manager) return;
-                foreach (var receiver in module.Receivers.Where(receiver => string.IsNullOrEmpty(_tag.Property) || receiver.collisionTags.Contains(_tag.Property))) OnContactValue(receiver, ValueFor(manager, receiver, s, e));
+                foreach (var receiver in module.Receivers.Where(receiver => string.IsNullOrEmpty(_tag.Property) || receiver.collisionTags.Contains(_tag.Property))) OnContactValue(receiver, ValueFor(manager, receiver, s, b));
             }
 
-            private static float ValueFor(ContactManager manager, ContactReceiver receiver, Vector3 s, Vector3 e)
+            private static float ValueFor(ContactManager manager, ContactReceiver receiver, Vector3 s, Vector3 b)
             {
                 var isProximity = receiver.receiverType == ContactReceiver.ReceiverType.Proximity;
-                var distance = DistanceFrom(manager, receiver, s, e, out var radius);
+                var distance = DistanceFrom(manager, receiver, s, b, out var radius);
                 if (isProximity) distance -= radius;
                 if (isProximity) return Mathf.Clamp(-distance / radius, 0f, 1f);
                 return distance < 0 ? 1f : 0f;
             }
 
-            private static float DistanceFrom(ContactManager manager, ContactBase receiver, Vector3 s, Vector3 e, out float radius)
+            private static float DistanceFrom(ContactManager manager, ContactBase receiver, Vector3 s, Vector3 b, out float radius)
             {
                 receiver.InitShape();
                 manager.collision.UpdateShapeData(receiver.shape);
-                var shape = manager.collision.GetShapeData(receiver.shape);
+                var aPointData = manager.collision.GetShapeData(receiver.shape);
                 var scaleVector = receiver.transform.lossyScale;
                 radius = receiver.radius * Mathf.Max(scaleVector.x, scaleVector.y, scaleVector.z);
-                var vectorLine = receiver.shapeType == ContactBase.ShapeType.Sphere ? shape.outPos0 : shape.outPos1;
-                ClosestPointsBetweenLineSegments(s, e, shape.outPos0, vectorLine, out var vector0, out var vector1);
+                var bPointVector = receiver.shapeType == ContactBase.ShapeType.Sphere ? aPointData.outPos0 : aPointData.outPos1;
+                ClosestPointsBetweenLineSegments(s, b, aPointData.outPos0, bPointVector, out var vector0, out var vector1);
                 return (vector0 - vector1).magnitude - radius;
             }
 
             /*
-             * Saved from the Plugins\VRC.Utility.dll before being obliterate in future versions of the library~ :c
+             * Saved from the Plugins\VRC.Utility.dll before being obliterated in future versions of the library~ :c
              *
              * This poor function will not be forgotten~
              */
@@ -441,9 +441,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             private static readonly Dictionary<int, string> MarkerIds = new();
             private static int _playerLoopMarkerId;
             private const string PlayerLoopName = "PlayerLoop";
-            private const string PropertyName = "Animators.Update";
 
-            private Dictionary<string, Benchmark> _benchmark = new();
+            private Dictionary<string, Benchmark> _benchmark = MarkerNames.ToDictionary(nString => nString, _ => new Benchmark());
 
             private static readonly string[] MarkerNames =
             {
@@ -458,13 +457,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             protected override string Description => "A simple benchmark using the Unity Profiler!\n\nAimed to show animator update calls usages!";
             protected internal override bool Active => Profiler.enabled;
             public bool Watching => Active && Foldout;
-            private Dictionary<string, Benchmark> Benchmarks => _benchmark.Count == 0 ? _dummyBenchmark : _benchmark;
-
-            private readonly Dictionary<string, Benchmark> _dummyBenchmark = new()
-            {
-                { "Dummy1", new Benchmark() },
-                { "Dummy2", new Benchmark() }
-            };
 
             private const int Thread = 0;
             private const int Column = HierarchyFrameDataView.columnName;
@@ -477,8 +469,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
                 using (new GUILayout.VerticalScope(EditorStyles.helpBox))
                 using (new GmgLayoutHelper.GuiEnabled(Active))
                 {
-                    GUILayout.Label(PropertyName, GestureManagerStyles.MiddleStyle);
-                    foreach (var benchmarkPair in Benchmarks) benchmarkPair.Value.Render();
+                    foreach (var benchmarkPair in _benchmark)
+                    {
+                        GUILayout.Label(benchmarkPair.Key, GestureManagerStyles.MiddleStyle);
+                        benchmarkPair.Value.Render();
+                        GUILayout.Space(10);
+                    }
                     GUILayout.Label($"\n[Result calculated on {_benchmark.FirstOrDefault().Value?.Frame ?? 0} frames]");
                 }
 
@@ -519,17 +515,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             private void GetIds(HierarchyFrameDataView frameData)
             {
                 frameData.GetItemChildren(frameData.GetRootItemID(), _cachedIds);
-                var playerLoopId = 0;
-                foreach (var intId in _cachedIds)
-                {
-                    if (frameData.GetItemMarkerID(intId) != _playerLoopMarkerId) continue;
-                    playerLoopId = intId;
-                    break;
-                }
+                var playerIntId = _cachedIds.FirstOrDefault(intId => frameData.GetItemMarkerID(intId) == _playerLoopMarkerId);
 
                 _idsNames.Clear();
                 var found = 0;
-                frameData.GetItemChildren(playerLoopId, _cachedIds);
+                frameData.GetItemChildren(playerIntId, _cachedIds);
                 for (var jInt = _cachedIds.Count - 1; jInt >= 0; jInt--)
                 {
                     var markerInt = frameData.GetItemMarkerID(_cachedIds[jInt]);

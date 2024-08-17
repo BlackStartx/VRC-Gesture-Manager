@@ -415,7 +415,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
         {
             if (_sender == null) return;
             var message = _settings.OnParameterChange(param, value);
-            if (message != null) _sender.Send(message.GetBytes());
+            if (message == null) return;
+            _sender.Send(message.GetBytes());
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System.Collections.Generic;
-using System.Linq;
 using BlackStartX.GestureManager.Editor.Library;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -18,6 +17,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
         private const string Link = "select your avatar";
         private const string Tail = " to directly edit your animations!";
 
+        private static Motion SelectClip => new AnimationClip { name = "[SELECT YOUR ANIMATION!]" };
+
         private readonly Dictionary<Motion, Motion> _convert = new();
 
         private AnimationWindow _animation;
@@ -31,15 +32,18 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.DummyModes
         internal Vrc3EditMode(ModuleVrc3 module, IEnumerable<MotionItem> motions) : base(module, Prefix)
         {
             var controller = GmgAnimatorControllerHelper.CreateController();
-            _state = GmgAnimatorControllerHelper.AddMotionWith(controller, motions.Select(Create));
+            GmgAnimatorControllerHelper.AddMotion(controller, SelectClip);
+            _state = GmgAnimatorControllerHelper.AddMotion(controller, SelectClip);
+            foreach (var motion in motions) Create(motion, controller);
             Animator.runtimeAnimatorController = controller;
         }
 
-        private Motion Create(MotionItem motion)
+        private void Create(MotionItem motion, AnimatorController controller)
         {
+            if (motion.Default) return;
             var clip = new AnimationClip { name = motion.FullName };
+            clip.name = GmgAnimatorControllerHelper.AddMotion(controller, clip).name;
             _convert[clip] = motion.Motion;
-            return clip;
         }
 
         public override RadialDescription DummyDescription() => Description;
