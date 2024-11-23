@@ -86,7 +86,8 @@ namespace BlackStartX.GestureManager.Editor
         private void TryInitialize()
         {
             if (!Manager.enabled || !Manager.gameObject.activeInHierarchy || Manager.Module != null) return;
-            Manager.StartCoroutine(TryInitializeRoutine(ModuleHelper.GetModuleFor(Manager.settings.favourite)));
+            var enumerator = TryInitializeRoutine(ModuleHelper.GetModuleFor(Manager.settings.favourite));
+            Manager.StartCoroutine(enumerator);
         }
 
         private IEnumerator TryInitializeRoutine(ModuleBase module)

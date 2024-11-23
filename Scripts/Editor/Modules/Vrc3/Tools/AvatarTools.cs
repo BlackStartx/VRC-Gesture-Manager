@@ -451,8 +451,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
                 "PreLateUpdate.DirectorUpdateAnimationEnd"
             };
 
-            private static readonly int[] Markers = new int[MarkerNames.Length];
-
             protected internal override string Name => "Animator Performance";
             protected override string Description => "A simple benchmark using the Unity Profiler!\n\nAimed to show animator update calls usages!";
             protected internal override bool Active => Profiler.enabled;
@@ -503,13 +501,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
                 if (MarkerIds.Count != 0) return;
                 using var frameData = ProfilerDriver.GetRawFrameDataView(ProfilerDriver.lastFrameIndex, Thread);
                 _playerLoopMarkerId = frameData.GetMarkerId(PlayerLoopName);
-                for (var i = 0; i < MarkerNames.Length; i++)
-                {
-                    var name = MarkerNames[i];
-                    var intValue = frameData.GetMarkerId(name);
-                    MarkerIds.Add(intValue, name);
-                    Markers[i] = intValue;
-                }
+                foreach (var name in MarkerNames) MarkerIds.Add(frameData.GetMarkerId(name), name);
             }
 
             private void GetIds(HierarchyFrameDataView frameData)

@@ -18,6 +18,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar
         private Vector2 _scroll;
 
         private static Color Color => EditorGUIUtility.isProSkin ? Color.magenta : Color.cyan;
+        private static readonly GUIStyle Style = new(EditorStyles.label) { fontSize = 10, alignment = TextAnchor.MiddleCenter };
 
         internal static Vrc3AvatarDebugWindow Create(ModuleVrc3 source)
         {
@@ -103,50 +104,68 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar
 
             private static void ParametersLayout(ModuleVrc3 module, float width)
             {
-                var widthOption = GUILayout.Width(width);
-                var innerOption = GUILayout.Width(width / 3);
+                var wOption = GUILayout.Width(width);
+                var iOption = GUILayout.Width(width / 3);
 
                 using (new GUILayout.VerticalScope())
                 {
-                    GUILayout.Label("Parameters", GestureManagerStyles.GuiHandTitle, widthOption);
+                    GUILayout.Label("Parameters", GestureManagerStyles.GuiHandTitle, wOption);
                     module.ParamFilterSearch();
                     GUILayout.Space(5);
-                    using (new GUILayout.HorizontalScope(widthOption))
+                    using (new GUILayout.HorizontalScope(wOption))
                     {
-                        GUILayout.Label("Parameter", GestureManagerStyles.GuiDebugTitle, innerOption);
-                        GUILayout.Label("Type", GestureManagerStyles.GuiDebugTitle, innerOption);
-                        GUILayout.Label("Value", GestureManagerStyles.GuiDebugTitle, innerOption);
+                        GUILayout.Label("Parameter", GestureManagerStyles.GuiDebugTitle, iOption);
+                        GUILayout.Label("Type", GestureManagerStyles.GuiDebugTitle, iOption);
+                        GUILayout.Label("Value", GestureManagerStyles.GuiDebugTitle, iOption);
                     }
 
-                    var color = GUI.backgroundColor;
                     var intTime = Vrc3Param.Time;
-                    foreach (var paramPair in module.FilteredParams)
-                    {
-                        GUILayout.Space(-4);
-                        GUI.backgroundColor = Color.Lerp(Color, color, (intTime - paramPair.Value.LastUpdate) / 100f);
-                        using (new GUILayout.HorizontalScope(GUI.skin.box, widthOption))
-                        {
-                            GUILayout.Label(paramPair.Key, innerOption);
-                            GUILayout.Label(paramPair.Value.TypeText, innerOption);
-                            ParametersLayoutValue(module, paramPair, innerOption);
-                        }
-                    }
-
-                    GUI.backgroundColor = color;
+                    ParametersCategory(module.UserFilteredParams, "[User Parameters]", width, wOption, iOption, intTime, module);
+                    ParametersCategory(module.VrcFilteredParams, "[VRC Defaults]", width, wOption, iOption, intTime, module);
                 }
             }
 
-            private static void ParametersLayoutValue(ModuleVrc3 module, KeyValuePair<string, Vrc3Param> paramPair, GUILayoutOption innerOption)
+            private static void ParametersCategory(Dictionary<string, Vrc3Param> vParams, string title, float width, GUILayoutOption wOption, GUILayoutOption iOption, int intTime, ModuleVrc3 module)
             {
-                if (module.Edit != paramPair.Key)
+                if (vParams.Count <= 0) return;
+                Foldout(title, GUILayout.Width(width + 16), GUILayout.Width(width / 3));
+                foreach (var (kString, param) in vParams) ShowParam(module, intTime, kString, param, wOption, iOption);
+            }
+
+            private static void Foldout(string text, GUILayoutOption wWidth, GUILayoutOption iWidth)
+            {
+                GUILayout.Space(-4);
+                using (new GUILayout.HorizontalScope(GUI.skin.box, wWidth))
                 {
-                    GmgLayoutHelper.GuiLabel(LabelTuple(paramPair.Value), innerOption);
+                    EditorGUILayout.LabelField("", GUI.skin.horizontalSlider, iWidth);
+                    GUILayout.Label(text, Style);
+                    EditorGUILayout.LabelField("", GUI.skin.horizontalSlider, iWidth);
+                }
+            }
+
+            private static void ShowParam(ModuleVrc3 module, int intTime, string key, Vrc3Param param, GUILayoutOption wOption, GUILayoutOption iOption)
+            {
+                GUILayout.Space(-4);
+                using (new GmgLayoutHelper.GuiBackground(Color.Lerp(Color, GUI.backgroundColor, (intTime - param.LastUpdate) / 100f)))
+                using (new GUILayout.HorizontalScope(GUI.skin.box, wOption))
+                {
+                    GUILayout.Label(key, iOption);
+                    GUILayout.Label(param.TypeText, iOption);
+                    ParametersLayoutValue(module, key, param, iOption);
+                }
+            }
+
+            private static void ParametersLayoutValue(ModuleVrc3 module, string key, Vrc3Param param, GUILayoutOption iOption)
+            {
+                if (module.Edit != key)
+                {
+                    GmgLayoutHelper.GuiLabel(LabelTuple(param), iOption);
                     var rect = GUILayoutUtility.GetLastRect();
                     rect.x += rect.width - 20;
                     rect.width = 15;
-                    if (GUI.Toggle(rect, false, "")) module.Edit = paramPair.Key;
+                    if (GUI.Toggle(rect, false, "")) module.Edit = key;
                 }
-                else FieldTuple(paramPair.Value, module, innerOption);
+                else FieldTuple(param, module, iOption);
             }
 
             private static void TrackingControlLayout(float width, Dictionary<VRCAvatarDescriptor.AnimLayerType, ModuleVrc3.LayerData> data, Dictionary<string, VRC_AnimatorTrackingControl.TrackingType> trackingControls, bool locomotionDisabled, bool poseSpace)

@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
+using VRC.SDKBase;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 {
@@ -31,11 +32,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 
         public Vrc3Param(string name, AnimatorControllerParameterType type, AnimatorControllerPlayable playable, int index) : this(name, type) => Subscribe(playable, index);
 
-        public void Set(ModuleVrc3 module, float value)
+        public void Set(ModuleVrc3 module, float value, object source = null)
         {
             var isSame = RadialMenuUtility.Is(FloatValue(), value);
             LastUpdate = Time;
-            InternalSet(value);
+            InternalSet(value, source);
             if (isSame) return;
             _onChange?.Invoke(this, value);
             module.OscModule.OnParameterChange(this, value);
@@ -48,18 +49,23 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 
         public void Subscribe(AnimatorControllerPlayable playable, int index) => _controllers[playable] = index;
 
-        public void Set(ModuleVrc3 module, bool value) => Set(module, value ? 1f : 0f);
+        public void Set(ModuleVrc3 module, bool value, object source = null) => Set(module, value ? 1f : 0f, source);
 
-        public void Set(ModuleVrc3 module, int value) => Set(module, (float)value);
+        public void Set(ModuleVrc3 module, int value, object source = null) => Set(module, (float)value, source);
 
-        public void Set(ModuleVrc3 module, float? value)
+        public void Set(ModuleVrc3 module, float? value, object source = null)
         {
-            if (value.HasValue) Set(module, value.Value);
+            if (value.HasValue) Set(module, value.Value, source);
         }
 
-        public void Set(ModuleVrc3 module, bool? value)
+        public void Set(ModuleVrc3 module, int? value, object source = null)
         {
-            if (value.HasValue) Set(module, value.Value);
+            if (value.HasValue) Set(module, value.Value, source);
+        }
+
+        public void Set(ModuleVrc3 module, bool? value, object source = null)
+        {
+            if (value.HasValue) Set(module, value.Value, source);
         }
 
         public void SetOnChange(Action<Vrc3Param, float> onChange) => _onChange = onChange;
@@ -83,7 +89,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
             _ => _value
         };
 
-        protected internal virtual void InternalSet(float value)
+        [Obsolete]
+        protected internal virtual void InternalSet(float value) => InternalSet(value, source: null);
+
+        protected internal virtual void InternalSet(float value, object source)
         {
             _value = value;
             foreach (var pair in _controllers.Where(pair => ModuleVrc3.IsValid(pair.Key)))
@@ -97,7 +106,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
                         pair.Key.SetInteger(_hashId, (int)Math.Round(value));
                         break;
                     case AnimatorControllerParameterType.Trigger:
-                        pair.Key.SetTrigger(_hashId);
+                        if (value != 0f || source is VRC_AvatarParameterDriver) pair.Key.SetTrigger(_hashId);
                         break;
                     case AnimatorControllerParameterType.Bool:
                         pair.Key.SetBool(_hashId, value != 0f);

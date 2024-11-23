@@ -76,7 +76,7 @@ namespace BlackStartX.GestureManager.Editor.Library
             }
         }
 
-        public static bool UnityFieldEnterListener<T1, T2>(T1 initialText, T2 argument, Rect rect, Func<Rect, T1, T1> field, Action<T2, T1> onEscape, string controlName)
+        public static bool UnityFieldEnterListener<T1, T2>(T1 initialText, T2 argument, Rect rect, Func<Rect, T1, T1> field, Action<T2, T1, object> onEscape, string controlName)
         {
             if (_unityFieldEnterListenerName != controlName) _unityFieldEnterListenerData = null;
             var isEnter = Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter;
@@ -86,7 +86,7 @@ namespace BlackStartX.GestureManager.Editor.Library
             GUI.FocusControl(controlName);
             _unityFieldEnterListenerData ??= initialText;
             var t = field(rect, _unityFieldEnterListenerData is T1 d ? d : default);
-            if (isEnter) onEscape(argument, _unityFieldEnterListenerData is T1 data ? data : default);
+            if (isEnter) onEscape(argument, _unityFieldEnterListenerData is T1 data ? data : default, null);
             else _unityFieldEnterListenerData = t;
             if (!isEnter && !isEscape) return false;
             _unityFieldEnterListenerData = null;

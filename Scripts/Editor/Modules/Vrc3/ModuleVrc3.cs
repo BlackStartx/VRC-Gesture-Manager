@@ -39,6 +39,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private const string OutputName = "Gesture Manager";
         private const int OutputValue = 0;
+        private const int PlayerId = 1;
 
         internal readonly AvatarTools AvatarTools;
         internal readonly OscModule OscModule;
@@ -46,8 +47,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal RadialSliceControl.RadialSettings HeightSettings;
         private Vrc3AvatarDebugWindow _debugAvatarWindow;
         internal Vrc3OscDebugWindow DebugOscWindow;
-
-        internal Vrc3DummyMode DummyMode;
 
         private PlayableGraph _playableGraph;
         private string _paramFilter;
@@ -57,35 +56,36 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private float _scale;
         private bool _hooked;
 
-        internal readonly Vrc3Param PoseT;
-        internal readonly Vrc3Param PoseIK;
-
-        private readonly Dictionary<VRCAvatarDescriptor.AnimLayerType, LayerData> _layers = new();
-        private readonly Dictionary<(Motion, VRCAvatarDescriptor.AnimLayerType), MotionItem> _motions = new();
         private readonly Dictionary<ScriptableObject, Vrc3WeightController> _weightControllers = new();
         private readonly Dictionary<ScriptableObject, VisualEpContainer> _oscContainers = new();
         private readonly Dictionary<ScriptableObject, RadialMenu> _radialMenus = new();
+
         private readonly List<VRCAvatarDescriptor.AnimLayerType> _brokenLayers = new();
         private readonly List<Vrc3Warning> _warnings = new();
 
         [PublicAPI] public readonly Dictionary<string, Vrc3Param> Params = new();
-        internal Dictionary<string, Vrc3Param> FilteredParams = new();
-
-        internal bool LocomotionDisabled;
-        internal bool PoseSpace;
-        internal bool PoseMode;
+        internal Dictionary<string, Vrc3Param> UserFilteredParams = new();
+        internal Dictionary<string, Vrc3Param> VrcFilteredParams = new();
 
         internal readonly Dictionary<string, VRC_AnimatorTrackingControl.TrackingType> TrackingControls = ModuleVrc3Styles.Data.DefaultTrackingState;
+        internal bool LocomotionDisabled;
+        internal bool PoseSpace;
+
+        private readonly Dictionary<(Motion, VRCAvatarDescriptor.AnimLayerType), MotionItem> _motions = new();
         internal readonly Dictionary<int, VRCAvatarDescriptor.DebugHash> AnimationHashSet = new();
+        private readonly Dictionary<VRCAvatarDescriptor.AnimLayerType, LayerData> _layers = new();
         internal readonly HashSet<ContactReceiver> Receivers = new();
         private readonly HashSet<VRCPhysBoneBase> _physBones = new();
-        private readonly HashSet<ContactSender> _senders = new();
         private readonly HashSet<Animator> _animators = new();
         private readonly HashSet<Cloth> _cloths = new();
 
+        internal readonly Vrc3Param PoseIK;
+        internal readonly Vrc3Param PoseT;
+        internal Vrc3DummyMode DummyMode;
         internal int DebugToolBar;
-        internal string Edit;
+        internal bool PoseMode;
         internal bool Broken;
+        internal string Edit;
 
         private static readonly GUILayoutOption SizeOptions = GUILayout.Height(RadialMenu.Size);
         private static readonly GUILayoutOption[] Options = { GUILayout.ExpandWidth(true), SizeOptions };
@@ -161,7 +161,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _animators.Clear();
             _brokenLayers.Clear();
 
-            _senders.Clear();
             Receivers.Clear();
 
             for (var i = 1; i < intCount; i++)
@@ -179,10 +178,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                         if (!_motions.ContainsKey((clip, layer.type)))
                             _motions[(clip, layer.type)] = new MotionItem(clip, layer.type);
 
-                var controller = Vrc3ProxyOverride.OverrideController(layer.isDefault ? RequestBuiltInController(layer.type) : layer.animatorController);
+                var controller = layer.isDefault ? RequestBuiltInController(layer.type) : layer.animatorController;
                 var mask = layer.isDefault || !layer.mask && isFx ? ModuleVrc3Styles.Data.MaskOf(layer.type) : layer.mask;
 
-                var playable = AnimatorControllerPlayable.Create(_playableGraph, controller);
+                var playable = AnimatorControllerPlayable.Create(_playableGraph, Vrc3ProxyOverride.OverrideController(controller));
                 var weight = new AnimatorControllerWeight(mixer, playable, i);
                 _layers[layer.type] = new LayerData { Playable = playable, Weight = weight, Empty = playable.GetInput(0).IsNull() };
 
@@ -212,6 +211,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             GetParam(Vrc3DefaultParams.VRMode).InternalSet(Settings.vrMode ? 1f : 0f);
             GetParam(Vrc3DefaultParams.IsLocal).InternalSet(Settings.isRemote ? 0f : 1f);
+            GetParam(Vrc3DefaultParams.IsOnFriendsList).InternalSet(Settings.isOnFriendsList ? 1f : 0f);
 
             _playableGraph.Play();
             _playableGraph.Evaluate(0f);
@@ -418,7 +418,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             ).magnitude);
         }
 
-        private RuntimeAnimatorController RequestBuiltInController(VRCAvatarDescriptor.AnimLayerType type)
+        private AnimatorController RequestBuiltInController(VRCAvatarDescriptor.AnimLayerType type)
         {
             var controller = ModuleVrc3Styles.Data.ControllerOf(type);
             var restoreAsset = ModuleVrc3Styles.Data.RestoreOf(type);
@@ -709,7 +709,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             if (Settings.loadStored) TryAddWarning(InitStored());
 
-            FilteredParams = FilterParam();
+            FilterParam();
         }
 
         private Vrc3Warning InitStored()
@@ -817,7 +817,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         public void ParamFilterSearch()
         {
             if (_paramFilter == (_paramFilter = GmgLayoutHelper.SearchBar(_paramFilter))) return;
-            FilteredParams = FilterParam();
+            FilterParam();
         }
 
         internal void TryAddWarning(Vrc3Warning warning)
@@ -828,9 +828,17 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         internal void TryRemoveWarning(Vrc3Warning warning) => _warnings.Remove(warning);
 
-        private Dictionary<string, Vrc3Param> FilterParam() => string.IsNullOrEmpty(_paramFilter) ? Params : Params.Where(ParamMatch).ToDictionary(pair => pair.Key, pair => pair.Value);
+        private void FilterParam()
+        {
+            UserFilteredParams = Params.Where(ParamMatch).Where(IsUserParam).ToDictionary(pair => pair.Key, pair => pair.Value);
+            VrcFilteredParams = Params.Where(ParamMatch).Where(IsVrcParam).ToDictionary(pair => pair.Key, pair => pair.Value);
+        }
 
-        private bool ParamMatch(KeyValuePair<string, Vrc3Param> pair) => pair.Key.IndexOf(_paramFilter, StringComparison.OrdinalIgnoreCase) >= 0;
+        private bool ParamMatch(KeyValuePair<string, Vrc3Param> pair) => string.IsNullOrEmpty(_paramFilter) || pair.Key.IndexOf(_paramFilter, StringComparison.OrdinalIgnoreCase) >= 0;
+
+        private static bool IsUserParam(KeyValuePair<string, Vrc3Param> pair) => !Vrc3DefaultParams.Parameters.ContainsKey(pair.Key);
+
+        private static bool IsVrcParam(KeyValuePair<string, Vrc3Param> pair) => Vrc3DefaultParams.Parameters.ContainsKey(pair.Key);
 
         /*
          * Vrc Hooks
@@ -839,7 +847,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void StartVrcHooks()
         {
             if (_hooked) return;
-            AvatarDynamicReset.CheckSceneCollisions();
+            AvatarDynamicReset.CheckOrRestartManagers();
+            AvatarDynamicReset.ReinstallAvatarColliders(this);
 
             EditorApplication.pauseStateChanged += OnEditorPauseChange;
             OnEditorPauseChange(EditorApplication.isPaused, Vrc3Warning.PausedEditor);
@@ -908,7 +917,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             if (!_hooked || !_animators.Contains(animator)) return;
 
-            var source = audio.Source ? audio.Source : audio.Source = Avatar.transform.Find(audio.SourcePath).GetComponent<AudioSource>();
+            var source = audio.Source ? audio.Source : audio.Source = Avatar.transform.Find(audio.SourcePath)?.GetComponent<AudioSource>();
             if (!source) return;
 
             if (audio.StopOnEnter) source.Stop();
@@ -919,7 +928,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             if (!_hooked || !_animators.Contains(animator)) return;
 
-            var source = audio.Source ? audio.Source : audio.Source = Avatar.transform.Find(audio.SourcePath).GetComponent<AudioSource>();
+            var source = audio.Source ? audio.Source : audio.Source = Avatar.transform.Find(audio.SourcePath)?.GetComponent<AudioSource>();
             if (!source) return;
 
             if (audio.StopOnExit) source.Stop();
@@ -952,7 +961,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 switch (parameter.type)
                 {
                     case VRC_AvatarParameterDriver.ChangeType.Set:
-                        param.Set(this, parameter.value);
+                        param.Set(this, parameter.value, driver);
                         break;
                     case VRC_AvatarParameterDriver.ChangeType.Add:
                         param.Add(this, parameter.value);
@@ -1023,8 +1032,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void ReceiverBaseSetup(ContactReceiver receiver)
         {
             Receivers.Add(receiver);
+            receiver.playerId = PlayerId;
             receiver.paramAccess = new AnimParameterAccessAvatarGmg(this, receiver.parameter);
-            if (receiver.shape != null) receiver.shape.OnEnter += shape => ContactShapeCheck(receiver, shape.component as ContactSender);
         }
 
         private void AudioSourcePlayAudio(AudioSource source, VRC_AnimatorPlayAudio audio, float delayValue = 0f)
@@ -1039,6 +1048,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             source.PlayDelayed(delayValue);
         }
 
+        private static void SenderBaseSetup(ContactSender sender) => sender.playerId = PlayerId;
+
         private static AudioClip NextClip(VRC_AnimatorPlayAudio audio, int index) => (audio.playbackIndex = index) < audio.Clips.Length ? audio.Clips[audio.playbackIndex] : null;
 
         private int NextIndex(VRC_AnimatorPlayAudio audio, int length) => audio.PlaybackOrder switch
@@ -1051,15 +1062,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         };
 
         private void ClothBaseSetup(Cloth cloth) => _cloths.Add(cloth);
-
-        private void SenderBaseSetup(ContactSender sender) => _senders.Add(sender);
-
-        private void ContactShapeCheck(ContactReceiver receiver, ContactSender sender)
-        {
-            if (!sender || !receiver) return;
-            if (!receiver.allowSelf && _senders.Contains(sender)) receiver.shape.OnExit.Invoke(sender.shape);
-            if (!receiver.allowOthers && !_senders.Contains(sender)) receiver.shape.OnExit.Invoke(sender.shape);
-        }
 
         private void AnimatorBaseSetup(Animator animator)
         {

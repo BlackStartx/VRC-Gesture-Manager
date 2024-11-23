@@ -161,6 +161,20 @@ You can switch between OSC Messages and OSC bundles by clicking the "Bundle" or 
 
 ![img.png](.markdown/3.8/SendOsc.png)
 
+# Animator Debugging
+
+While testing your avatar you can control and preview the flow of your animators in the "Animator" window 
+of the Unity Editor and gain information on why the avatar is not behaving how you would expect.
+
+Getting the preview of any Animator is very easy:
+
+> Select your Avatar > Double-Click the Playable Layer
+
+The Unity Animator window should open, and you can now preview the flow of the selected 
+Playable Layer, and dig up the reason on why things are not working as expected~
+
+![img.gif](.markdown/Debug/AnimatorDebug.gif)
+
 ### Knew Issues
 ♥ All the knew issues since the release of 3.0 has been addressed! ♥
 

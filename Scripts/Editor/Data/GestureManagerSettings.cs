@@ -57,6 +57,7 @@ namespace BlackStartX.GestureManager.Editor.Data
             GUILayout.Label("Default Parameters", GestureManagerStyles.ToolSubHeader);
             GUILayout.Label("Set the initial states of the default parameters!", GestureManagerStyles.SettingsText);
             using (new GUILayout.HorizontalScope()) DefaultParametersSettings(manager);
+            manager.settings.isOnFriendsList = GmgLayoutHelper.Toggle("IsOnFriendList: ", manager.settings.isOnFriendsList, manager);
         }
 
         private static void BlendShapeSettings(string label = "Blend-Shapes Clamping: ")
