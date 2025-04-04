@@ -11,7 +11,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 {
     public class Vrc3Param
     {
-        private readonly Dictionary<AnimatorControllerPlayable, int> _controllers = new();
+        private readonly Dictionary<AnimatorControllerPlayable, PlayableParam> _controllers = new();
 
         public readonly AnimatorControllerParameterType Type;
         private readonly int _hashId;
@@ -47,7 +47,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 
         public static int Time => (int)(DateTime.Now.Ticks / 100000L);
 
-        public void Subscribe(AnimatorControllerPlayable playable, int index) => _controllers[playable] = index;
+        public void Subscribe(AnimatorControllerPlayable playable, int index) => _controllers[playable] = new PlayableParam(playable, index, _hashId);
 
         public void Set(ModuleVrc3 module, bool value, object source = null) => Set(module, value ? 1f : 0f, source);
 
@@ -70,50 +70,26 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 
         public void SetOnChange(Action<Vrc3Param, float> onChange) => _onChange = onChange;
 
+        internal float AapValue()
+        {
+            var (playable, param) = _controllers.FirstOrDefault();
+            return playable.IsValid() ? param.GetValue(aapChk: true) : _value;
+        }
+
         public virtual float FloatValue()
         {
-            var (playable, intIndex) = _controllers.FirstOrDefault();
-            return playable.IsValid() ? PlayableValue(playable, intIndex) : _value;
+            var (playable, param) = _controllers.FirstOrDefault();
+            return playable.IsValid() ? param.GetValue() : _value;
         }
 
         public int IntValue() => (int)FloatValue();
 
         public bool BoolValue() => FloatValue() != 0f;
 
-        private float PlayableValue(AnimatorControllerPlayable playable, int intIndex) => playable.GetParameter(intIndex).type switch
-        {
-            AnimatorControllerParameterType.Float => playable.GetFloat(_hashId),
-            AnimatorControllerParameterType.Int => playable.GetInteger(_hashId),
-            AnimatorControllerParameterType.Trigger => playable.GetBool(_hashId) ? 1f : 0f,
-            AnimatorControllerParameterType.Bool => playable.GetBool(_hashId) ? 1f : 0f,
-            _ => _value
-        };
-
-        [Obsolete]
-        protected internal virtual void InternalSet(float value) => InternalSet(value, source: null);
-
-        protected internal virtual void InternalSet(float value, object source)
+        protected internal virtual void InternalSet(float value, object source = null)
         {
             _value = value;
-            foreach (var pair in _controllers.Where(pair => ModuleVrc3.IsValid(pair.Key)))
-            {
-                switch (pair.Key.GetParameter(pair.Value).type)
-                {
-                    case AnimatorControllerParameterType.Float:
-                        pair.Key.SetFloat(_hashId, value);
-                        break;
-                    case AnimatorControllerParameterType.Int:
-                        pair.Key.SetInteger(_hashId, (int)Math.Round(value));
-                        break;
-                    case AnimatorControllerParameterType.Trigger:
-                        if (value != 0f || source is VRC_AvatarParameterDriver) pair.Key.SetTrigger(_hashId);
-                        break;
-                    case AnimatorControllerParameterType.Bool:
-                        pair.Key.SetBool(_hashId, value != 0f);
-                        break;
-                    default: throw new ArgumentOutOfRangeException();
-                }
-            }
+            foreach (var pair in _controllers.Where(pair => ModuleVrc3.IsValid(pair.Key))) pair.Value.SetValue(value, source);
         }
 
         public void Add(ModuleVrc3 module, float value) => Set(module, FloatValue() + value);
@@ -156,6 +132,54 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
                     Set(module, UnityEngine.Random.Range(0.0f, 1.0f) < chance);
                     break;
                 default: throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private class PlayableParam
+        {
+            private AnimatorControllerPlayable _playable;
+
+            private readonly int _hashId;
+            private readonly AnimatorControllerParameterType _type;
+
+            private bool _isAap() => _playable.IsParameterControlledByCurve(_hashId);
+
+            public PlayableParam(AnimatorControllerPlayable playable, int index, int hashId)
+            {
+                _playable = playable;
+                _hashId = hashId;
+
+                _type = playable.GetParameter(index).type;
+            }
+
+            internal float GetValue(bool aapChk = false) => _type switch
+            {
+                AnimatorControllerParameterType.Float => aapChk && _isAap() ? 0f : _playable.GetFloat(_hashId),
+                AnimatorControllerParameterType.Trigger => _playable.GetBool(_hashId) ? 1f : 0f,
+                AnimatorControllerParameterType.Bool => _playable.GetBool(_hashId) ? 1f : 0f,
+                AnimatorControllerParameterType.Int => _playable.GetInteger(_hashId),
+                _ => 0f
+            };
+
+            public void SetValue(float value, object source)
+            {
+                if (_isAap()) return;
+                switch (_type)
+                {
+                    case AnimatorControllerParameterType.Float:
+                        _playable.SetFloat(_hashId, value);
+                        break;
+                    case AnimatorControllerParameterType.Int:
+                        _playable.SetInteger(_hashId, (int)Math.Round(value));
+                        break;
+                    case AnimatorControllerParameterType.Trigger:
+                        if (value != 0f || source is VRC_AvatarParameterDriver) _playable.SetTrigger(_hashId);
+                        break;
+                    case AnimatorControllerParameterType.Bool:
+                        _playable.SetBool(_hashId, value != 0f);
+                        break;
+                    default: throw new ArgumentOutOfRangeException();
+                }
             }
         }
     }

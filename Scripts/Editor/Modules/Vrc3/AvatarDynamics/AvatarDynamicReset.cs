@@ -74,6 +74,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.AvatarDynamics
         {
             var sEnumerable = module.Avatar.GetComponentsInChildren<VRCContactSender>().Where(sender => sender.hideFlags == HideFlags.HideAndDontSave);
             foreach (var sender in sEnumerable) Object.DestroyImmediate(sender);
+            var avatar = module.AvatarAnimator.avatar;
+            if (!avatar || !avatar.isHuman) return;
             foreach (var pair in Bones)
             {
                 var transform = module.AvatarAnimator.GetBoneTransform(pair.Key);

@@ -223,36 +223,43 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
             private static IEnumerable<UnityEngine.Object> Resources => AssetDatabase.LoadAllAssetsAtPath("Library/unity default resources");
 
+            private bool IsValid(ContactReceiver receiver) => receiver.isActiveAndEnabled && string.IsNullOrEmpty(_tag.Property) || receiver.collisionTags.Contains(_tag.Property);
+
             /*
              * RayCast Calculation~
              */
 
             private void CheckRay(ModuleVrc3 module, Vector3 s, Vector3 b)
             {
-                var manager = ContactManager.Inst;
-                if (!manager) return;
-                foreach (var receiver in module.Receivers.Where(receiver => string.IsNullOrEmpty(_tag.Property) || receiver.collisionTags.Contains(_tag.Property))) OnContactValue(receiver, ValueFor(manager, receiver, s, b));
+                foreach (var receiver in module.Receivers.Where(IsValid))
+                    OnContactValue(receiver, ValueFor(receiver, s, b));
             }
 
-            private static float ValueFor(ContactManager manager, ContactReceiver receiver, Vector3 s, Vector3 b)
+            private static float ValueFor(ContactReceiver receiver, Vector3 s, Vector3 b)
             {
+                var distance = DistanceFrom(receiver, s, b, out var radius);
                 var isProximity = receiver.receiverType == ContactReceiver.ReceiverType.Proximity;
-                var distance = DistanceFrom(manager, receiver, s, b, out var radius);
-                if (isProximity) distance -= radius;
-                if (isProximity) return Mathf.Clamp(-distance / radius, 0f, 1f);
-                return distance < 0 ? 1f : 0f;
+                return isProximity ? Mathf.Clamp01((radius - distance) / radius) : distance < 0 ? 1f : 0f;
             }
 
-            private static float DistanceFrom(ContactManager manager, ContactBase receiver, Vector3 s, Vector3 b, out float radius)
+            private static float DistanceFrom(ContactBase receiver, Vector3 s, Vector3 b, out float radius)
             {
                 receiver.InitShape();
-                manager.collision.UpdateShapeData(receiver.shape);
-                var aPointData = manager.collision.GetShapeData(receiver.shape);
-                var scaleVector = receiver.transform.lossyScale;
-                radius = receiver.radius * Mathf.Max(scaleVector.x, scaleVector.y, scaleVector.z);
-                var bPointVector = receiver.shapeType == ContactBase.ShapeType.Sphere ? aPointData.outPos0 : aPointData.outPos1;
-                ClosestPointsBetweenLineSegments(s, b, aPointData.outPos0, bPointVector, out var vector0, out var vector1);
+                var vector = receiver.transform.lossyScale;
+                var scale = Mathf.Max(vector.x, vector.y, vector.z);
+                GetShapeData(receiver.shape, receiver.transform, scale, out radius, out var aPointVector, out var bPointVector);
+                ClosestPointsBetweenLineSegments(s, b, aPointVector, bPointVector, out var vector0, out var vector1);
                 return (vector0 - vector1).magnitude - radius;
+            }
+
+            private static void GetShapeData(CollisionScene.Shape shape, Transform transform, float scale, out float radius, out Vector3 aPointFloat, out Vector3 bPointFloat)
+            {
+                var cVector = shape.center * scale;
+                radius = Mathf.Min(shape.radius * scale, shape.maxSize * 0.5f);
+                var isSphere = shape.shapeType == CollisionScene.ShapeType.Sphere;
+                var aVector = isSphere ? Vector3.zero : CapsuleVector(shape, scale, radius);
+                aPointFloat = transform.position + transform.rotation * (cVector - aVector);
+                bPointFloat = transform.position + transform.rotation * (cVector + aVector);
             }
 
             /*
@@ -274,10 +281,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
                 return ClosestPointOnLineSegment(lineA, lineB, rhsVector, Vector3.Dot(lhsVector, rhsVector));
             }
 
-            private static Vector3 ClosestPointOnLineSegment(Vector3 lineA, Vector3 lineB, Vector3 lhsRhs, float dot1)
-            {
-                return dot1 <= 0.0 ? lineA : ClosestPointOnLineSegment(lineA, lineB, lhsRhs, dot1, Vector3.Dot(lhsRhs, lhsRhs));
-            }
+            private static Vector3 ClosestPointOnLineSegment(Vector3 lineA, Vector3 lineB, Vector3 lhsRhs, float dot1) => dot1 <= 0.0 ? lineA : ClosestPointOnLineSegment(lineA, lineB, lhsRhs, dot1, Vector3.Dot(lhsRhs, lhsRhs));
+
+            private static Vector3 CapsuleVector(CollisionScene.Shape shape, float scale, float radius) => shape.axis * Mathf.Max(0.0f, Mathf.Min(shape.height * scale, shape.maxSize) * 0.5f - radius);
 
             private static Vector3 ClosestPointOnLineSegment(Vector3 lineA, Vector3 lineB, Vector3 lhsRhs, float dot1, float dot) => dot <= dot1 ? lineB : lineA + lhsRhs * (dot1 / dot);
         }
@@ -473,6 +479,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
                         benchmarkPair.Value.Render();
                         GUILayout.Space(10);
                     }
+
                     GUILayout.Label($"\n[Result calculated on {_benchmark.FirstOrDefault().Value?.Frame ?? 0} frames]");
                 }
 

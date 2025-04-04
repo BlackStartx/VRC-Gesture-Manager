@@ -183,7 +183,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
                 var playable = AnimatorControllerPlayable.Create(_playableGraph, Vrc3ProxyOverride.OverrideController(controller));
                 var weight = new AnimatorControllerWeight(mixer, playable, i);
-                _layers[layer.type] = new LayerData { Playable = playable, Weight = weight, Empty = playable.GetInput(0).IsNull() };
+                var isNull = playable.GetInput(0).IsNull();
+                _layers[layer.type] = new LayerData { Playable = playable, Weight = weight, Empty = isNull, Parameters = RadialMenuUtility.GetParameters(playable) };
 
                 mixer.ConnectInput(i, playable, OutputValue, weightOn);
 
@@ -393,7 +394,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private bool IsWatchingAnimatorPerformance(RadialMenu menu) => menu.ToolBar.Selected == 1 && AvatarTools.PerformanceAnimator.Watching;
 
-        private void RemoveVise() => OnViseChange(null, 0f);
+        private void RemoveVise() => SetViseVisual(0);
 
         private void OnBrokenSimulation()
         {
@@ -604,9 +605,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             if (AvatarAnimator.playableGraph.IsValid()) AvatarAnimator.playableGraph.Destroy();
         }
 
-        private void OnViseChange(Vrc3Param param, float fVise)
+        private void SetViseVisual(int vise)
         {
-            var vise = (int)fVise;
             var skinnedMesh = AvatarDescriptor.VisemeSkinnedMesh;
 
             switch (AvatarDescriptor.lipSync)
@@ -674,6 +674,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             OnScaleChanged();
         }
 
+        private void OnViseChange(Vrc3Param param, float fVise)
+        {
+            var vise = (int)fVise;
+            var voiceParam = GetParam(Vrc3DefaultParams.Voice);
+            voiceParam.Set(this, vise == 0 ? 0f : 1f);
+            SetViseVisual(vise);
+        }
+
         private void OnEditorPauseChange(bool pause, Vrc3Warning warning)
         {
             if (pause) TryAddWarning(warning);
@@ -690,9 +698,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             Params.Clear();
             foreach (var pair in _layers)
-            foreach (var (intIndex, parameter) in RadialMenuUtility.GetParameters(pair.Value.Playable))
-                if (Params.TryGetValue(parameter.name, out var param)) param.Subscribe(pair.Value.Playable, intIndex);
-                else Params[parameter.name] = new Vrc3Param(parameter.name, parameter.type, pair.Value.Playable, intIndex);
+            foreach (var (parameter, index) in pair.Value.Parameters.Select((parameter, i) => (parameter, i)))
+                if (Params.TryGetValue(parameter.name, out var param)) param.Subscribe(pair.Value.Playable, index);
+                else Params[parameter.name] = new Vrc3Param(parameter.name, parameter.type, pair.Value.Playable, index);
 
             if (parameters)
                 foreach (var parameter in parameters.parameters)
@@ -967,7 +975,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                         param.Add(this, parameter.value);
                         break;
                     case VRC_AvatarParameterDriver.ChangeType.Copy:
-                        param.Copy(this, GetParam(parameter.source)?.FloatValue() ?? 0f, parameter.convertRange, parameter.sourceMin, parameter.sourceMax, parameter.destMin, parameter.destMax);
+                        param.Copy(this, GetParam(parameter.source)?.AapValue() ?? 0f, parameter.convertRange, parameter.sourceMin, parameter.sourceMax, parameter.destMin, parameter.destMax);
                         break;
                     case VRC_AvatarParameterDriver.ChangeType.Random:
                         param.Random(this, parameter.valueMin, parameter.valueMax, parameter.chance);
@@ -1090,6 +1098,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         internal struct LayerData
         {
+            internal AnimatorControllerParameter[] Parameters;
             internal AnimatorControllerPlayable Playable;
             internal AnimatorControllerWeight Weight;
             internal bool Empty;

@@ -30,6 +30,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal const string IsLocal = "IsLocal";
         internal const string Seated = "Seated";
         internal const string VRMode = "VRMode";
+        internal const string Voice = "Voice";
         internal const string Vise = "Viseme";
         internal const string Afk = "AFK";
 
@@ -37,7 +38,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private const string VrcFaceBlendV = "VRCFaceBlendV";
         private const string VrcEmote = "VRCEmote";
         private const string AngularY = "AngularY";
-        private const string Voice = "Voice";
 
         public static Dictionary<string, AnimatorControllerParameterType> Parameters => new()
         {

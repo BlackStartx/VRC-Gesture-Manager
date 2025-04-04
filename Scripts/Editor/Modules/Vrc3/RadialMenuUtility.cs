@@ -280,11 +280,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _ => DynamicType.None
         };
 
-        public static IEnumerable<(int, AnimatorControllerParameter)> GetParameters(AnimatorControllerPlayable playable)
+        public static AnimatorControllerParameter[] GetParameters(AnimatorControllerPlayable playable)
         {
-            if (playable.IsNull()) yield break;
-            for (var i = 0; i < playable.GetParameterCount(); i++)
-                yield return (i, playable.GetParameter(i));
+            if (playable.IsNull()) return Array.Empty<AnimatorControllerParameter>();
+            var pars = new AnimatorControllerParameter[playable.GetParameterCount()];
+            for (var i = 0; i < pars.Length; i++) pars[i] = playable.GetParameter(i);
+            return pars;
         }
 
         private static void AppendMenus(VRCExpressionsMenu menu, ICollection<VRCExpressionsMenu> menus)
