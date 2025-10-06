@@ -21,6 +21,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         }
 
         public static readonly Vrc3Warning PausedEditor = new("Editor Paused", "The editor is in pause, animator will be so as well.", false);
+        public static readonly Vrc3Warning InitLoadJsonError = new("Init Error", "Unable to load local stored parameters. (JSON format error)");
+        public static readonly Vrc3Warning InitLoadUnexisting = new("Init Error", "Unable to load local stored parameters. (File doesn't exist)");
     }
 }
 #endif

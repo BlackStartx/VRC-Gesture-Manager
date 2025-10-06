@@ -39,7 +39,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private const string OutputName = "Gesture Manager";
         private const int OutputValue = 0;
-        private const int PlayerId = 1;
 
         internal readonly AvatarTools AvatarTools;
         internal readonly OscModule OscModule;
@@ -62,6 +61,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private readonly List<VRCAvatarDescriptor.AnimLayerType> _brokenLayers = new();
         private readonly List<Vrc3Warning> _warnings = new();
+        private readonly int _playerId;
 
         [PublicAPI] public readonly Dictionary<string, Vrc3Param> Params = new();
         internal Dictionary<string, Vrc3Param> UserFilteredParams = new();
@@ -99,6 +99,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         public ModuleVrc3(VRCAvatarDescriptor avatarDescriptor) : base(avatarDescriptor)
         {
+            _playerId = 1;
             AvatarTools = new AvatarTools();
             AvatarDescriptor = avatarDescriptor;
             OscModule = new OscModule(this);
@@ -339,7 +340,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                     var rect = GUILayoutUtility.GetLastRect();
                     var isContained = rect.Contains(Event.current.mousePosition);
                     GestureDrag = (Event.current.type == EventType.MouseDown && isContained) || Event.current.type != EventType.MouseUp && GestureDrag;
-                    if (isContained && GestureDrag && Event.current.type == EventType.MouseDrag) OnNewLeft((int)((Event.current.mousePosition.y - GUILayoutUtility.GetLastRect().y) / 19) + 1);
+                    if (isContained && GestureDrag && Event.current.type == EventType.MouseDrag) OnNewLeft((int)((Event.current.mousePosition.y - rect.y) / rect.height * 7) + 1);
                 }
 
                 using (new GUILayout.VerticalScope())
@@ -350,7 +351,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                     var rect = GUILayoutUtility.GetLastRect();
                     var isContained = rect.Contains(Event.current.mousePosition);
                     GestureDrag = (Event.current.type == EventType.MouseDown && isContained) || Event.current.type != EventType.MouseUp && GestureDrag;
-                    if (isContained && GestureDrag && Event.current.type == EventType.MouseDrag) OnNewRight((int)((Event.current.mousePosition.y - GUILayoutUtility.GetLastRect().y) / 19) + 1);
+                    if (isContained && GestureDrag && Event.current.type == EventType.MouseDrag) OnNewRight((int)((Event.current.mousePosition.y - rect.y) / rect.height * 7) + 1);
                 }
             }
         }
@@ -722,12 +723,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private Vrc3Warning InitStored()
         {
-            var localString = GestureManagerSettings.UserPath(Settings.userIndex, GestureManagerSettings.LocalFolder);
+            if (string.IsNullOrEmpty(Pipeline.blueprintId)) return null;
+            var localString = GestureManagerSettings.UserPath(Settings.userIndex);
             if (localString == null) return null;
             var fileString = Path.Combine(localString, Pipeline.blueprintId);
-            if (!File.Exists(fileString)) return new Vrc3Warning("Init Error", "Unable to load local stored parameters. (File doesn't exist)");
+            if (!File.Exists(fileString)) return Vrc3Warning.InitLoadUnexisting;
             var file = AvatarFile.LoadData(File.ReadAllText(fileString));
-            if (file == null) return new Vrc3Warning("Init Error", "Unable to load local stored parameters. (JSON format error)");
+            if (file == null) return Vrc3Warning.InitLoadJsonError;
             foreach (var parameters in file.animationParameters) GetParam(parameters.name)?.InternalSet(parameters.value);
             return null;
         }
@@ -830,7 +832,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         internal void TryAddWarning(Vrc3Warning warning)
         {
-            if (warning == null) return;
+            if (warning == null || _warnings.Contains(warning)) return;
             _warnings.Add(warning);
         }
 
@@ -1040,9 +1042,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void ReceiverBaseSetup(ContactReceiver receiver)
         {
             Receivers.Add(receiver);
-            receiver.playerId = PlayerId;
+            receiver.playerId = _playerId;
             receiver.paramAccess = new AnimParameterAccessAvatarGmg(this, receiver.parameter);
         }
+
+        private void SenderBaseSetup(ContactSender sender) => sender.playerId = _playerId;
 
         private void AudioSourcePlayAudio(AudioSource source, VRC_AnimatorPlayAudio audio, float delayValue = 0f)
         {
@@ -1055,8 +1059,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             source.PlayDelayed(delayValue);
         }
-
-        private static void SenderBaseSetup(ContactSender sender) => sender.playerId = PlayerId;
 
         private static AudioClip NextClip(VRC_AnimatorPlayAudio audio, int index) => (audio.playbackIndex = index) < audio.Clips.Length ? audio.Clips[audio.playbackIndex] : null;
 

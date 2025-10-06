@@ -10,16 +10,19 @@ namespace BlackStartX.GestureManager.Editor.Data
 {
     public static class GestureManagerSettings
     {
-        public const string LocalFolder = "LocalAvatarData";
+        private const string LocalFolder = "LocalAvatarData";
 
-        private static string UserPath(string folder, string user) => user == null ? null : Path.Combine(VrcDirectory, folder, user);
+        private static IEnumerable<string> Users(string directory) => Directory.Exists(directory) ? Directory.GetDirectories(directory).Select(Path.GetFileName) : new string[] { };
+        private static string UserPath(string folder, string user) => user == null ? null : PathCombine(VrcDirectory, folder, user);
         private static string UserID(int index, IReadOnlyList<string> users) => index < users.Count ? users[index] : null;
-        private static IEnumerable<string> Users => Directory.GetDirectories(DataDirectory).Select(Path.GetFileName);
-        public static string VrcDirectory => Path.Combine(ModuleHelper.LocalLowPath, "VRChat", "VRChat");
-        public static string UserPath(int index, string folder) => UserPath(folder, UserID(index));
+        public static string VrcDirectory => PathCombine(ModuleHelper.LocalLowPath, "VRChat", "VRChat");
+        private static string[] Choose => new[] { "[Unset]" }.Concat(Users(DataDirectory)).ToArray();
         public static string UserID(int index) => index < 1 ? null : UserID(index, Choose);
-        private static string DataDirectory => Path.Combine(VrcDirectory, LocalFolder);
-        private static string[] Choose => new[] { "[Unset]" }.Concat(Users).ToArray();
+        public static string UserPath(int index) => UserPath(LocalFolder, UserID(index));
+        private static string DataDirectory => PathCombine(VrcDirectory, LocalFolder);
+
+        private static string PathCombine(string path1, string path2, string path3) => path1 == null ? null : Path.Combine(path1, path2, path3);
+        private static string PathCombine(string path1, string path2) => path1 == null ? null : Path.Combine(path1, path2);
 
         private static bool _generalSettings;
         private static bool _simulationSettings;
@@ -77,7 +80,7 @@ namespace BlackStartX.GestureManager.Editor.Data
                 if (!GUI.enabled) GmgLayoutHelper.Toggle("Load stored parameters: ", GUI.enabled, manager);
                 else manager.settings.loadStored = GmgLayoutHelper.Toggle("Load stored parameters: ", manager.settings.loadStored, manager);
 
-                if (GUILayout.Button(buttonString)) EditorUtility.RevealInFinder(UserPath(manager.settings.userIndex, LocalFolder));
+                if (GUILayout.Button(buttonString)) EditorUtility.RevealInFinder(UserPath(manager.settings.userIndex));
             }
         }
 

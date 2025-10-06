@@ -60,13 +60,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private Texture2D TextureV()
         {
             if (_menu == null || !InternalEditorUtility.isApplicationActive) return null;
-            var width = (int)_menu.Rect.width;
-            var height = (int)_menu.Rect.height;
-            var texture = new Texture2D(width, height);
-            texture.SetPixels(InternalEditorUtility.ReadScreenPixel(position.position + HeaderSize, width, height));
+            var xWidth = (int)_menu.Rect.width;
+            var yHeight = (int)_menu.Rect.height;
+            var texture = new Texture2D(xWidth, yHeight);
+            texture.SetPixels(Colors(xWidth, yHeight));
             texture.Apply();
             return texture;
         }
+
+        private Color[] Colors(int sizeX, int sizeY) => InternalEditorUtility.ReadScreenPixel(position.position + HeaderSize, sizeX, sizeY);
 
         private void Awake() => this.MySetAntiAliasing(4);
 
