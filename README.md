@@ -4,6 +4,15 @@ A tool that will help you preview and edit your avatar animation directly in Uni
 
 Available for both VRChat SDK 2.0 and SDK 3.0, in Unity 2018 or 2019.
 
+## Pre-Release Versions
+
+You can use the button bellow to add the pre-release listing to your VRChat Creator Companion!
+<div align="center" width="100%">
+
+[![Use This Template](.markdown/AddListing.png)](https://blackstartx.github.io/jump.html?url=vcc://vpm/addRepo?url=https://raw.githubusercontent.com/BlackStartx/VRC-Gesture-Manager/refs/heads/master/.vpm/source.json)
+
+</div>
+
 ## How To Use (SDK 3.0)
 - ### Import using the VRChat Creator Companion
 
@@ -16,7 +25,7 @@ Available for both VRChat SDK 2.0 and SDK 3.0, in Unity 2018 or 2019.
 3) Look for "Gesture Manager" and click the **Add** button!
 
 <br>You have correctly imported the package into your project!
-<br>Once the VCC app have finished doing the rest you're free to open the project and the tool 
+<br>Once the VCC app have finished doing the rest you're free to open the project and the tool
 will be there waiting for you~ ♥
 
 - ### Import using the release UnityPackage
@@ -30,7 +39,7 @@ Once imported in your project, enable it by navigating to the Unity toolbar and 
 
 `"Tools -> Gesture Manager Emulator"`
 
-This will drop the **GestureManager** prefab into your scene! 
+This will drop the **GestureManager** prefab into your scene!
 
 ![img.png](.markdown/3.8/GestureManagerStart.png)
 
@@ -67,7 +76,7 @@ https://user-images.githubusercontent.com/26898122/224572259-252527e0-b1ee-4121-
 
 ![img.png](.markdown/Options.png)
 
-The Option button in the RadialMenu contains a lot of sub-category that helps you change parameters usually 
+The Option button in the RadialMenu contains a lot of sub-category that helps you change parameters usually
 controlled by the VRChat client.
 
 ![img.png](.markdown/3.2/RadialOptions.png)
@@ -83,7 +92,7 @@ In the **Locomotion** category you can preview animation like:
 
 In the **States** category you can preview AFK, Seated, IK and T Pose animations.
 
-In the **Tracking** category you can change the number of Tracking Point of your Avatar as well as the 
+In the **Tracking** category you can change the number of Tracking Point of your Avatar as well as the
 VRMode parameter.
 
 In the **Extra** category you can change Gesture Weights, MuteSelf, IsLocal and InStation parameters.
@@ -93,18 +102,18 @@ In the **Extra** category you can change Gesture Weights, MuteSelf, IsLocal and 
 # - Edit Mode
 In the Option Menu you can find a button called: Edit-Mode.
 
-Clicking that button will enable the Edit-Mode feature and will create a clone of your avatar 
+Clicking that button will enable the Edit-Mode feature and will create a clone of your avatar
 giving him all the animation of your VRChat controller layers.
 
 ![img.png](.markdown/3.8/EditingMode.png)
 
-Since the avatar have all the animation of your animators, you can edit them by going in to the Animation tab and selecting 
+Since the avatar have all the animation of your animators, you can edit them by going in to the Animation tab and selecting
 your avatar from the hierarchy window. (Or by clicking the blue "select your avatar" text under the RadialMenu)
 
 Once there you can select the animation you want by clicking the dropdown menu. <br>
 If you can't find it, look for the text `[Select Your Animation!]` and click it.
 
-From here, you can edit your animation as you usually do, by clicking the record button or by inserting keyframe manually. 
+From here, you can edit your animation as you usually do, by clicking the record button or by inserting keyframe manually.
 
 ![img.png](.markdown/3.2/Editing.png)
 
@@ -114,7 +123,7 @@ The Debug tab of the Gesture Manager is where you can check lots of information 
 
 # Avatar Debug
 
-This window contains: Animator Parameters, Tracking Controls, Animation Controllers Weight, Animator States and Layer 
+This window contains: Animator Parameters, Tracking Controls, Animation Controllers Weight, Animator States and Layer
 Weights as well as Locomotion and Pose Space current values.
 
 If you need to constantly check for updates of your avatar while using the Gesture Manager features you can undock the window by simply
@@ -134,13 +143,13 @@ You can maximize it on another screen too, if you wish.
 In the Debug tab you can enable the integration for OSC data packages.
 
 > The port you choose must be available for being listened to.
-> 
-> This mean that if VRChat is currently listening on those ports the simulation can't start. 
+>
+> This mean that if VRChat is currently listening on those ports the simulation can't start.
 
 You can customize the port (and the address) directly from the OSC Debug Panel before starting the debug mode.
 
 For a correct simulation of the behaviour of your Avatar trough Unity you should start the debugger on the same port
-you use on your VRChat client, and load your custom settings from your LocalLow VRChat folder automatically with 
+you use on your VRChat client, and load your custom settings from your LocalLow VRChat folder automatically with
 the button bellow.
 
 If you don't load any custom setting the simulation will start listening on a wide-range of address.
@@ -163,14 +172,14 @@ You can switch between OSC Messages and OSC bundles by clicking the "Bundle" or 
 
 # Animator Debugging
 
-While testing your avatar you can control and preview the flow of your animators in the "Animator" window 
+While testing your avatar you can control and preview the flow of your animators in the "Animator" window
 of the Unity Editor and gain information on why the avatar is not behaving how you would expect.
 
 Getting the preview of any Animator is very easy:
 
 > Select your Avatar > Double-Click the Playable Layer
 
-The Unity Animator window should open, and you can now preview the flow of the selected 
+The Unity Animator window should open, and you can now preview the flow of the selected
 Playable Layer, and dig up the reason on why things are not working as expected~
 
 ![img.gif](.markdown/Debug/AnimatorDebug.gif)
@@ -198,7 +207,7 @@ Whenever you want to test your avatar hit PlayMode and select the GestureManager
 <br>
 If there are no errors the GestureManager will take control of your Avatar and you can start testing~ ♥
 
-You can test Left and Right hand gestures by using the toggles in the Inspector window, 
+You can test Left and Right hand gestures by using the toggles in the Inspector window,
 each gesture has the name of the animation file its related.
 
 ![alt text](.markdown/2.0/TestingStart.png)
