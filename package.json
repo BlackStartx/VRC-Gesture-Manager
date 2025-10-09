@@ -5,7 +5,7 @@
 	"unity" : "2022.3",
 	"description" : "A tool that will help you preview your VRChat Avatar animation directly in Unity.",
 	"type" : "tool",
-	"url" : "https://github.com/BlackStartx/VRC-Gesture-Manager/archive/refs/tags/v3.9.5.zip",
+	"url" : "https://github.com/BlackStartx/VRC-Gesture-Manager/releases/download/v3.9.5/GestureManager3.9.5.zip",
 	"author" : {
 		"name" : "BlackStartx",
 		"email" : "leonardo.lorenzoni99@gmail.com",
