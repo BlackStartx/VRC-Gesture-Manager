@@ -3,7 +3,7 @@
     "rootNamespace": "BlackStartX.GestureManager",
     "references": [
         "vrchat.blackstartx.gesture-manager",
-        "VRC.SDKBase"
+        "VRC.SDK3A"
     ],
     "includePlatforms": [
         "Editor"
