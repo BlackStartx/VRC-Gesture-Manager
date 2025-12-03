@@ -67,6 +67,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static Texture2D _isLocal;
         private static Texture2D _extras;
         private static Texture2D _isOnFriendsList;
+        private static Texture2D _isAnimatorEnabled;
 
         internal static GUIStyle Url => _url ??= new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.blue } };
         internal static GUIStyle UrlPro => _urlPro ??= new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.cyan } };
@@ -121,6 +122,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal static Texture2D IsLocal => !_isLocal ? _isLocal = Resources.Load<Texture2D>("Vrc3/BSX_GM_IsLocal") : _isLocal;
         internal static Texture2D Extras => !_extras ? _extras = Resources.Load<Texture2D>("Vrc3/BSX_GM_Extras") : _extras;
         internal static Texture2D IsOnFriendsList => !_isOnFriendsList ? _isOnFriendsList = Resources.Load<Texture2D>("Vrc3/BSX_GM_IsOnFriendsList") : _isOnFriendsList;
+        internal static Texture2D IsAnimatorEnabled => !_isAnimatorEnabled ? _isAnimatorEnabled = Resources.Load<Texture2D>("Vrc3/BSX_GM_IsAnimatorEnabled") : _isAnimatorEnabled;
 
         public static class Data
         {

@@ -198,7 +198,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "AFK", GetParam(Vrc3DefaultParams.Afk), ModuleVrc3Styles.Afk),
                 RadialMenuUtility.Buttons.RadialFromParam(this, Vrc3DefaultParams.Vise, GetParam(Vrc3DefaultParams.Vise), ModuleVrc3Styles.Visemes, amplify: Module.ViseAmount),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "Seated", GetParam(Vrc3DefaultParams.Seated), ModuleVrc3Styles.Seated),
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "IK Pose", Module.PoseIK, ModuleVrc3Styles.PoseIK)
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "IK Pose", Module.PoseIK, ModuleVrc3Styles.PoseIK),
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "Avatar Culling", Module.AvatarCulling, ModuleVrc3Styles.IsAnimatorEnabled)
             });
         }
 
@@ -248,7 +249,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             {
                 new RadialSliceTool(Module, Module.AvatarTools.SceneCamera, ModuleVrc3Styles.ToolCamera),
                 new RadialSliceTool(Module, Module.AvatarTools.ContactsClickable, ModuleVrc3Styles.ToolClick),
-                new RadialSliceTool(Module, Module.AvatarTools.PoseAvatar, ModuleVrc3Styles.ToolPose)
+                new RadialSliceTool(Module, Module.AvatarTools.PoseAvatar, ModuleVrc3Styles.ToolPose),
             });
             _radialDescription = new RadialDescription("You edit each tool settings in the \"", "Tools", "\" tab!", OpenToolPage);
         }

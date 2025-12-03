@@ -81,6 +81,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         internal readonly Vrc3Param PoseIK;
         internal readonly Vrc3Param PoseT;
+
+        internal readonly Vrc3Param AvatarCulling;
+        private const float CullingDiamondReferenceEyeHeight = 1.70f;
+        private const float CullingDiamondYOffset = 0.05f;
+        private GameObject _cullingDiamond;
+        private bool _isCulled;
+        private int _preCullCountdown;
+
         internal Vrc3DummyMode DummyMode;
         internal int DebugToolBar;
         internal bool PoseMode;
@@ -106,6 +114,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             PoseIK = new Vrc3Param(null, AnimatorControllerParameterType.Bool, OnIKPoseChange);
             PoseT = new Vrc3Param(null, AnimatorControllerParameterType.Bool, OnTPoseChange);
+
+            AvatarCulling = new Vrc3Param(null, AnimatorControllerParameterType.Bool, OnAvatarCullingChange);
+
+            _cullingDiamond = null;
+            _isCulled = false;
+            _preCullCountdown = 0;
         }
 
         public override void Update()
@@ -119,6 +133,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 if (DummyMode != null) DummyMode.Update(Avatar);
                 else if (_layers.Any(IsBroken)) OnBrokenSimulation();
                 foreach (var pair in _layers) pair.Value.Weight.Update();
+                HandleCullingSimulation();
+                if (_isCulled && _cullingDiamond)
+                {
+                    _cullingDiamond.transform.position = GetCullingDiamondPosition();
+                    _cullingDiamond.transform.rotation = Avatar.transform.rotation;
+                    _cullingDiamond.transform.localScale = GetCullingDiamondScale();
+                }
             }
             else DestroyGraphs();
         }
@@ -215,6 +236,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             GetParam(Vrc3DefaultParams.IsLocal).InternalSet(Settings.isRemote ? 0f : 1f);
             GetParam(Vrc3DefaultParams.IsOnFriendsList).InternalSet(Settings.isOnFriendsList ? 1f : 0f);
 
+            GetParam(Vrc3DefaultParams.IsAnimatorEnabled).InternalSet(1f);
+
             _playableGraph.Play();
             _playableGraph.Evaluate(0f);
             if (_brokenLayers.Count != 0) TryAddWarning(new Vrc3Warning("Animator Controllers", "Some default Animator Controllers have changed!", true, "Restore Controllers", RestoreDefaultControllers));
@@ -224,6 +247,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             GetParam(Vrc3DefaultParams.Vise).SetOnChange(OnViseChange);
             GetParam(Vrc3DefaultParams.Seated).SetOnChange(OnSeatedChange);
+            GetParam(Vrc3DefaultParams.IsAnimatorEnabled).SetOnChange(OnAnimatorEnabledChange);
             GetParam(Vrc3DefaultParams.IsLocal).SetOnChange(OnIsLocalChange);
             GetParam(Vrc3DefaultParams.VelocityX).SetOnChange(OnVelocityChange);
             GetParam(Vrc3DefaultParams.VelocityY).SetOnChange(OnVelocityChange);
@@ -246,6 +270,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         protected override void Unlink()
         {
+            _preCullCountdown = 0;
+            if (_isCulled) SetAvatarCulled(false);
+            if (_cullingDiamond)
+            {
+                UnityEngine.Object.DestroyImmediate(_cullingDiamond);
+                _cullingDiamond = null;
+            }
+
             CloseDebugWindows();
             AvatarTools.Unlink(this);
             if (OscModule.Enabled) OscModule.Stop();
@@ -690,6 +722,121 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         }
 
         private void OnSeatedChange(Vrc3Param param, float seated) => _layers[VRCAvatarDescriptor.AnimLayerType.Sitting].Weight.Set(seated);
+
+        private void EnsureCullingDiamond()
+        {
+            if (_cullingDiamond) return;
+
+            var prefab = Resources.Load<GameObject>("Vrc3/CullingDiamond");
+            if (!prefab) return;
+
+            var parent = Avatar.transform.parent;
+            _cullingDiamond = UnityEngine.Object.Instantiate(prefab, parent);
+
+            _cullingDiamond.transform.position = GetCullingDiamondPosition();
+            _cullingDiamond.transform.rotation = Avatar.transform.rotation;
+            _cullingDiamond.transform.localScale = GetCullingDiamondScale();
+            _cullingDiamond.SetActive(false);
+        }
+
+        private Vector3 GetCullingDiamondPosition()
+        {
+            var pos = Avatar.transform.position;
+
+            var heightParam = GetParam(Vrc3DefaultParams.EyeHeightAsMeters);
+            var height = heightParam != null ? heightParam.FloatValue() : _baseHeight;
+
+            pos.y += height * 0.5f + CullingDiamondYOffset;
+
+            return pos;
+        }
+
+        private Vector3 GetCullingDiamondScale()
+        {
+            var heightParam = GetParam(Vrc3DefaultParams.EyeHeightAsMeters);
+            var height = heightParam != null ? heightParam.FloatValue() : _baseHeight;
+
+            if (height <= 0f) height = CullingDiamondReferenceEyeHeight;
+
+            var factor = height / CullingDiamondReferenceEyeHeight;
+
+            return Vector3.one * factor;
+        }
+
+        private void SetAvatarCulled(bool culled)
+        {
+            _isCulled = culled;
+
+            EnsureCullingDiamond();
+
+            foreach (var animator in _animators)
+            {
+                if (animator) animator.enabled = !culled;
+            }
+
+            if (AvatarAnimator) AvatarAnimator.enabled = !culled;
+
+            foreach (var renderer in Avatar.GetComponentsInChildren<Renderer>(true)) renderer.enabled = !culled;
+
+            if (_cullingDiamond)
+            {
+                if (culled)
+                {
+                    _cullingDiamond.transform.position = GetCullingDiamondPosition();
+                    _cullingDiamond.transform.rotation = Avatar.transform.rotation;
+                    _cullingDiamond.transform.localScale = GetCullingDiamondScale();
+                }
+                _cullingDiamond.SetActive(culled);
+            }
+
+            var param = GetParam(Vrc3DefaultParams.IsAnimatorEnabled);
+            if (param != null) param.InternalSet(culled ? 0f : 1f);
+        }
+
+        private void OnAvatarCullingChange(Vrc3Param param, float value)
+        {
+            var isAnimatorParam = GetParam(Vrc3DefaultParams.IsAnimatorEnabled);
+            if (isAnimatorParam == null) return;
+
+            var cullingOn = value >= 0.5f;
+
+            if (cullingOn) isAnimatorParam.Set(this, 0f);
+            else isAnimatorParam.Set(this, 1f);
+        }
+
+        private void OnAnimatorEnabledChange(Vrc3Param param, float enabledValue)
+        {
+            var enabled = enabledValue >= 0.5f;
+
+            if (!enabled) _preCullCountdown = 1;
+            else
+            {
+                _preCullCountdown = 0;
+                if (_isCulled) SetAvatarCulled(false);
+            }
+        }
+
+        private void HandleCullingSimulation()
+        {
+            var param = GetParam(Vrc3DefaultParams.IsAnimatorEnabled);
+            if (param == null) return;
+
+            var enabled = param.FloatValue() >= 0.5f;
+
+            if (!enabled)
+            {
+                if (_preCullCountdown > 0)
+                {
+                    _preCullCountdown--;
+                    if (_preCullCountdown == 0 && !_isCulled) SetAvatarCulled(true);
+                }
+            }
+            else
+            {
+                _preCullCountdown = 0;
+                if (_isCulled) SetAvatarCulled(false);
+            }
+        }
 
         /*
          * Params
