@@ -28,6 +28,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal const string Earmuffs = "Earmuffs";
         internal const string Upright = "Upright";
         internal const string IsLocal = "IsLocal";
+        internal const string IsAnimatorEnabled = "IsAnimatorEnabled";
         internal const string Seated = "Seated";
         internal const string VRMode = "VRMode";
         internal const string Voice = "Voice";
@@ -67,6 +68,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             { VrcEmote, AnimatorControllerParameterType.Int },
             { Upright, AnimatorControllerParameterType.Float },
             { IsLocal, AnimatorControllerParameterType.Bool },
+            { IsAnimatorEnabled, AnimatorControllerParameterType.Bool },
             { Seated, AnimatorControllerParameterType.Bool },
             { VRMode, AnimatorControllerParameterType.Int },
             { Voice, AnimatorControllerParameterType.Float },

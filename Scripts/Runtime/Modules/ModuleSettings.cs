@@ -19,6 +19,7 @@ namespace BlackStartX.GestureManager.Modules
         public bool loadStored;
         public bool isRemote;
         public bool vrMode;
+        public bool simulateCulling;
     }
 
     public enum Pose
