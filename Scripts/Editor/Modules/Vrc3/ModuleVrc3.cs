@@ -426,7 +426,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             var restoreAsset = ModuleVrc3Styles.Data.RestoreOf(type);
 
             if (!controller || !CheckIntegrity(new FileInfo(NameOf(controller)), new FileInfo(NameOf(restoreAsset)))) _brokenLayers.Add(type);
-            return controller ? controller : new AnimatorController();
+            return !controller ? new AnimatorController() : controller;
         }
 
         private void StopVisualElements()
@@ -927,7 +927,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             if (!_hooked || !_animators.Contains(animator)) return;
 
-            var source = audio.Source ? audio.Source : audio.Source = Avatar.transform.Find(audio.SourcePath)?.GetComponent<AudioSource>();
+            var source = !audio.Source ? audio.Source = Avatar.transform.Find(audio.SourcePath)?.GetComponent<AudioSource>() : audio.Source;
             if (!source) return;
 
             if (audio.StopOnEnter) source.Stop();
@@ -938,7 +938,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             if (!_hooked || !_animators.Contains(animator)) return;
 
-            var source = audio.Source ? audio.Source : audio.Source = Avatar.transform.Find(audio.SourcePath)?.GetComponent<AudioSource>();
+            var source = !audio.Source ? audio.Source = Avatar.transform.Find(audio.SourcePath)?.GetComponent<AudioSource>() : audio.Source;
             if (!source) return;
 
             if (audio.StopOnExit) source.Stop();
