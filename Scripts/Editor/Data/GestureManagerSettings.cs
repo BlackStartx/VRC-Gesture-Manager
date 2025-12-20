@@ -61,6 +61,9 @@ namespace BlackStartX.GestureManager.Editor.Data
             GUILayout.Label("Set the initial states of the default parameters!", GestureManagerStyles.SettingsText);
             using (new GUILayout.HorizontalScope()) DefaultParametersSettings(manager);
             manager.settings.isOnFriendsList = GmgLayoutHelper.Toggle("IsOnFriendList: ", manager.settings.isOnFriendsList, manager);
+            GUILayout.Label("Avatar Culling", GestureManagerStyles.ToolSubHeader);
+            GUILayout.Label("Simulate VRChat Avatar Culling using the IsAnimatorEnabled Animator Parameter.", GestureManagerStyles.SettingsText);
+            manager.settings.simulateCulling = GmgLayoutHelper.Toggle("Simulate Culling: ", manager.settings.simulateCulling, manager);
         }
 
         private static void BlendShapeSettings(string label = "Blend-Shapes Clamping: ")

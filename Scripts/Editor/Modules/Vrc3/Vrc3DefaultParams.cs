@@ -12,6 +12,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal const string EyeHeightAsMeters = "EyeHeightAsMeters";
         internal const string GestureLeftWeight = "GestureLeftWeight";
         internal const string VelocityMagnitude = "VelocityMagnitude";
+        internal const string IsAnimatorEnabled = "IsAnimatorEnabled";
         internal const string IsOnFriendsList = "IsOnFriendsList";
         internal const string ScaleModified = "ScaleModified";
         internal const string AvatarVersion = "AvatarVersion";
@@ -47,6 +48,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             { EyeHeightAsMeters, AnimatorControllerParameterType.Float },
             { GestureLeftWeight, AnimatorControllerParameterType.Float },
             { VelocityMagnitude, AnimatorControllerParameterType.Float },
+            { IsAnimatorEnabled, AnimatorControllerParameterType.Bool },
             { IsOnFriendsList, AnimatorControllerParameterType.Bool },
             { VrcFaceBlendH, AnimatorControllerParameterType.Float },
             { VrcFaceBlendV, AnimatorControllerParameterType.Float },
