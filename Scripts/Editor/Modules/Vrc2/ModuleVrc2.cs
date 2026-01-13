@@ -77,7 +77,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
 
         /**
          *     This dictionary is needed just because I hate the original animation names.
-         *     It will just translate the name of the original animation to the my version of the name.
+         *     It will just translate the name of the original animation to my version of the name.
          */
         private Dictionary<string, string> _myTranslateDictionary;
 
