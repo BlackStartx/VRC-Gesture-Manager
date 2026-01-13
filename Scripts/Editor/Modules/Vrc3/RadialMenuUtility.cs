@@ -271,12 +271,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         public static DynamicType GetDynamicType(ControlType type) => type switch
         {
-            ControlType.Button => DynamicType.Running,
-            ControlType.Toggle => DynamicType.Running,
+            ControlType.Button or ControlType.Toggle => DynamicType.Running,
             ControlType.RadialPuppet => DynamicType.Radial,
-            ControlType.SubMenu => DynamicType.None,
-            ControlType.TwoAxisPuppet => DynamicType.None,
-            ControlType.FourAxisPuppet => DynamicType.None,
             _ => DynamicType.None
         };
 

@@ -149,11 +149,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 AnimLayerType.IKPose => Masks.Armature,
                 AnimLayerType.TPose => Masks.Armature,
                 AnimLayerType.FX => Masks.Empty,
-                AnimLayerType.Deprecated0 => null,
-                AnimLayerType.Additive => null,
-                AnimLayerType.Sitting => null,
-                AnimLayerType.Action => null,
-                AnimLayerType.Base => null,
                 _ => null
             };
 

@@ -34,9 +34,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Cache
 
         public AnimatorControllerParameterType FetchType() => type switch
         {
-            "Int" => AnimatorControllerParameterType.Int,
             "Bool" => AnimatorControllerParameterType.Bool,
-            "Float" => AnimatorControllerParameterType.Float,
+            "Int" => AnimatorControllerParameterType.Int,
             _ => AnimatorControllerParameterType.Float
         };
     }

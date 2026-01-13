@@ -648,7 +648,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             Pose.PoseIK => PoseIK,
             Pose.PoseT => PoseT,
-            Pose.None => null,
             _ => null
         };
 
