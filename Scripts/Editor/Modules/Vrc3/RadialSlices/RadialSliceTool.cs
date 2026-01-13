@@ -10,7 +10,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
         private readonly GmgDynamicFunction _tool;
         private readonly ModuleVrc3 _module;
 
-        public RadialSliceTool(ModuleVrc3 module, GmgDynamicFunction tool, Texture2D icon) : base(tool.Name, icon, null, DynamicType.Running, 1f)
+        public RadialSliceTool(ModuleVrc3 module, GmgDynamicFunction tool, Texture2D icon) : base(tool.Name, icon, null, DynamicType.Running, 0f, 1f)
         {
             _tool = tool;
             _module = module;

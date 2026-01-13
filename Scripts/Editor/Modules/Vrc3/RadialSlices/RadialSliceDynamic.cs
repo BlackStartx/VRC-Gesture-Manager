@@ -6,6 +6,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
 {
     public abstract class RadialSliceDynamic : RadialSliceBase
     {
+        internal readonly float OffValue;
         internal readonly float ActiveValue;
 
         private VisualRunningElement _runningElement;
@@ -13,9 +14,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
 
         private bool RunCheck => RadialMenuUtility.Is(FloatValue(), ActiveValue);
 
-        internal RadialSliceDynamic(string name, Texture2D icon, Texture2D subIcon, DynamicType type, float activeValue) : base(name, icon, subIcon)
+        internal RadialSliceDynamic(string name, Texture2D icon, Texture2D subIcon, DynamicType type, float offValue, float activeValue) : base(name, icon, subIcon)
         {
             _dynamicType = type;
+            OffValue = offValue;
             ActiveValue = activeValue;
         }
 

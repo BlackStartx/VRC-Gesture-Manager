@@ -24,7 +24,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
 
         private VisualRadialElement _radialElement;
 
-        public RadialSliceControl(RadialMenu menu, VRCExpressionsMenu.Control control) : base(control.name, control.icon, RadialMenuUtility.GetSubIcon(control.type), RadialMenuUtility.GetDynamicType(control.type), control.value)
+        public RadialSliceControl(RadialMenu menu, VRCExpressionsMenu.Control control) : base(control.name, control.icon, RadialMenuUtility.GetSubIcon(control.type), RadialMenuUtility.GetDynamicType(control.type), offValue: 0f, control.value)
         {
             _menu = menu;
             _type = control.type;
@@ -35,7 +35,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
             Settings = RadialSettings.Base;
         }
 
-        public RadialSliceControl(RadialMenu menu, string name, Texture2D icon, ControlType type, float activeValue, Vrc3Param param, Vrc3Param[] subParams, VRCExpressionsMenu subMenu, VRCExpressionsMenu.Control.Label[] subLabels, float? amplify = null, RadialSettings settings = null) : base(name, icon, RadialMenuUtility.GetSubIcon(type), RadialMenuUtility.GetDynamicType(type), activeValue)
+        public RadialSliceControl(RadialMenu menu, string name, Texture2D icon, ControlType type, float offValue, float activeValue, Vrc3Param param, Vrc3Param[] subParams, VRCExpressionsMenu subMenu, VRCExpressionsMenu.Control.Label[] subLabels, float? amplify = null, RadialSettings settings = null) : base(name, icon, RadialMenuUtility.GetSubIcon(type), RadialMenuUtility.GetDynamicType(type), offValue, activeValue)
         {
             _menu = menu;
             _type = type;
@@ -88,7 +88,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
                     SetValue(0);
                     break;
                 case ControlType.Toggle:
-                    if (RadialMenuUtility.Is(FloatValue(), ActiveValue)) SetValue(0);
+                    if (RadialMenuUtility.Is(FloatValue(), ActiveValue)) SetValue(OffValue);
                     else SetControlValue();
                     break;
                 case ControlType.SubMenu:

@@ -241,20 +241,20 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         public static class Buttons
         {
-            public static RadialSliceControl ToggleFromParam(RadialMenu menu, string name, Vrc3Param param, Texture2D icon = null, float activeValue = 1f)
+            public static RadialSliceControl ToggleFromParam(RadialMenu menu, string name, Vrc3Param param, Texture2D icon = null, float offValue = 0f, float activeValue = 1f)
             {
-                return new RadialSliceControl(menu, name, icon, ControlType.Toggle, activeValue, param, Array.Empty<Vrc3Param>(), null, null);
+                return new RadialSliceControl(menu, name, icon, ControlType.Toggle, offValue, activeValue, param, Array.Empty<Vrc3Param>(), null, null);
             }
 
             public static RadialSliceBase RadialFromParam(RadialMenu menu, string name, Vrc3Param param, Texture2D icon = null, float amplify = 1f, RadialSliceControl.RadialSettings settings = null)
             {
-                return new RadialSliceControl(menu, name, icon, ControlType.RadialPuppet, 1f, null, new[] { param }, null, null, amplify, settings);
+                return new RadialSliceControl(menu, name, icon, ControlType.RadialPuppet, 0f, 1f, null, new[] { param }, null, null, amplify, settings);
             }
 
             public static RadialSliceControl AxisFromParams(RadialMenu menu, string name, Vrc3Param xParam, Vrc3Param yParam, Texture2D icon = null, float amplify = 1f)
             {
                 var subLabels = new VRCExpressionsMenu.Control.Label[4];
-                return new RadialSliceControl(menu, name, icon, ControlType.TwoAxisPuppet, 1f, null, new[] { xParam, yParam }, null, subLabels, amplify);
+                return new RadialSliceControl(menu, name, icon, ControlType.TwoAxisPuppet, 0f, 1f, null, new[] { xParam, yParam }, null, subLabels, amplify);
             }
         }
 
