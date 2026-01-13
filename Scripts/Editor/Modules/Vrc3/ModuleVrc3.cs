@@ -83,7 +83,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal readonly Vrc3Param PoseIK;
         internal readonly Vrc3Param PoseT;
 
-        internal readonly Vrc3Param AvatarCulling;
         private const float CullingDiamondReferenceEyeHeight = 1.70f;
         private const float CullingDiamondYOffset = 0.05f;
         private GameObject _cullingDiamond;
@@ -113,7 +112,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             AvatarDescriptor = avatarDescriptor;
             OscModule = new OscModule(this);
 
-            AvatarCulling = new Vrc3Param(null, AnimatorControllerParameterType.Bool, OnAvatarCullingChange);
             PoseIK = new Vrc3Param(null, AnimatorControllerParameterType.Bool, OnIKPoseChange);
             PoseT = new Vrc3Param(null, AnimatorControllerParameterType.Bool, OnTPoseChange);
         }
@@ -129,8 +127,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 if (DummyMode != null) DummyMode.Update(Avatar);
                 else if (_layers.Any(IsBroken)) OnBrokenSimulation();
                 foreach (var pair in _layers) pair.Value.Weight.Update();
-                HandleCullingSimulation();
-                HandleCullDiamond();
+                if (_preCullCountdown > 0 && --_preCullCountdown == 0 && !_isCulled) SetAvatarCulled(true);
             }
             else DestroyGraphs();
         }
@@ -261,7 +258,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         protected override void Unlink()
         {
-            ClearCullMesh();
             CloseDebugWindows();
             AvatarTools.Unlink(this);
             if (OscModule.Enabled) OscModule.Stop();
@@ -609,6 +605,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             RemoveVise();
             ResetHeight();
+            SetAvatarCulled(false);
             if (OscModule.Enabled) OscModule.Forget();
             AvatarAnimator.Rebind();
             _paramFilter = null;
@@ -663,8 +660,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void OnIKPoseChange(Vrc3Param param, float state) => _layers[VRCAvatarDescriptor.AnimLayerType.IKPose].Weight.Set(state);
 
-        private void OnAvatarCullingChange(Vrc3Param param, float value) => GetParam(Vrc3DefaultParams.IsAnimatorEnabled)?.Set(this, value >= 0.5f ? 0f : 1f);
-
         private void OnIsLocalChange(Vrc3Param param, float local) => Settings.isRemote = local < 0.5f;
 
         private void OnVelocityChange(Vrc3Param param, float velocity) => SetVelocityMag();
@@ -681,6 +676,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             if (Right == 0) GetParam(Vrc3DefaultParams.GestureRightWeight).Set(this, 1f);
             if (right == 0) GetParam(Vrc3DefaultParams.GestureRightWeight).Set(this, 0f);
             Right = (int)right;
+        }
+
+        private void OnAnimatorEnabledChange(Vrc3Param param, float enabledValue)
+        {
+            var isAnimatorEnabled = enabledValue >= 0.5f;
+            _preCullCountdown = isAnimatorEnabled ? 0 : 1;
+            if (isAnimatorEnabled && _isCulled) SetAvatarCulled(false);
         }
 
         private void OnEyeHeightAsMetersChange(Vrc3Param param, float height)
@@ -709,114 +711,29 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void OnSeatedChange(Vrc3Param param, float seated) => _layers[VRCAvatarDescriptor.AnimLayerType.Sitting].Weight.Set(seated);
 
-        private void ClearCullMesh()
-        {
-            _preCullCountdown = 0;
-            if (_isCulled) SetAvatarCulled(false);
-            if (!_cullingDiamond) return;
-            UnityEngine.Object.DestroyImmediate(_cullingDiamond);
-            _cullingDiamond = null;
-        }
-
-        private void EnsureCullingDiamond()
-        {
-            if (_cullingDiamond) return;
-
-            var diamondObject = ModuleVrc3Styles.CullingDiamond;
-            if (!diamondObject) return;
-
-            _cullingDiamond = UnityEngine.Object.Instantiate(diamondObject, Avatar.transform.parent);
-            _cullingDiamond.transform.position = GetCullingDiamondPosition();
-            _cullingDiamond.transform.rotation = Avatar.transform.rotation;
-            _cullingDiamond.transform.localScale = GetCullingDiamondScale();
-            _cullingDiamond.SetActive(false);
-        }
-
-        private Vector3 GetCullingDiamondPosition()
-        {
-            var pos = Avatar.transform.position;
-
-            var height = GetParam(Vrc3DefaultParams.EyeHeightAsMeters)?.FloatValue() ?? _baseHeight;
-
-            pos.y += height * 0.5f + CullingDiamondYOffset;
-
-            return pos;
-        }
-
-        private Vector3 GetCullingDiamondScale()
-        {
-            var height = GetParam(Vrc3DefaultParams.EyeHeightAsMeters)?.FloatValue() ?? _baseHeight;
-
-            if (height <= 0f) height = CullingDiamondReferenceEyeHeight;
-
-            var factor = height / CullingDiamondReferenceEyeHeight;
-
-            return Vector3.one * factor;
-        }
-
         private void SetAvatarCulled(bool culled)
         {
             _isCulled = culled;
-
-            EnsureCullingDiamond();
-
-            foreach (var animator in _animators)
-            {
-                if (animator) animator.enabled = !culled;
-            }
-
+            if (!culled) DestroyDiamond();
+            else CreateDiamond(ModuleVrc3Styles.CullingDiamond);
             if (AvatarAnimator) AvatarAnimator.enabled = !culled;
-
-            foreach (var renderer in _renderers) renderer.enabled = !culled;
-
-            if (_cullingDiamond)
-            {
-                if (culled)
-                {
-                    _cullingDiamond.transform.position = GetCullingDiamondPosition();
-                    _cullingDiamond.transform.rotation = Avatar.transform.rotation;
-                    _cullingDiamond.transform.localScale = GetCullingDiamondScale();
-                }
-
-                _cullingDiamond.SetActive(culled);
-            }
-
-            GetParam(Vrc3DefaultParams.IsAnimatorEnabled)?.InternalSet(culled ? 0f : 1f);
+            foreach (var animator in _animators.Where(animator => animator)) animator.enabled = !culled;
+            foreach (var renderer in _renderers.Where(renderer => renderer)) renderer.enabled = !culled;
         }
 
-        private void OnAnimatorEnabledChange(Vrc3Param param, float enabledValue)
+        private void DestroyDiamond()
         {
-            if (enabledValue >= 0.5f)
-            {
-                _preCullCountdown = 0;
-                if (_isCulled) SetAvatarCulled(false);
-            }
-            else _preCullCountdown = 1;
+            if (!_cullingDiamond) return;
+            UnityEngine.Object.DestroyImmediate(_cullingDiamond);
         }
 
-        private void HandleCullingSimulation()
+        private void CreateDiamond(GameObject diamondObject)
         {
-            var param = GetParam(Vrc3DefaultParams.IsAnimatorEnabled);
-            if (param == null) return;
-
-            if (param.FloatValue() >= 0.5f)
-            {
-                _preCullCountdown = 0;
-                if (_isCulled) SetAvatarCulled(false);
-            }
-            else if (_preCullCountdown > 0)
-            {
-                _preCullCountdown--;
-                if (_preCullCountdown == 0 && !_isCulled) SetAvatarCulled(true);
-            }
-        }
-
-        private void HandleCullDiamond()
-        {
-            if (!_isCulled || !_cullingDiamond) return;
-            _cullingDiamond.transform.position = GetCullingDiamondPosition();
-            _cullingDiamond.transform.rotation = Avatar.transform.rotation;
-            _cullingDiamond.transform.localScale = GetCullingDiamondScale();
+            if (!diamondObject) return;
+            _cullingDiamond = UnityEngine.Object.Instantiate(diamondObject, Avatar.transform);
+            _cullingDiamond.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
+            _cullingDiamond.transform.localScale = Vector3.one * (_baseHeight / CullingDiamondReferenceEyeHeight);
+            _cullingDiamond.transform.localPosition = new Vector3(0, _baseHeight * 0.5f + CullingDiamondYOffset, 0);
         }
 
         /*

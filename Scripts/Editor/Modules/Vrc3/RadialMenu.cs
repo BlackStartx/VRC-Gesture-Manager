@@ -199,7 +199,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 RadialMenuUtility.Buttons.RadialFromParam(this, Vrc3DefaultParams.Vise, GetParam(Vrc3DefaultParams.Vise), ModuleVrc3Styles.Visemes, amplify: Module.ViseAmount),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "Seated", GetParam(Vrc3DefaultParams.Seated), ModuleVrc3Styles.Seated),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "IK Pose", Module.PoseIK, ModuleVrc3Styles.PoseIK),
-                RadialMenuUtility.Buttons.ToggleFromParam(this, "Avatar Culling", Module.AvatarCulling, ModuleVrc3Styles.IsAnimatorEnabled)
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "Avatar Culling", GetParam(Vrc3DefaultParams.IsAnimatorEnabled), ModuleVrc3Styles.IsAnimatorEnabled, offValue: 1f, activeValue: 0f)
             });
         }
 

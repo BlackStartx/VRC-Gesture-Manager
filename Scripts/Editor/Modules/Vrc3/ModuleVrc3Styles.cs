@@ -74,7 +74,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal static GUIStyle Url => _url ??= new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.blue } };
         internal static GUIStyle UrlPro => _urlPro ??= new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.cyan } };
 
-        internal static GameObject CullingDiamond => !_cullingDiamond ? _cullingDiamond = Resources.Load<GameObject>("Vrc3/CullingDiamond") : _cullingDiamond;
+        internal static GameObject CullingDiamond => !_cullingDiamond ? _cullingDiamond = Resources.Load<GameObject>("Vrc3/Meshes/CullingDiamond") : _cullingDiamond;
 
         internal static Texture2D Emojis => !_emojis ? _emojis = Resources.Load<Texture2D>("Vrc3/BSX_GM_Emojis") : _emojis;
         internal static Texture2D Option => !_option ? _option = Resources.Load<Texture2D>("Vrc3/BSX_GM_Option") : _option;
