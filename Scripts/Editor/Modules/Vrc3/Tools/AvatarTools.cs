@@ -95,7 +95,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
             protected override void Gui(ModuleVrc3 module)
             {
-                if (GmgLayoutHelper.ButtonObjectField("Scene Camera: ", _camera, _camera ? 'X' : 'A', Set)) AutoToggle();
+                if (GmgLayoutHelper.ButtonObjectField("Scene Camera: ", _camera, !_camera ? 'A' : 'X', Set)) AutoToggle();
             }
 
             protected override void Update(ModuleVrc3 module)
@@ -116,7 +116,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
                 transform.position = new Vector3(positionVector.x, positionVector.y + 0.001f, positionVector.z);
             }
 
-            private static void AutoToggle() => Set(_camera ? null : ToolCamera);
+            private static void AutoToggle() => Set(!_camera ? ToolCamera : null);
 
             private static void Set(Camera camera)
             {
@@ -141,13 +141,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             protected internal override bool Active => _isActive.Property;
 
             private static Mesh _sphereMesh;
-            private static Mesh SphereMesh => _sphereMesh ? _sphereMesh : _sphereMesh = FetchSpherePrimitive();
+            private static Mesh SphereMesh => !_sphereMesh ? _sphereMesh = FetchSpherePrimitive() : _sphereMesh;
 
             private static Mesh _capsuleMesh;
-            private static Mesh CapsuleMesh => _capsuleMesh ? _capsuleMesh : _capsuleMesh = FetchCapsulePrimitive();
+            private static Mesh CapsuleMesh => !_capsuleMesh ? _capsuleMesh = FetchCapsulePrimitive() : _capsuleMesh;
 
             private Camera _camera = ToolCamera;
-            private Camera Camera => _camera ? _camera : _camera = ToolCamera;
+            private Camera Camera => !_camera ? _camera = ToolCamera : _camera;
 
             protected internal override void Toggle(ModuleVrc3 module) => _isActive.Property = !_isActive.Property;
 

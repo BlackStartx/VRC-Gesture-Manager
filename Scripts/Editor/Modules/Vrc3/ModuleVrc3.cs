@@ -108,8 +108,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         public ModuleVrc3(VRCAvatarDescriptor avatarDescriptor) : base(avatarDescriptor)
         {
             _playerId = 1;
-            AvatarTools = new AvatarTools();
             AvatarDescriptor = avatarDescriptor;
+            AvatarTools = new AvatarTools();
             OscModule = new OscModule(this);
 
             PoseIK = new Vrc3Param(null, AnimatorControllerParameterType.Bool, OnIKPoseChange);
