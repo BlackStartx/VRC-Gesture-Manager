@@ -37,6 +37,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
     {
         private static bool CameraRule(Camera camera) => camera.isActiveAndEnabled && camera.targetDisplay == 0;
         internal static Camera MainCamera => Camera.allCameras.FirstOrDefault(CameraRule);
+        private Camera Camera => !_camera ? _camera = MainCamera : _camera;
 
         [PublicAPI] public readonly VRCAvatarDescriptor AvatarDescriptor;
 
@@ -55,6 +56,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private Vector3 _baseScale;
         private Vector3 _baseView;
         private float _baseHeight;
+        private Camera _camera;
         private float _scale;
         private bool _hooked;
 
@@ -131,8 +133,17 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 else if (_layers.Any(IsBroken)) OnBrokenSimulation();
                 foreach (var pair in _layers) pair.Value.Weight.Update();
                 if (_preCullCountdown > 0 && --_preCullCountdown == 0 && !_isCulled) SetAvatarCulled(true);
+                if (Settings.simulateCulling) CheckCameraCulling(GetParam(Vrc3DefaultParams.IsAnimatorEnabled));
             }
             else DestroyGraphs();
+        }
+
+        private void CheckCameraCulling(Vrc3Param param)
+        {
+            var camera = Camera;
+            if (!camera || param == null) return;
+            var isEnabled = Vector3.Distance(Avatar.transform.position, camera.transform.position) < Settings.cullingDistance;
+            if (param.BoolValue() != isEnabled) param.Set(this, isEnabled);
         }
 
         public override void LateUpdate()

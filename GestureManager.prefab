@@ -47,6 +47,8 @@ MonoBehaviour:
     favourite: {fileID: 0}
     initialPose: 0
     userIndex: 0
+    cullingDistance: 5
+    simulateCulling: 0
     loadStored: 0
     isRemote: 0
     vrMode: 0

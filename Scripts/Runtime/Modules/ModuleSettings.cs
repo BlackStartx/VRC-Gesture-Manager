@@ -15,7 +15,9 @@ namespace BlackStartX.GestureManager.Modules
         public Pose initialPose;
         public int userIndex;
 
+        public float cullingDistance;
         public bool isOnFriendsList;
+        public bool simulateCulling;
         public bool loadStored;
         public bool isRemote;
         public bool vrMode;
