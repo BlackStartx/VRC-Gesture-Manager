@@ -35,6 +35,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
     public class ModuleVrc3 : ModuleBase
     {
+        private static bool CameraRule(Camera camera) => camera.isActiveAndEnabled && camera.targetDisplay == 0;
+        internal static Camera MainCamera => Camera.allCameras.FirstOrDefault(CameraRule);
+
         [PublicAPI] public readonly VRCAvatarDescriptor AvatarDescriptor;
 
         private const string OutputName = "Gesture Manager";
