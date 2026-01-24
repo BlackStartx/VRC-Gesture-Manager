@@ -112,7 +112,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         public ModuleVrc3(VRCAvatarDescriptor avatarDescriptor) : base(avatarDescriptor)
         {
-            _playerId = 1;
+            _playerId = avatarDescriptor.GetInstanceID();
             AvatarDescriptor = avatarDescriptor;
             AvatarTools = new AvatarTools();
             OscModule = new OscModule(this);
@@ -1155,6 +1155,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             vrcPhysBoneBase.param_Stretch = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_STRETCH);
             vrcPhysBoneBase.param_Squish = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_SQUISH);
             vrcPhysBoneBase.param_Angle = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_ANGLE);
+            vrcPhysBoneBase.playerId = _playerId;
             _physBones.Add(vrcPhysBoneBase);
         }
 
