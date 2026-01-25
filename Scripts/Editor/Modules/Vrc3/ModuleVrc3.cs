@@ -224,8 +224,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _baseScale = Avatar.transform.localScale;
             InitParams(Parameters);
 
+            GetParam(Vrc3DefaultParams.Afk).InternalSet(0f);
+            GetParam(Vrc3DefaultParams.Seated).InternalSet(0f);
             GetParam(Vrc3DefaultParams.Upright).InternalSet(1f);
             GetParam(Vrc3DefaultParams.Grounded).InternalSet(1f);
+            GetParam(Vrc3DefaultParams.InStation).InternalSet(0f);
             GetParam(Vrc3DefaultParams.PreviewMode).InternalSet(0f);
             GetParam(Vrc3DefaultParams.TrackingType).InternalSet(3f);
             GetParam(Vrc3DefaultParams.AvatarVersion).InternalSet(3f);
