@@ -226,6 +226,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             GetParam(Vrc3DefaultParams.Upright).InternalSet(1f);
             GetParam(Vrc3DefaultParams.Grounded).InternalSet(1f);
+            GetParam(Vrc3DefaultParams.PreviewMode).InternalSet(0f);
             GetParam(Vrc3DefaultParams.TrackingType).InternalSet(3f);
             GetParam(Vrc3DefaultParams.AvatarVersion).InternalSet(3f);
             GetParam(Vrc3DefaultParams.IsAnimatorEnabled).InternalSet(1f);
