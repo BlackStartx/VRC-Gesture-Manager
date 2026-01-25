@@ -15,7 +15,7 @@ namespace BlackStartX.GestureManager.Data
     {
         private List<HumanBodyBones> _bones;
         private List<HumanBodyBones> Bones => _bones ??= PoseBones;
-        public string Name => Avatar != null ? Avatar.name : null;
+        public string Name => !Avatar ? null : Avatar.name;
 
         private readonly Dictionary<HumanBodyBones, (Vector3, Quaternion)> _poseBones = new();
 
