@@ -20,6 +20,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal const string GestureRight = "GestureRight";
         internal const string ScaleFactor = "ScaleFactor";
         internal const string GestureLeft = "GestureLeft";
+        internal const string PreviewMode = "PreviewMode";
         internal const string VelocityX = "VelocityX";
         internal const string VelocityY = "VelocityY";
         internal const string VelocityZ = "VelocityZ";
@@ -58,6 +59,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             { GestureRight, AnimatorControllerParameterType.Int },
             { ScaleFactor, AnimatorControllerParameterType.Float },
             { GestureLeft, AnimatorControllerParameterType.Int },
+            { PreviewMode, AnimatorControllerParameterType.Int },
             { VelocityX, AnimatorControllerParameterType.Float },
             { VelocityY, AnimatorControllerParameterType.Float },
             { VelocityZ, AnimatorControllerParameterType.Float },
