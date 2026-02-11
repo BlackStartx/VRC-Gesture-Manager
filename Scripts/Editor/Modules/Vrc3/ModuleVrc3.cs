@@ -52,6 +52,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal Vrc3OscDebugWindow DebugOscWindow;
 
         private PlayableGraph _playableGraph;
+        private AnimationLayerMixerPlayable _layerMixer;
+        private int _testLayerIndex;
+        private AnimationClipPlayable _testPlayable;
+        private AvatarMask _testHumanoidMask;
+        private bool _baseApplyRootMotion;
+        private bool _testForcingRootMotion;
         private string _paramFilter;
         private Vector3 _baseScale;
         private Vector3 _baseView;
@@ -159,6 +165,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             StartVrcHooks();
 
+            _baseApplyRootMotion = AvatarAnimator.applyRootMotion;
             AvatarAnimator.applyRootMotion = false;
             AvatarAnimator.runtimeAnimatorController = null;
             AvatarAnimator.updateMode = AnimatorUpdateMode.Normal;
@@ -168,7 +175,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             var layerList = AvatarDescriptor.baseAnimationLayers.ToList();
             layerList.AddRange(AvatarDescriptor.specialAnimationLayers);
             layerList.Sort(ModuleVrc3Styles.Data.LayerSort);
-            var intCount = layerList.Count + 1;
+            var intCount = layerList.Count + 2;
 
             const bool add = true;
             const float weightOn = 1f;
@@ -176,8 +183,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             _playableGraph = PlayableGraph.Create(GestureManager.Version);
             _playableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
-            var mixer = AnimationLayerMixerPlayable.Create(_playableGraph, intCount);
-            AnimationPlayableOutput.Create(_playableGraph, OutputName, AvatarAnimator).SetSourcePlayable(mixer);
+            _layerMixer = AnimationLayerMixerPlayable.Create(_playableGraph, intCount);
+            _testLayerIndex = intCount - 1;
+            _layerMixer.SetInputWeight(_testLayerIndex, 0f);
+            AnimationPlayableOutput.Create(_playableGraph, OutputName, AvatarAnimator).SetSourcePlayable(_layerMixer);
 
             _layers.Clear();
             _cloths.Clear();
@@ -187,7 +196,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             Receivers.Clear();
 
-            for (var i = 1; i < intCount; i++)
+            for (var i = 1; i < intCount - 1; i++)
             {
                 var layer = layerList[i - 1];
 
@@ -206,15 +215,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 var mask = layer.isDefault || !layer.mask && isFx ? ModuleVrc3Styles.Data.MaskOf(layer.type) : layer.mask;
 
                 var playable = AnimatorControllerPlayable.Create(_playableGraph, Vrc3ProxyOverride.OverrideController(controller));
-                var weight = new AnimatorControllerWeight(mixer, playable, i);
+                var weight = new AnimatorControllerWeight(_layerMixer, playable, i);
                 var isNull = playable.GetInput(0).IsNull();
                 _layers[layer.type] = new LayerData { Playable = playable, Weight = weight, Empty = isNull, Parameters = RadialMenuUtility.GetParameters(playable) };
 
-                mixer.ConnectInput(i, playable, OutputValue, weightOn);
+                _layerMixer.ConnectInput(i, playable, OutputValue, weightOn);
 
-                if (isLim) mixer.SetInputWeight(i, weightOff);
-                if (isAdd) mixer.SetLayerAdditive((uint)i, add);
-                if (mask) mixer.SetLayerMaskFromAvatarMask((uint)i, mask);
+                if (isLim) _layerMixer.SetInputWeight(i, weightOff);
+                if (isAdd) _layerMixer.SetLayerAdditive((uint)i, add);
+                if (mask) _layerMixer.SetLayerMaskFromAvatarMask((uint)i, mask);
             }
 
             HeightSettings = RadialSliceControl.RadialSettings.Height(_baseHeight = AvatarDescriptor.ViewPosition.y);
@@ -341,9 +350,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         protected override Animator OnCustomAnimationPlay(AnimationClip clip)
         {
-            if (!clip) return Vrc3TestMode.Disable(DummyMode);
-            if (DummyMode is not Vrc3TestMode testMode) testMode = new Vrc3TestMode(this);
-            return testMode.Test(clip);
+            // Overlay the test animation on top of the existing playable graph,
+            // so that the current parameters/toggle states remain visible while previewing.
+            if (!clip) return StopTestAnimation();
+            return PlayTestAnimation(clip);
         }
 
         protected override List<string> CheckErrors()
@@ -1169,6 +1179,69 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             internal AnimatorControllerPlayable Playable;
             internal AnimatorControllerWeight Weight;
             internal bool Empty;
+        }
+
+        /*
+         * Test Animation Hooks
+         */
+
+        private Animator PlayTestAnimation(AnimationClip clip)
+        {
+            if (!_playableGraph.IsValid() || !_layerMixer.IsValid()) return AvatarAnimator;
+
+            // Recreate the playable each time to avoid stale state
+            if (_testPlayable.IsValid())
+            {
+                _layerMixer.DisconnectInput(_testLayerIndex);
+                _testPlayable.Destroy();
+            }
+
+            _testPlayable = AnimationClipPlayable.Create(_playableGraph, clip);
+
+            // Match VRChat's typical behavior: Emotes/Gestures typically override human pose, while FX-driven toggles/parameters continue to run.
+            if (_testHumanoidMask == null) _testHumanoidMask = CreateHumanoidOnlyMask();
+
+            _layerMixer.ConnectInput(_testLayerIndex, _testPlayable, OutputValue, 1f);
+            _layerMixer.SetLayerAdditive((uint)_testLayerIndex, false);
+            _layerMixer.SetLayerMaskFromAvatarMask((uint)_testLayerIndex, _testHumanoidMask);
+            _layerMixer.SetInputWeight(_testLayerIndex, 1f);
+
+            var wantsRootMotion = clip.hasRootCurves || clip.hasMotionCurves;
+
+            _testForcingRootMotion = wantsRootMotion;
+            AvatarAnimator.applyRootMotion = wantsRootMotion || _baseApplyRootMotion;
+
+            return AvatarAnimator;
+        }
+
+        private Animator StopTestAnimation()
+        {
+            if (_layerMixer.IsValid())
+            {
+                _layerMixer.SetInputWeight(_testLayerIndex, 0f);
+                _layerMixer.DisconnectInput(_testLayerIndex);
+            }
+
+            if (_testPlayable.IsValid()) _testPlayable.Destroy();
+
+            if (_testForcingRootMotion)
+            {
+                AvatarAnimator.applyRootMotion = _baseApplyRootMotion;
+                _testForcingRootMotion = false;
+            }
+
+            return AvatarAnimator;
+        }
+
+        private static AvatarMask CreateHumanoidOnlyMask()
+        {
+            var mask = new AvatarMask();
+            // AvatarMaskBodyPart includes a sentinel "LastBodyPart" value; skip it.
+            for (var i = 0; i < (int)AvatarMaskBodyPart.LastBodyPart; i++) mask.SetHumanoidBodyPartActive((AvatarMaskBodyPart)i, true);
+
+            // NO Transform Paths; keeping object toggles intact.
+            mask.transformCount = 0;
+            return mask;
         }
     }
 }
