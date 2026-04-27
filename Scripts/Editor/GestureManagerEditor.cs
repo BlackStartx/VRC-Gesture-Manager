@@ -119,7 +119,7 @@ namespace BlackStartX.GestureManager.Editor
 
         private void ModuleGui()
         {
-            GmgLayoutHelper.ObjectField("Controlling Avatar: ", Manager.Module.Avatar, OnAvatarSwitch);
+            GmgLayoutHelper.ObjectField("Controlling Avatar: ", Manager.Module.AvatarDescriptor, OnAvatarSwitch);
             if (Manager.Module == null) return;
             Manager.Module.EditorHeader();
             Manager.Module.EditorContent(this, _root);
@@ -188,11 +188,11 @@ namespace BlackStartX.GestureManager.Editor
             if (GUILayout.Button("Check Again")) CheckActiveModules();
         }
 
-        private void OnAvatarSwitch(GameObject obj)
+        private void OnAvatarSwitch(GmgAvatarDescriptor descriptor)
         {
-            if (obj)
+            if (descriptor)
             {
-                var module = ModuleHelper.GetModuleFor(obj);
+                var module = ModuleHelper.GetModuleFor(descriptor);
                 if (module != null) Manager.SetModule(module);
             }
             else Manager.UnlinkModule();
