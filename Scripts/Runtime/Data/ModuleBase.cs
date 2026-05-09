@@ -19,13 +19,12 @@ namespace BlackStartX.GestureManager.Data
 
         private readonly Dictionary<HumanBodyBones, (Vector3, Quaternion)> _poseBones = new();
 
-        private readonly GmgAvatarDescriptor _avatarDescriptor;
-
         private List<string> _errorList = new();
         private List<string> _warningList = new();
 
         public readonly GameObject Avatar;
         public readonly Animator AvatarAnimator;
+        public readonly GmgAvatarDescriptor AvatarDescriptor;
 
         private TransformData _beforeEmote;
         public bool PlayingCustomAnimation { get; private set; }
@@ -38,8 +37,7 @@ namespace BlackStartX.GestureManager.Data
 
         protected ModuleBase(GmgAvatarDescriptor avatarDescriptor)
         {
-            _avatarDescriptor = avatarDescriptor;
-
+            AvatarDescriptor = avatarDescriptor;
             Avatar = avatarDescriptor.gameObject;
             AvatarAnimator = Avatar.GetComponent<Animator>();
         }
@@ -57,7 +55,7 @@ namespace BlackStartX.GestureManager.Data
         protected abstract Animator OnCustomAnimationPlay(AnimationClip clip);
         protected abstract List<HumanBodyBones> PoseBones { get; }
 
-        public virtual bool IsInvalid() => !Avatar || !AvatarAnimator || !_avatarDescriptor;
+        public virtual bool IsInvalid() => !Avatar || !AvatarAnimator || !AvatarDescriptor;
 
         protected virtual List<string> CheckWarnings()
         {
@@ -72,7 +70,7 @@ namespace BlackStartX.GestureManager.Data
             if (!Avatar) errors.Add("- The GameObject has been deleted!");
             else if (!Avatar.activeInHierarchy) errors.Add("- The GameObject is disabled!");
             if (!AvatarAnimator) errors.Add("- The model doesn't have any animator!");
-            if (!_avatarDescriptor) errors.Add("- The VRC_AvatarDescriptor has been deleted!");
+            if (!AvatarDescriptor) errors.Add("- The VRC_AvatarDescriptor has been deleted!");
             return errors;
         }
 

@@ -6,6 +6,7 @@ using System.Linq;
 using BlackStartX.GestureManager.Data;
 using BlackStartX.GestureManager.Editor.Data;
 using BlackStartX.GestureManager.Editor.Library;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -16,7 +17,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
 {
     public class ModuleVrc2 : ModuleBase
     {
-        private readonly VRC_AvatarDescriptor _avatarDescriptor;
+        [PublicAPI] public new readonly VRC_AvatarDescriptor AvatarDescriptor;
 
         private readonly GUILayoutOption _options = GUILayout.Width(100);
         private readonly int _emoteHash = Animator.StringToHash("Emote");
@@ -130,7 +131,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
             HumanBodyBones.UpperChest
         };
 
-        public ModuleVrc2(VRC_AvatarDescriptor avatarDescriptor) : base(avatarDescriptor) => _avatarDescriptor = avatarDescriptor;
+        public ModuleVrc2(VRC_AvatarDescriptor avatarDescriptor) : base(avatarDescriptor) => AvatarDescriptor = avatarDescriptor;
 
         public override void Update()
         {
@@ -155,8 +156,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
 
         public override void InitForAvatar()
         {
-            if (_avatarDescriptor.CustomStandingAnims) SetupOverride(ControllerType.Standing, true);
-            else if (_avatarDescriptor.CustomSittingAnims) SetupOverride(ControllerType.Seated, true);
+            if (AvatarDescriptor.CustomStandingAnims) SetupOverride(ControllerType.Standing, true);
+            else if (AvatarDescriptor.CustomSittingAnims) SetupOverride(ControllerType.Seated, true);
         }
 
         protected override void Unlink()
@@ -266,7 +267,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
         protected override List<string> CheckErrors()
         {
             var errorList = base.CheckErrors();
-            if (!_avatarDescriptor.CustomSittingAnims && !_avatarDescriptor.CustomStandingAnims) errorList.Add("- The Descriptor doesn't have any kind of controller!");
+            if (!AvatarDescriptor.CustomSittingAnims && !AvatarDescriptor.CustomStandingAnims) errorList.Add("- The Descriptor doesn't have any kind of controller!");
             return errorList;
         }
 
@@ -317,7 +318,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
             var controllerPreset = controllerType == ControllerType.Standing ? StandingControllerPreset : SeatedControllerPreset;
             _usingType = controllerType == ControllerType.Standing ? ControllerType.Standing : ControllerType.Seated;
             _notUsedType = controllerType == ControllerType.Standing ? ControllerType.Seated : ControllerType.Standing;
-            _originalUsingOverrideController = controllerType == ControllerType.Standing ? _avatarDescriptor.CustomStandingAnims : _avatarDescriptor.CustomSittingAnims;
+            _originalUsingOverrideController = controllerType == ControllerType.Standing ? AvatarDescriptor.CustomStandingAnims : AvatarDescriptor.CustomSittingAnims;
             _myRuntimeOverrideController = new AnimatorOverrideController(controllerPreset);
 
             _myTranslateDictionary = null;
@@ -372,7 +373,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
 
         private void SwitchType() => SetupOverride(_notUsedType, false);
 
-        private bool CanSwitchController() => _notUsedType == ControllerType.Seated ? _avatarDescriptor.CustomSittingAnims : _avatarDescriptor.CustomStandingAnims;
+        private bool CanSwitchController() => _notUsedType == ControllerType.Seated ? AvatarDescriptor.CustomSittingAnims : AvatarDescriptor.CustomStandingAnims;
     }
 
     public static class GmgAnimatorControllerHelper
