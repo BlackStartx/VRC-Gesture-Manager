@@ -175,7 +175,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
                 yHeight = isSphere ? xRadiusZ : yHeight / 2f;
                 var scaleSize = new Vector3(xRadiusZ, yHeight, xRadiusZ);
                 Gizmos.color = new Color(0.0f, 1f, 1f, value.Float * 0.85f);
-                Gizmos.matrix = key.shape.transform0.localToWorldMatrix;
+                Gizmos.matrix = (!key.rootTransform ? key.shape.transform0 : key.rootTransform).localToWorldMatrix;
                 if (mesh) Gizmos.DrawMesh(mesh, key.position, key.rotation, scaleSize);
                 else Gizmos.DrawCube(key.shape.center, scaleSize);
                 if (key.receiverType == ContactReceiver.ReceiverType.OnEnter && value.Float > 0) value.Float -= 0.05f;
@@ -242,9 +242,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             private static float DistanceFrom(ContactBase receiver, Vector3 s, Vector3 b, out float radius)
             {
                 receiver.InitShape();
-                var vector = receiver.transform.lossyScale;
-                var scale = Mathf.Max(vector.x, vector.y, vector.z);
-                GetShapeData(receiver.shape, receiver.transform, scale, out radius, out var aPointVector, out var bPointVector);
+                var transform = !receiver.rootTransform ? receiver.transform : receiver.rootTransform;
+                var scale = Mathf.Max(transform.lossyScale.x, transform.lossyScale.y, transform.lossyScale.z);
+                GetShapeData(receiver.shape, transform, scale, out radius, out var aPointVector, out var bPointVector);
                 ClosestPointsBetweenLineSegments(s, b, aPointVector, bPointVector, out var vector0, out var vector1);
                 return (vector0 - vector1).magnitude - radius;
             }
