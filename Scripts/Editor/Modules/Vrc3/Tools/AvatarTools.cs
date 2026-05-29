@@ -203,8 +203,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
             private void Disable(ContactReceiver receiver)
             {
-                if (!_activeContact.ContainsKey(receiver)) return;
-                _activeContact.Remove(receiver);
+                if (!_activeContact.Remove(receiver)) return;
                 receiver.SetParameter(0f);
             }
 
