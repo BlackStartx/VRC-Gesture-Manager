@@ -266,6 +266,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             foreach (var physBone in AvatarComponents<VRCPhysBoneBase>()) PhysBoneBaseSetup(physBone);
             foreach (var receiver in AvatarComponents<ContactReceiver>()) ReceiverBaseSetup(receiver);
             foreach (var coSender in AvatarComponents<ContactSender>()) SenderBaseSetup(coSender);
+            foreach (var vRaycast in AvatarComponents<VRCRaycast>()) RaycastBaseSetup(vRaycast);
             foreach (var animator in AvatarComponents<Animator>()) AnimatorBaseSetup(animator);
             foreach (var renderer in AvatarComponents<Renderer>()) RendererBaseSetup(renderer);
             foreach (var cloth in AvatarComponents<Cloth>()) ClothBaseSetup(cloth);
@@ -1109,6 +1110,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         }
 
         private void SenderBaseSetup(ContactSender sender) => sender.playerId = _playerId;
+
+        private void RaycastBaseSetup(VRCRaycast raycast)
+        {
+            raycast.param_Distance = new AnimParameterAccessAvatarGmg(this, raycast.Parameter + VRCRaycast.PARAM_DISTANCE);
+            raycast.param_Ratio = new AnimParameterAccessAvatarGmg(this, raycast.Parameter + VRCRaycast.PARAM_RATIO);
+            raycast.param_Hit = new AnimParameterAccessAvatarGmg(this, raycast.Parameter + VRCRaycast.PARAM_HIT);
+        }
 
         private void AudioSourcePlayAudio(AudioSource source, VRC_AnimatorPlayAudio audio, float delayValue = 0f)
         {
