@@ -5,6 +5,7 @@ using System.Linq;
 using BlackStartX.GestureManager.Data;
 using BlackStartX.GestureManager.Editor.Data;
 using BlackStartX.GestureManager.Editor.Library;
+using BlackStartX.GestureManager.Library;
 using UnityEditor;
 using UnityEditor.Profiling;
 using UnityEditorInternal;
@@ -137,12 +138,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             protected override string Description => "Click and trigger Avatar Contacts with your mouse!\n\nLike you can do with PhysBones~";
             protected internal override bool Active => _isActive.Property;
 
-            private static Mesh _sphereMesh;
-            private static Mesh SphereMesh => !_sphereMesh ? _sphereMesh = FetchSpherePrimitive() : _sphereMesh;
-
-            private static Mesh _capsuleMesh;
-            private static Mesh CapsuleMesh => !_capsuleMesh ? _capsuleMesh = FetchCapsulePrimitive() : _capsuleMesh;
-
             private Camera _camera = ModuleVrc3.MainCamera;
             private Camera Camera => !_camera ? _camera = ModuleVrc3.MainCamera : _camera;
 
@@ -164,28 +159,106 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
             protected override void DrawGizmos()
             {
-                foreach (var pair in _activeContact) DrawGizmos(pair.Key, pair.Value, pair.Key.radius, pair.Key.height);
+                foreach (var pair in _activeContact) DrawGizmos(pair.Key, pair.Value, pair.Key.shape);
             }
 
-            private static void DrawGizmos(ContactReceiver key, Flat value, float xRadiusZ, float yHeight)
+            private static void LineAndExtendedBoxIntersection(Vector3 start, Vector3 end, Vector3 center, Vector3 size, Quaternion rotation, out Vector3 midPoint, out Vector3 projection)
             {
-                var isSphere = key.shapeType == ContactBase.ShapeType.Sphere;
-                var mesh = isSphere ? SphereMesh : CapsuleMesh;
-                xRadiusZ *= 2;
-                yHeight = isSphere ? xRadiusZ : yHeight / 2f;
-                var scaleSize = new Vector3(xRadiusZ, yHeight, xRadiusZ);
-                Gizmos.color = new Color(0.0f, 1f, 1f, value.Float * 0.85f);
-                Gizmos.matrix = (!key.rootTransform ? key.shape.transform0 : key.rootTransform).localToWorldMatrix;
-                if (mesh) Gizmos.DrawMesh(mesh, key.position, key.rotation, scaleSize);
-                else Gizmos.DrawCube(key.shape.center, scaleSize);
-                if (key.receiverType == ContactReceiver.ReceiverType.OnEnter && value.Float > 0) value.Float -= 0.05f;
+                var isMiss = false;
+                midPoint = Vector3.zero;
+                projection = Vector3.zero;
+                var quaternion = Quaternion.Inverse(rotation);
+                var startVector = quaternion * (start - center);
+                var endVector = quaternion * (end - center);
+                var dirVector = endVector - startVector;
+                if (Inside(startVector, size) || Inside(endVector, size)) return;
+                float tMin = float.NegativeInfinity, tMax = float.PositiveInfinity;
+                for (var axis = 0; axis < 3; axis++) isMiss = isMiss || TryAxisHit(size[axis], dirVector[axis], startVector[axis], ref tMin, ref tMax);
+                isMiss = isMiss || !(tMin < tMax) || !(tMin >= -1e-5f) || !(tMax <= 1f + 1e-5f) || !(tMin <= 1f) || !(tMax >= -1e-5f);
+                if (!BoxVectorPoints(size, isMiss, tMin, tMax, dirVector, startVector, out var vectorPoint1, out var vectorPoint2)) return;
+                midPoint = (LocalToWorld(vectorPoint1, center, rotation) + LocalToWorld(vectorPoint2, center, rotation)) * 0.5f;
+                projection = GetBoxSurfacePoint(center, midPoint, size, rotation);
+            }
+
+            private static bool TryAxisHit(float size, float dir, float start, ref float tMin, ref float tMax)
+            {
+                if (Mathf.Abs(dir) < 1e-8f) return Mathf.Abs(start) > size;
+                float t1 = (-size - start) / dir, t2 = (size - start) / dir;
+                if (t1 > t2) (t1, t2) = (t2, t1);
+                if (t1 > tMin) tMin = t1;
+                if (t2 < tMax) tMax = t2;
+                return false;
+            }
+
+            private static bool BvpHit(float tMin, float tMax, Vector3 dir, Vector3 start, out Vector3 point1, out Vector3 point2)
+            {
+                point1 = LocalPointAt(Mathf.Clamp01(tMin), start, dir);
+                point2 = LocalPointAt(Mathf.Clamp01(tMax), start, dir);
+                return true;
+            }
+
+            private static bool BvpMiss(Vector3 size, Vector3 dir, Vector3 start, out Vector3 point1, out Vector3 point2)
+            {
+                var foundPair = false;
+                point1 = Vector3.zero;
+                point2 = Vector3.zero;
+                var bestDist = float.MaxValue;
+                for (var iInt = 0; iInt < 6; iInt++)
+                for (var jInt = iInt + 1; jInt < 6; jInt++)
+                {
+                    var iIntA = iInt / 2;
+                    var jIntA = jInt / 2;
+                    var iIntS = iInt % 2 == 0 ? -1 : 1;
+                    var jIntS = jInt % 2 == 0 ? -1 : 1;
+                    if (iIntA == jIntA && iIntS == jIntS) continue;
+                    if (Mathf.Abs(dir[iIntA]) < 1e-8f || Mathf.Abs(dir[jIntA]) < 1e-8f) continue;
+                    BestDist(dir, start, ref point1, ref point2, BvpM(size, dir, start, iIntS, iIntA), BvpM(size, dir, start, jIntS, jIntA), ref bestDist, ref foundPair);
+                }
+
+                return foundPair;
+            }
+
+            private static void BestDist(Vector3 dir, Vector3 start, ref Vector3 point1, ref Vector3 point2, float iBvpM, float jBvpM, ref float bestDist, ref bool foundPair)
+            {
+                if (iBvpM is < -1e-5f or > 1f + 1e-5f) return;
+                if (jBvpM is < -1e-5f or > 1f + 1e-5f) return;
+                var iVector = LocalPointAt(iBvpM, start, dir);
+                var jVector = LocalPointAt(jBvpM, start, dir);
+                iBvpM = ((iVector + jVector) * .5f).magnitude;
+                if (iBvpM >= bestDist) return;
+                bestDist = iBvpM;
+                point1 = iVector;
+                point2 = jVector;
+                foundPair = true;
+            }
+
+            private static Vector3 GetBoxSurfacePoint(Vector3 center, Vector3 mid, Vector3 size, Quaternion rotation)
+            {
+                var tHit = float.MaxValue;
+                var dirVector = Quaternion.Inverse(rotation) * (mid - center);
+                for (var i = 0; i < 3; i++) tHit = THit(dirVector[i], size[i], tHit);
+                return center + rotation * (dirVector * tHit);
+            }
+
+            private static void DrawGizmos(ContactReceiver key, Flat value, CollisionScene.Shape shape)
+            {
+                var isBox = key.shapeType is ContactBase.ShapeType.Box;
+                var isSphere = key.shapeType is ContactBase.ShapeType.Sphere;
+                var isCapsule = key.shapeType is ContactBase.ShapeType.Capsule;
+                var transform = !key.rootTransform ? key.transform : key.rootTransform;
+                var posVector = transform.position + transform.rotation * Vector3.Scale(shape.center, transform.lossyScale);
+                var quaternion = transform.rotation * key.rotation;
+                Gizmos.color = new Color(0f, 1f, 1f, value.Float * 0.85f);
+                if (isSphere) GmgGizmosHelper.DrawSphere(posVector, quaternion, radius: Mathf.Min(shape.radius * Uniform(transform.lossyScale), shape.maxSize * 0.5f));
+                else if (isBox) GmgGizmosHelper.DrawCube(posVector, quaternion, sSize: Vector3.Min(lhs: Abs(Vector3.Scale(shape.boxSize, transform.lossyScale)), rhs: Vector3.one * shape.maxSize));
+                else if (isCapsule) GmgGizmosHelper.DrawCapsule(posVector, quaternion, radius: Mathf.Min(shape.radius * Uniform(transform.lossyScale), shape.maxSize * 0.5f), height: Mathf.Min(shape.height * Uniform(transform.lossyScale), shape.maxSize));
+                if (key.receiverType is ContactReceiver.ReceiverType.OnEnter && value.Float > 0) value.Float -= 0.05f;
             }
 
             private void OnClick(ModuleVrc3 module)
             {
                 if (!Camera) return;
-                var ray = Camera.ScreenPointToRay(Input.mousePosition);
-                CheckRay(module, ray.origin, ray.origin + ray.direction * 1000f);
+                CheckRay(module, Camera.ScreenPointToRay(Input.mousePosition));
             }
 
             private void OnContactValue(ContactReceiver receiver, float value)
@@ -196,7 +269,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
             private void Enable(ContactReceiver receiver, float value)
             {
-                if (_activeContact.ContainsKey(receiver) && receiver.receiverType == ContactReceiver.ReceiverType.OnEnter) return;
+                if (_activeContact.ContainsKey(receiver) && receiver.receiverType is ContactReceiver.ReceiverType.OnEnter) return;
                 _activeContact[receiver] = new Flat { Float = value };
                 receiver.SetParameter(value);
             }
@@ -213,75 +286,87 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
                 _activeContact.Clear();
             }
 
-            private static Mesh FetchSpherePrimitive() => (Mesh)Resources.First(uObject => uObject.name == "Sphere");
-
-            private static Mesh FetchCapsulePrimitive() => (Mesh)Resources.First(uObject => uObject.name == "Capsule");
-
-            private static IEnumerable<UnityEngine.Object> Resources => AssetDatabase.LoadAllAssetsAtPath("Library/unity default resources");
-
-            private bool IsValid(ContactReceiver receiver) => receiver.isActiveAndEnabled && string.IsNullOrEmpty(_tag.Property) || receiver.collisionTags.Contains(_tag.Property);
-
-            /*
-             * RayCast Calculation~
-             */
-
-            private void CheckRay(ModuleVrc3 module, Vector3 s, Vector3 b)
+            private void CheckRay(ModuleVrc3 module, Vector3 origin, Vector3 direction, float lenght = 1000f)
             {
-                foreach (var receiver in module.Receivers.Where(IsValid))
-                    OnContactValue(receiver, ValueFor(receiver, s, b));
+                var endVector = origin + direction * lenght;
+                foreach (var receiver in module.Receivers.Where(IsValid)) OnContactValue(receiver, ValueFor(DistanceFrom(receiver, origin, endVector, out lenght), lenght, receiver.receiverType is ContactReceiver.ReceiverType.Proximity));
             }
 
-            private static float ValueFor(ContactReceiver receiver, Vector3 s, Vector3 b)
-            {
-                var distance = DistanceFrom(receiver, s, b, out var radius);
-                var isProximity = receiver.receiverType == ContactReceiver.ReceiverType.Proximity;
-                return isProximity ? Mathf.Clamp01((radius - distance) / radius) : distance < 0 ? 1f : 0f;
-            }
-
-            private static float DistanceFrom(ContactBase receiver, Vector3 s, Vector3 b, out float radius)
+            private static float DistanceFrom(ContactBase receiver, Vector3 origin, Vector3 end, out float lenght)
             {
                 receiver.InitShape();
                 var transform = !receiver.rootTransform ? receiver.transform : receiver.rootTransform;
-                var scale = Mathf.Max(transform.lossyScale.x, transform.lossyScale.y, transform.lossyScale.z);
-                GetShapeData(receiver.shape, transform, scale, out radius, out var aPointVector, out var bPointVector);
-                ClosestPointsBetweenLineSegments(s, b, aPointVector, bPointVector, out var vector0, out var vector1);
-                return (vector0 - vector1).magnitude - radius;
+                if (receiver.shapeType is ContactBase.ShapeType.Box) return BoxDistanceFrom(receiver.shape, transform, origin, end, out lenght);
+                GetShapeData(receiver.shape, transform, Uniform(transform.lossyScale), out lenght, out var aPointVector, out var bPointVector);
+                ClosestPointsBetweenLineSegments(origin, end, aPointVector, bPointVector, out var vector0, out var vector1);
+                return (vector0 - vector1).magnitude - lenght;
             }
 
-            private static void GetShapeData(CollisionScene.Shape shape, Transform transform, float scale, out float radius, out Vector3 aPointFloat, out Vector3 bPointFloat)
+            private static float BoxDistanceFrom(CollisionScene.Shape shape, Transform transform, Vector3 origin, Vector3 end, out float halfExtent)
             {
-                var cVector = shape.center * scale;
-                radius = Mathf.Min(shape.radius * scale, shape.maxSize * 0.5f);
-                var isSphere = shape.shapeType == CollisionScene.ShapeType.Sphere;
-                var aVector = isSphere ? Vector3.zero : CapsuleVector(shape, scale, radius);
-                aPointFloat = transform.position + transform.rotation * (cVector - aVector);
-                bPointFloat = transform.position + transform.rotation * (cVector + aVector);
+                var sizeVector = Vector3.Min(lhs: Abs(Vector3.Scale(shape.boxSize, transform.lossyScale)), rhs: Vector3.one * shape.maxSize) * 0.5f;
+                var centerVector = transform.position + transform.rotation * Vector3.Scale(shape.center, transform.lossyScale);
+                var quaternion = transform.rotation * shape.rotationOffset;
+                LineAndExtendedBoxIntersection(origin, end, centerVector, sizeVector, quaternion, out var midPointVector, out var projectionVector);
+                halfExtent = (projectionVector - centerVector).magnitude;
+                return (midPointVector - centerVector).magnitude - halfExtent;
             }
 
-            /*
-             * Saved from the Plugins\VRC.Utility.dll before being obliterated in future versions of the library~ :c
-             *
-             * This poor function will not be forgotten~
-             */
-            private static void ClosestPointsBetweenLineSegments(Vector3 lineA, Vector3 lineB, Vector3 aPoint, Vector3 bPoint, out Vector3 vector0, out Vector3 vector1)
+            private static void GetShapeData(CollisionScene.Shape shape, Transform transform, float uniform, out float lenght, out Vector3 aPointFloat, out Vector3 bPointFloat)
             {
-                var pointVector1 = ClosestPointOnLineSegment(lineA, lineB, aPoint);
-                var pointVector2 = ClosestPointOnLineSegment(lineA, lineB, bPoint);
-                vector1 = ClosestPointOnLineSegment(aPoint, bPoint, vector0 = (pointVector1 - aPoint).sqrMagnitude < (pointVector2 - bPoint).sqrMagnitude ? pointVector1 : pointVector2);
+                var vector = Vector3.Scale(shape.center, transform.lossyScale);
+                lenght = Mathf.Min(shape.radius * uniform, shape.maxSize * 0.5f);
+                var isSphere = shape.shapeType is CollisionScene.ShapeType.Sphere;
+                var aVector = isSphere ? Vector3.zero : CapsuleVector(shape, uniform, lenght);
+                aPointFloat = transform.position + transform.rotation * vector - transform.rotation * aVector;
+                bPointFloat = transform.position + transform.rotation * vector + transform.rotation * aVector;
             }
 
-            private static Vector3 ClosestPointOnLineSegment(Vector3 lineA, Vector3 lineB, Vector3 point)
+            private static void ClosestPointsBetweenLineSegments(Vector3 origin, Vector3 end, Vector3 a, Vector3 b, out Vector3 vector0, out Vector3 vector1)
             {
-                var rhsVector = lineB - lineA;
-                var lhsVector = point - lineA;
-                return ClosestPointOnLineSegment(lineA, lineB, rhsVector, Vector3.Dot(lhsVector, rhsVector));
+                var dVector0 = b - a;
+                var dVector1 = origin - a;
+                var dVector2 = end - origin;
+                ClosestPointsBetweenLineSegments(origin, a, out vector0, out vector1, dVector0, dVector1, dVector2);
             }
 
-            private static Vector3 ClosestPointOnLineSegment(Vector3 lineA, Vector3 lineB, Vector3 lhsRhs, float dot1) => dot1 <= 0.0 ? lineA : ClosestPointOnLineSegment(lineA, lineB, lhsRhs, dot1, Vector3.Dot(lhsRhs, lhsRhs));
+            private static void Lines(Vector3 origin, Vector3 aPoint, out Vector3 vector0, out Vector3 vector1, Vector3 d0, Vector3 d1, float dA, float dB, float dC, float dD, float dE)
+            {
+                vector0 = origin + d0 * Solve0(dA, dB, dC, dD, dE);
+                vector1 = aPoint + d1 * Solve1(dA, dB, dC, dD, dE);
+            }
 
-            private static Vector3 CapsuleVector(CollisionScene.Shape shape, float scale, float radius) => shape.axis * Mathf.Max(0.0f, Mathf.Min(shape.height * scale, shape.maxSize) * 0.5f - radius);
+            private static bool BoxVectorPoints(Vector3 size, bool miss, float tMin, float tMax, Vector3 dir, Vector3 start, out Vector3 point1, out Vector3 point2) => miss ? BvpMiss(size, dir, start, out point1, out point2) : BvpHit(tMin, tMax, dir, start, out point1, out point2);
 
-            private static Vector3 ClosestPointOnLineSegment(Vector3 lineA, Vector3 lineB, Vector3 lhsRhs, float dot1, float dot) => dot <= dot1 ? lineB : lineA + lhsRhs * (dot1 / dot);
+            private static void ClosestPointsBetweenLineSegments(Vector3 origin, Vector3 a, out Vector3 vector0, out Vector3 vector1, Vector3 d0, Vector3 d1, Vector3 d2) => Lines(origin, a, out vector0, out vector1, d2, d0, D(d2, d2), D(d2, d0), D(d2, d1), D(d0, d0), D(d0, d1));
+
+            private static float Solve1(float a, float b, float c, float d, float e) => d < 1e-8f ? 0f : Mathf.Clamp01((a < 1e-8f ? e : b * (a * d - b * b > 1e-8f ? Mathf.Clamp01((b * e - c * d) / (a * d - b * b)) : 0f) + e) / d);
+
+            private static Vector3 CapsuleVector(CollisionScene.Shape shape, float uniform, float lenght) => shape.axis * Mathf.Max(0.0f, Mathf.Min(shape.height * uniform, shape.maxSize) * 0.5f - lenght);
+
+            private bool IsValid(ContactReceiver receiver) => receiver.isActiveAndEnabled && string.IsNullOrEmpty(_tag.Property) || receiver.collisionTags.Contains(_tag.Property);
+
+            private static float ValueFor(float distance, float lenght, bool isProximity) => isProximity ? Mathf.Clamp01((lenght - distance) / lenght) : distance < 0 ? 1f : 0f;
+
+            private static float THit(float dir, float size, float tHit) => Mathf.Abs(dir) < 1e-8f ? tHit : (size /= Mathf.Abs(dir)) > 0f && size < tHit ? size : tHit;
+
+            private static bool Inside(Vector3 vector, Vector3 size) => Mathf.Abs(vector.x) < size.x && Mathf.Abs(vector.y) < size.y && Mathf.Abs(vector.z) < size.z;
+
+            private static float Solve0(float a, float b, float c, float d, float e) => a < 1e-8f ? 0f : Mathf.Clamp01((b * Solve1(a, b, c, d, e) - c) / a);
+
+            private static float BvpM(Vector3 size, Vector3 dir, Vector3 start, int s, int a) => (s * size[a] - start[a]) / dir[a];
+
+            private static float Uniform(Vector3 scale) => Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
+
+            private static Vector3 LocalToWorld(Vector3 point, Vector3 center, Quaternion rotation) => center + rotation * point;
+
+            private static Vector3 Abs(Vector3 vector) => new(Mathf.Abs(vector.x), Mathf.Abs(vector.y), Mathf.Abs(vector.z));
+
+            private static Vector3 LocalPointAt(float clamp, Vector3 start, Vector3 dirVector) => start + dirVector * clamp;
+
+            private void CheckRay(ModuleVrc3 module, Ray ray) => CheckRay(module, ray.origin, ray.direction);
+
+            private static float D(Vector3 lhsD, Vector3 rhsD) => Vector3.Dot(lhsD, rhsD);
         }
 
         public class AvatarPose : GmgDynamicFunction
