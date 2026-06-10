@@ -111,6 +111,12 @@ namespace BlackStartX.GestureManager.Editor.Library
             return rect;
         }
 
+        public static Rect GetLastRect(ref Rect lastRect)
+        {
+            if (Event.current.type == EventType.Layout || Event.current.type == EventType.Used) return lastRect;
+            return lastRect = GUILayoutUtility.GetLastRect();
+        }
+
         /*
          *  Object Field!!!
          *  Object Field!!!
@@ -149,12 +155,6 @@ namespace BlackStartX.GestureManager.Editor.Library
             EditorGUI.DrawRect(rect, new Color(0.5f, 0.5f, 0.5f, 1));
         }
 
-        public static Rect GetLastRect(ref Rect lastRect)
-        {
-            if (Event.current.type == EventType.Layout || Event.current.type == EventType.Used) return lastRect;
-            return lastRect = GUILayoutUtility.GetLastRect();
-        }
-
         public static ulong ULongField(string label, ulong value)
         {
             var backULong = value;
@@ -187,6 +187,28 @@ namespace BlackStartX.GestureManager.Editor.Library
                 GUI.FocusControl(sNull);
                 return null;
             }
+        }
+
+        public static void HorizontalGrid<T1, T2>(T2 t2, float width, float sizeWidth, float sizeHeight, float divisor, IList<T1> data, Action<T2, Rect, T1> gridRect) where T1 : class
+        {
+            var intCount = (int)(width / sizeWidth);
+            if (intCount <= 0) return;
+            GUILayout.BeginHorizontal();
+            for (var i = 0; i < data.Count + (intCount - data.Count % intCount) % intCount; i++)
+            {
+                var t = i < data.Count ? data[i] : null;
+                GUILayout.FlexibleSpace();
+                var rect = GUILayoutUtility.GetRect(sizeWidth, sizeHeight);
+                if (t != null) gridRect(t2, rect, t);
+
+                if ((i + 1) % intCount != 0) continue;
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+                GUILayout.Space(divisor);
+                GUILayout.BeginHorizontal();
+            }
+
+            GUILayout.EndHorizontal();
         }
 
         /*
@@ -241,35 +263,6 @@ namespace BlackStartX.GestureManager.Editor.Library
             public void Dispose() => GUILayout.FlexibleSpace();
         }
 
-        public static void HorizontalGrid<T1, T2>(T2 t2, float width, float sizeWidth, float sizeHeight, float divisor, IList<T1> data, Action<T2, Rect, T1> gridRect) where T1 : class
-        {
-            var intCount = (int)(width / sizeWidth);
-            if (intCount <= 0) return;
-            GUILayout.BeginHorizontal();
-            for (var i = 0; i < data.Count + (intCount - data.Count % intCount) % intCount; i++)
-            {
-                var t = i < data.Count ? data[i] : null;
-                GUILayout.FlexibleSpace();
-                var rect = GUILayoutUtility.GetRect(sizeWidth, sizeHeight);
-                if (t != null) gridRect(t2, rect, t);
-
-                if ((i + 1) % intCount != 0) continue;
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
-                GUILayout.Space(divisor);
-                GUILayout.BeginHorizontal();
-            }
-
-            GUILayout.EndHorizontal();
-        }
-
-        public static bool FoldoutSection(string name, ref bool foldout, string content = null)
-        {
-            if (GUILayout.Button(name, GestureManagerStyles.ToolHeader)) foldout = !foldout;
-            var positionRect = GUILayoutUtility.GetLastRect();
-            return foldout = EditorGUI.Foldout(positionRect, foldout, content);
-        }
-
         /*
          * Gesture Manager's Settings
          * Gesture Manager's Settings
@@ -277,6 +270,13 @@ namespace BlackStartX.GestureManager.Editor.Library
          */
 
         private const string EventName = "GestureManager's settings.";
+
+        public static bool FoldoutSection(string name, ref bool foldout, string content = null)
+        {
+            if (GUILayout.Button(name, GestureManagerStyles.ToolHeader)) foldout = !foldout;
+            var positionRect = GUILayoutUtility.GetLastRect();
+            return foldout = EditorGUI.Foldout(positionRect, foldout, content);
+        }
 
         public static T ComponentField<T>(string label, T descriptor, UnityEngine.Object o) where T : Component
         {

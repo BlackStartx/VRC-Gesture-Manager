@@ -315,11 +315,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
         {
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                if (GmgLayoutHelper.TitleButton($"Osc Message [{i}]", "-", 20))
-                {
-                    _messages.RemoveAt(i);
-                    i--;
-                }
+                if (GmgLayoutHelper.TitleButton($"Osc Message [{i}]", "-", 20)) _messages.RemoveAt(i--);
                 else MessageLayout(i);
             }
         }
