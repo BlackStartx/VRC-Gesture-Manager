@@ -123,9 +123,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
             GUILayout.Space(pixelRight);
         }
 
-        /*
-         * Input & Outputs
-         */
+        /* ╭────────────────────────────╮ *
+         * │      Inputs & Outputs      │ *
+         * ╰────────────────────────────╯ */
 
         public void OnMessage(OscPacket.Message message)
         {
@@ -137,9 +137,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
             return !_data.Output.TryGetValue(param.Name, out var tuple) ? null : Message(tuple.address, tuple.type, value);
         }
 
-        /*
-         * Configuration
-         */
+        /* ╭────────────────────────────╮ *
+         * │       Configurations       │ *
+         * ╰────────────────────────────╯ */
 
         public bool Setup()
         {

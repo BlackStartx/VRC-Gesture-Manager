@@ -96,11 +96,9 @@ namespace BlackStartX.GestureManager.Editor.Library
             return true;
         }
 
-        /*
-         *  Rect Utils!!!
-         *  Rect Utils!!!
-         *  Rect Utils!!!
-         */
+        /* ╭────────────────────────────╮ *
+         * │         Rect Utils         │ *
+         * ╰────────────────────────────╯ */
 
         private static Rect SubtractWidthRight(Rect rect, int width, out Rect rectR)
         {
@@ -117,11 +115,9 @@ namespace BlackStartX.GestureManager.Editor.Library
             return lastRect = GUILayoutUtility.GetLastRect();
         }
 
-        /*
-         *  Object Field!!!
-         *  Object Field!!!
-         *  Object Field!!!
-         */
+        /* ╭────────────────────────────╮ *
+         * │        Object Field        │ *
+         * ╰────────────────────────────╯ */
 
         private static T ObjectField<T>(string label, T unityObject) where T : UnityEngine.Object
         {
@@ -211,11 +207,9 @@ namespace BlackStartX.GestureManager.Editor.Library
             GUILayout.EndHorizontal();
         }
 
-        /*
-         * Classes...
-         * Classes...
-         * Classes...
-         */
+        /* ╭────────────────────────────╮ *
+         * │         Disposable         │ *
+         * ╰────────────────────────────╯ */
 
         internal class GuiContent : IDisposable
         {
@@ -263,11 +257,9 @@ namespace BlackStartX.GestureManager.Editor.Library
             public void Dispose() => GUILayout.FlexibleSpace();
         }
 
-        /*
-         * Gesture Manager's Settings
-         * Gesture Manager's Settings
-         * Gesture Manager's Settings
-         */
+        /* ╭────────────────────────────╮ *
+         * │  Gesture Manager Settings  │ *
+         * ╰────────────────────────────╯ */
 
         private const string EventName = "GestureManager's settings.";
 

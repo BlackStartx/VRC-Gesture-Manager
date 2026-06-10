@@ -68,9 +68,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             CreateRadial();
         }
 
-        /*
-         * Events
-         */
+        /* ╭────────────────────────────╮ *
+         * │           Events           │ *
+         * ╰────────────────────────────╯ */
 
         private void OnClickStart()
         {
@@ -88,9 +88,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             else ClosePuppet();
         }
 
-        /*
-         * Core
-         */
+        /* ╭────────────────────────────╮ *
+         * │            Core            │ *
+         * ╰────────────────────────────╯ */
 
         public override void Render(VisualElement root, Rect rect)
         {
@@ -103,9 +103,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         protected override bool RenderCondition(ModuleVrc3 module, RadialMenu menu) => menu.ToolBar.Selected == 0;
 
-        /*
-         * Puppets
-         */
+        /* ╭────────────────────────────╮ *
+         * │           Puppet           │ *
+         * ╰────────────────────────────╯ */
 
         internal void OpenPuppet(BasePuppet puppet)
         {
@@ -133,9 +133,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _cursor.Update(Event.current.mousePosition, _buttons, Puppet);
         }
 
-        /*
-         * Menu Prefabs
-         */
+        /* ╭────────────────────────────╮ *
+         * │        Menu Prefabs        │ *
+         * ╰────────────────────────────╯ */
 
         internal void MainMenuPrefab()
         {
@@ -261,9 +261,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             else QuickActionsMenuPrefab();
         }
 
-        /*
-         * Menu
-         */
+        /* ╭────────────────────────────╮ *
+         * │            Menu            │ *
+         * ╰────────────────────────────╯ */
 
         internal void OpenMenu(VRCExpressionsMenu menu, Vrc3Param param, float value)
         {
@@ -286,9 +286,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             });
         }
 
-        /*
-         * Custom Menu
-         */
+        /* ╭────────────────────────────╮ *
+         * │        Custom Menus        │ *
+         * ╰────────────────────────────╯ */
 
         private void OpenCustom(IReadOnlyList<RadialSliceBase> controls)
         {
@@ -306,9 +306,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             });
         }
 
-        /*
-         * Menu Actions
-         */
+        /* ╭────────────────────────────╮ *
+         * │        Menu Actions        │ *
+         * ╰────────────────────────────╯ */
 
         private void OpenToolPage(string s)
         {
@@ -330,9 +330,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             param?.Set(Module, 0);
         }
 
-        /*
-         * Radial Button Creation Types
-         */
+        /* ╭────────────────────────────╮ *
+         * │     Radial Button Type     │ *
+         * ╰────────────────────────────╯ */
 
         private void ButtonCreationDefault(int index, float progress, float dCurrent, float pCurrent)
         {
@@ -344,9 +344,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _textHolder.MyAdd(slice.DataHolder).transform.position = new Vector3(Mathf.Sin(pCurrent) * Size / 3, Mathf.Cos(pCurrent) * Size / 3, 0);
         }
 
-        /*
-         * Radial Stuff
-         */
+        /* ╭────────────────────────────╮ *
+         * │        Radial Stuff        │ *
+         * ╰────────────────────────────╯ */
 
         public Vrc3Param GetParam(string paramName) => Module.GetParam(paramName);
 

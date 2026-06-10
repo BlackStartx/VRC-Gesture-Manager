@@ -32,9 +32,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 .Add(RadialMenuUtility.Prefabs.NewCircleBorder(SmallSize, RadialMenuUtility.Colors.CursorBorder));
         }
 
-        /*
-         * Data
-         */
+        /* ╭────────────────────────────╮ *
+         * │            Data            │ *
+         * ╰────────────────────────────╯ */
 
         private void SetParent(VisualElement referenceLayout)
         {
@@ -83,9 +83,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             newElement.VertexColor = newElement.SelectedBorderColor;
         }
 
-        /*
-         * Static
-         */
+        /* ╭────────────────────────────╮ *
+         * │           Static           │ *
+         * ╰────────────────────────────╯ */
 
         private static float GetAngle(Vector2 mouse) => -Mathf.Atan2(mouse.x, mouse.y) * 180f / Mathf.PI + 180f;
 
@@ -126,9 +126,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             return (int)((GetAngle(mouse) + 180f / elements) % 360 / (360f / elements));
         }
 
-        /*
-         * Listeners
-         */
+        /* ╭────────────────────────────╮ *
+         * │          Listener          │ *
+         * ╰────────────────────────────╯ */
 
         [PublicAPI] public int GetChoice(int elements, bool puppet) => puppet ? -1 : GetChoice(_position, _min, _max, elements);
 
@@ -138,9 +138,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         internal bool Get4Axis(float range, out Vector4 axis) => Get4Axis(_position, range, out axis);
 
-        /*
-         * Cursor Position
-         */
+        /* ╭────────────────────────────╮ *
+         * │      Cursor Positions      │ *
+         * ╰────────────────────────────╯ */
 
         private void SetCursorPosition(float x, float y) => SetCursorPosition(new Vector2(x, y));
 

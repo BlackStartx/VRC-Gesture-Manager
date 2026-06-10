@@ -354,9 +354,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             return errorList;
         }
 
-        /*
-         * Editor GUI
-         */
+        /* ╭────────────────────────────╮ *
+         * │         Editor GUI         │ *
+         * ╰────────────────────────────╯ */
 
         private void EditorContentGesture(VisualElement element, Vrc3WeightController weightController)
         {
@@ -416,9 +416,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             GUILayout.Space(6);
         }
 
-        /*
-         * Functions
-         */
+        /* ╭────────────────────────────╮ *
+         * │          Function          │ *
+         * ╰────────────────────────────╯ */
 
         private IEnumerable<T> AvatarComponents<T>(bool includeInactive = true) where T : Component => Avatar.GetComponentsInChildren<T>(includeInactive);
 
@@ -754,9 +754,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _cullingDiamond.transform.localPosition = new Vector3(0, _baseHeight * 0.5f + CullingDiamondYOffset, 0);
         }
 
-        /*
-         * Params
-         */
+        /* ╭────────────────────────────╮ *
+         * │           Params           │ *
+         * ╰────────────────────────────╯ */
 
         private void InitParams(VRCExpressionParameters parameters)
         {
@@ -913,9 +913,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private static bool IsVrcParam(KeyValuePair<string, Vrc3Param> pair) => Vrc3DefaultParams.Parameters.ContainsKey(pair.Key);
 
-        /*
-         * Vrc Hooks
-         */
+        /* ╭────────────────────────────╮ *
+         * │        VRChat Hooks        │ *
+         * ╰────────────────────────────╯ */
 
         private void StartVrcHooks()
         {
@@ -962,9 +962,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _hooked = false;
         }
 
-        /*
-         * Vrc Hooks (Static)
-         */
+        /* ╭────────────────────────────╮ *
+         * │     Vrc Hooks (Static)     │ *
+         * ╰────────────────────────────╯ */
 
         private void AnimatorPlayAudioInit(VRC_AnimatorPlayAudio animatorPlayAudio)
         {
@@ -982,9 +982,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void AnimatorTemporaryPoseSpaceInit(VRC_AnimatorTemporaryPoseSpace animatorTemporaryPoseSpace) => animatorTemporaryPoseSpace.ApplySettings += AnimatorTemporaryPoseSpaceSettings;
 
-        /*
-         * Vrc Hooks (Dynamic)
-         */
+        /* ╭────────────────────────────╮ *
+         * │    Vrc Hooks (Dynamics)    │ *
+         * ╰────────────────────────────╯ */
 
         private void AnimatorPlayAudioEnterState(VRC_AnimatorPlayAudio audio, Animator animator)
         {
@@ -1081,9 +1081,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             PoseSpace = poseSpace.enterPoseSpace;
         }
 
-        /*
-         * Vrc Hooks (Helpers)
-         */
+        /* ╭────────────────────────────╮ *
+         * │     Vrc Hooks (Helper)     │ *
+         * ╰────────────────────────────╯ */
 
         private bool ContactBaseInit(ContactBase contactBase)
         {

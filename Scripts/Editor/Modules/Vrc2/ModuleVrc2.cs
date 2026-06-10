@@ -76,7 +76,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc2
             new("EMOTE8", GmData.EmoteStandingName[7], GmData.EmoteSeatedName[7])
         };
 
-        /**
+        /*
          *     This dictionary is needed just because I hate the original animation names.
          *     It will just translate the name of the original animation to my version of the name.
          */

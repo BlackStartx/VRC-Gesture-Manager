@@ -208,9 +208,9 @@ namespace BlackStartX.GestureManager.Editor
                 EditorGUIUtility.systemCopyBuffer = discord;
         }
 
-        /*
-         * Layout Builders
-         */
+        /* ╭────────────────────────────╮ *
+         * │       Layout Builder       │ *
+         * ╰────────────────────────────╯ */
 
         internal static void OnCheckBoxGuiHand(ModuleBase module, GestureHand hand, int position, Action<int> click, Func<int, bool> overridden = null)
         {
@@ -238,9 +238,9 @@ namespace BlackStartX.GestureManager.Editor
                 click(i);
         }
 
-        /*
-         * Async Calls
-         */
+        /* ╭────────────────────────────╮ *
+         * │         Async Call         │ *
+         * ╰────────────────────────────╯ */
 
         private static async void CheckDiscordName()
         {
@@ -263,9 +263,9 @@ namespace BlackStartX.GestureManager.Editor
             if (!string.IsNullOrEmpty(supportString)) supporters(supportString);
         }
 
-        /*
-         * Async
-         */
+        /* ╭────────────────────────────╮ *
+         * │         Async Task         │ *
+         * ╰────────────────────────────╯ */
 
         private static async Task<string> Get(string url)
         {

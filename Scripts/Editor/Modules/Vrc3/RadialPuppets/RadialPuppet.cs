@@ -75,9 +75,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
 
         public override void AfterCursor() => _text.parent.BringToFront();
 
-        /*
-         * Static
-         */
+        /* ╭────────────────────────────╮ *
+         * │           Static           │ *
+         * ╰────────────────────────────╯ */
 
         private static VisualElement ArrowElement(float scale = 1f)
         {
