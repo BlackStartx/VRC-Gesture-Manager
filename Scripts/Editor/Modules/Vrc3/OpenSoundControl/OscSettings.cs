@@ -53,7 +53,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
 
         private string TryLoadUsers()
         {
-            if (string.IsNullOrEmpty(_module.Pipeline.blueprintId)) return "The current avatar doesn't have a blueprint ID.";
+            if (string.IsNullOrEmpty(_module.Pipeline?.blueprintId)) return "The current avatar doesn't have a blueprint ID.";
             if (!Directory.Exists(VrcDirectory)) return "VRChat's directory cannot be found.";
             if (!Directory.Exists(OscDirectory)) return "VRChat's OSC directory cannot be found.";
             _users = Directory.GetDirectories(OscDirectory).Select(Path.GetFileName).ToArray();
@@ -65,7 +65,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
         private string TryLoadFile()
         {
             if (_selectedUser == -1) return "No default user found.";
-            _fileNameString = $"{_module.Pipeline.blueprintId}.json";
+            _fileNameString = $"{_module.Pipeline?.blueprintId}.json";
             _filePathString = Path.Combine(OscDirectory, _users[_selectedUser], "Avatars", _fileNameString);
             return !File.Exists(_filePathString) ? "OSC settings for the avatar cannot be found in this user folder." : null;
         }

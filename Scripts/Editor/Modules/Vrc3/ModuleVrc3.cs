@@ -103,10 +103,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static readonly GUILayoutOption SizeOptions = GUILayout.Height(RadialMenu.Size);
         private static readonly GUILayoutOption[] Options = { GUILayout.ExpandWidth(true), SizeOptions };
 
-        private VRCExpressionParameters Parameters => AvatarDescriptor.expressionParameters;
-        internal PipelineManager Pipeline => Avatar.GetComponent<PipelineManager>();
-        private VRCExpressionsMenu Menu => AvatarDescriptor.expressionsMenu;
         internal IEnumerable<RadialMenu> Radials => _radialMenus.Values;
+        private VRCExpressionsMenu Menu => AvatarDescriptor.expressionsMenu;
+        private VRCExpressionParameters Parameters => AvatarDescriptor.expressionParameters;
+        internal PipelineManager Pipeline => AvatarDescriptor.GetComponent<PipelineManager>();
         internal float ViseAmount => AvatarDescriptor.lipSync == VRC_AvatarDescriptor.LipSyncStyle.VisemeBlendShape ? 14 : 100;
         protected override List<HumanBodyBones> PoseBones => Enum.GetValues(typeof(HumanBodyBones)).Cast<HumanBodyBones>().Where(bones => bones != HumanBodyBones.LastBone).ToList();
 
@@ -779,17 +779,17 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 if (!Params.ContainsKey(nameString))
                     Params[nameString] = new Vrc3Param(nameString, type);
 
-            if (Settings.loadStored) TryAddWarning(InitStored());
+            if (Settings.loadStored) TryAddWarning(InitStored(Pipeline?.blueprintId));
 
             FilterParam();
         }
 
-        private Vrc3Warning InitStored()
+        private Vrc3Warning InitStored(string blueprintId)
         {
-            if (string.IsNullOrEmpty(Pipeline.blueprintId)) return null;
+            if (string.IsNullOrEmpty(blueprintId)) return null;
             var localString = GestureManagerSettings.UserPath(Settings.userIndex);
             if (localString == null) return null;
-            var fileString = Path.Combine(localString, Pipeline.blueprintId);
+            var fileString = Path.Combine(localString, blueprintId);
             if (!File.Exists(fileString)) return Vrc3Warning.InitLoadUnexisting;
             var file = AvatarFile.LoadData(File.ReadAllText(fileString));
             if (file == null) return Vrc3Warning.InitLoadJsonError;
