@@ -1087,8 +1087,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private bool ContactBaseInit(ContactBase contactBase)
         {
-            var animator = contactBase.GetComponentInParent<VRCAvatarDescriptor>()?.GetComponent<Animator>();
-            if (!_hooked || !animator || animator != AvatarAnimator) return true;
+            var animator = contactBase.GetComponentInParent<Animator>(includeInactive: true);
+            if (!_hooked || !animator || !_animators.Contains(animator)) return true;
 
             switch (contactBase)
             {
@@ -1154,9 +1154,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void PhysBoneBaseInit(VRCPhysBoneBase vrcPhysBoneBase)
         {
-            if (string.IsNullOrEmpty(vrcPhysBoneBase.parameter)) return;
-            var animator = vrcPhysBoneBase.GetComponentInParent<VRCAvatarDescriptor>()?.GetComponent<Animator>();
-            if (!_hooked || !animator || animator != AvatarAnimator) return;
+            var animator = vrcPhysBoneBase.GetComponentInParent<Animator>(includeInactive: true);
+            if (!_hooked || !animator || !_animators.Contains(animator)) return;
+
             PhysBoneBaseSetup(vrcPhysBoneBase);
         }
 
