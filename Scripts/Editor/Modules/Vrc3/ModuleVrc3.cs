@@ -79,8 +79,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private readonly Dictionary<(Motion, VRCAvatarDescriptor.AnimLayerType), MotionItem> _motions = new();
         internal readonly Dictionary<int, VRCAvatarDescriptor.DebugHash> AnimationHashSet = new();
         private readonly Dictionary<VRCAvatarDescriptor.AnimLayerType, LayerData> _layers = new();
+        private readonly Dictionary<ContactBase, DynamicsUsageFlags> _default = new();
         internal readonly HashSet<ContactReceiver> Receivers = new();
         private readonly HashSet<VRCPhysBoneBase> _physBones = new();
+        private readonly HashSet<ContactSender> _senders = new();
         private readonly HashSet<Animator> _animators = new();
         private readonly HashSet<Renderer> _renderers = new();
         private readonly HashSet<Cloth> _cloths = new();
@@ -182,6 +184,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _layers.Clear();
             _cloths.Clear();
             _motions.Clear();
+            _senders.Clear();
+            _default.Clear();
             _renderers.Clear();
             _physBones.Clear();
             _animators.Clear();
@@ -610,6 +614,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         public void ResetAvatar()
         {
             ResetHeight();
+            ResetContactsFlags();
             AvatarAnimator.Rebind();
             InitForAvatar();
         }
@@ -621,12 +626,19 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 manager.RemovePose(pose);
         }
 
+        private void ResetContactsFlags(bool isRemote = false)
+        {
+            foreach (var sender in _senders) sender.contentTypes = ContactFlagsFor(isRemote, sender);
+            foreach (var receiver in Receivers) receiver.contentTypes = ContactFlagsFor(isRemote, receiver);
+        }
+
         public void ResetHeight() => GetParam(Vrc3DefaultParams.EyeHeightAsMeters).Set(this, _baseHeight);
 
         internal void ForgetAvatar()
         {
             RemoveVise();
             ResetHeight();
+            ResetContactsFlags();
             SetAvatarCulled(false);
             if (OscModule.Enabled) OscModule.Forget();
             AvatarAnimator.Rebind();
@@ -681,7 +693,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void OnIKPoseChange(Vrc3Param param, float state) => _layers[VRCAvatarDescriptor.AnimLayerType.IKPose].Weight.Set(state);
 
-        private void OnIsLocalChange(Vrc3Param param, float local) => Settings.isRemote = local < 0.5f;
+        private void OnIsLocalChange(Vrc3Param param, float local) => ResetContactsFlags(Settings.isRemote = local < 0.5f);
 
         private void OnVelocityChange(Vrc3Param param, float velocity) => SetVelocityMag();
 
@@ -912,6 +924,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private bool ParamMatch(KeyValuePair<string, Vrc3Param> pair) => string.IsNullOrEmpty(_paramFilter) || pair.Key.IndexOf(_paramFilter, StringComparison.OrdinalIgnoreCase) >= 0;
 
+        private DynamicsUsageFlags ContactFlagsFor(bool isRemote, ContactBase c) => isRemote && c.localOnly ? DynamicsUsageFlags.Nothing : _default[c];
+
         private static bool IsUserParam(KeyValuePair<string, Vrc3Param> pair) => !Vrc3DefaultParams.Parameters.ContainsKey(pair.Key);
 
         private static bool IsVrcParam(KeyValuePair<string, Vrc3Param> pair) => Vrc3DefaultParams.Parameters.ContainsKey(pair.Key);
@@ -1028,6 +1042,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void AvatarParameterDriverSettings(VRC_AvatarParameterDriver driver, Animator animator)
         {
             if (!_hooked || !_animators.Contains(animator)) return;
+            if (driver.localOnly && Settings.isRemote) return;
 
             foreach (var parameter in driver.parameters)
             {
@@ -1109,10 +1124,18 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             Receivers.Add(receiver);
             receiver.playerId = _playerId;
+            _default[receiver] = receiver.contentTypes;
+            receiver.contentTypes = ContactFlagsFor(Settings.isRemote, receiver);
             receiver.paramAccess = new AnimParameterAccessAvatarGmg(this, receiver.parameter);
         }
 
-        private void SenderBaseSetup(ContactSender sender) => sender.playerId = _playerId;
+        private void SenderBaseSetup(ContactSender sender)
+        {
+            _senders.Add(sender);
+            sender.playerId = _playerId;
+            _default[sender] = sender.contentTypes;
+            sender.contentTypes = ContactFlagsFor(Settings.isRemote, sender);
+        }
 
         private void RaycastBaseSetup(VRCRaycast raycast)
         {
