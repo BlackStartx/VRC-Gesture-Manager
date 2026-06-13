@@ -182,10 +182,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _layers.Clear();
             _cloths.Clear();
             _motions.Clear();
+            _renderers.Clear();
+            _physBones.Clear();
             _animators.Clear();
             _brokenLayers.Clear();
 
             Receivers.Clear();
+            AnimationHashSet.Clear();
 
             for (var i = 1; i < intCount; i++)
             {
