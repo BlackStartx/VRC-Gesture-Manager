@@ -776,6 +776,15 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void InitParams(VRCExpressionParameters parameters)
         {
             Params.Clear();
+            foreach (var (nameString, parameter) in Vrc3DefaultParams.Parameters)
+                if (!Params.ContainsKey(nameString))
+                    Params[nameString] = new Vrc3Param(parameter);
+
+            if (parameters)
+                foreach (var parameter in parameters.parameters)
+                    if (!Params.ContainsKey(parameter.name))
+                        Params[parameter.name] = new Vrc3Param(parameter);
+
             foreach (var pair in _layers)
             foreach (var (parameter, index) in pair.Value.Parameters.Select((parameter, i) => (parameter, i)))
                 if (Params.TryGetValue(parameter.name, out var param)) param.Subscribe(pair.Value.Playable, index);
@@ -783,16 +792,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             if (parameters)
                 foreach (var parameter in parameters.parameters)
-                    if (!Params.ContainsKey(parameter.name))
-                        Params[parameter.name] = new Vrc3Param(parameter.name, ModuleVrc3Styles.Data.TypeOf[parameter.valueType]);
-
-            if (parameters)
-                foreach (var parameter in parameters.parameters)
                     Params[parameter.name].InternalSet(parameter.defaultValue);
-
-            foreach (var (nameString, type) in Vrc3DefaultParams.Parameters)
-                if (!Params.ContainsKey(nameString))
-                    Params[nameString] = new Vrc3Param(nameString, type);
 
             if (Settings.loadStored) TryAddWarning(InitStored(Pipeline?.blueprintId));
 

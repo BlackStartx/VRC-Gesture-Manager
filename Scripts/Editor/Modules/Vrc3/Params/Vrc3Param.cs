@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
+using VRC.SDK3.Avatars.ScriptableObjects;
 using VRC.SDKBase;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
@@ -12,9 +13,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
     public class Vrc3Param
     {
         private readonly Dictionary<AnimatorControllerPlayable, PlayableParam> _controllers = new();
+        private readonly VRCExpressionParameters.ValueType? _vrcType;
+        private readonly int _hashId;
 
         public readonly AnimatorControllerParameterType Type;
-        private readonly int _hashId;
         public readonly string Name;
         public int LastUpdate;
 
@@ -31,6 +33,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
         }
 
         public Vrc3Param(string name, AnimatorControllerParameterType type, AnimatorControllerPlayable playable, int index) : this(name, type) => Subscribe(playable, index);
+
+        public Vrc3Param(VRCExpressionParameters.Parameter vrcParam) : this(vrcParam.name, ModuleVrc3Styles.Data.TypeOf[vrcParam.valueType]) => _vrcType = vrcParam.valueType;
 
         public void Set(ModuleVrc3 module, float value, object source = null)
         {

@@ -1,6 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System.Collections.Generic;
-using UnityEngine;
+using VRC.SDK3.Avatars.ScriptableObjects;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 {
@@ -41,41 +41,41 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private const string VrcEmote = "VRCEmote";
         private const string AngularY = "AngularY";
 
-        public static Dictionary<string, AnimatorControllerParameterType> Parameters => new()
+        public static Dictionary<string, VRCExpressionParameters.Parameter> Parameters => new()
         {
-            { GestureRightWeight, AnimatorControllerParameterType.Float },
-            { ScaleFactorInverse, AnimatorControllerParameterType.Float },
-            { EyeHeightAsPercent, AnimatorControllerParameterType.Float },
-            { EyeHeightAsMeters, AnimatorControllerParameterType.Float },
-            { GestureLeftWeight, AnimatorControllerParameterType.Float },
-            { VelocityMagnitude, AnimatorControllerParameterType.Float },
-            { IsAnimatorEnabled, AnimatorControllerParameterType.Bool },
-            { IsOnFriendsList, AnimatorControllerParameterType.Bool },
-            { VrcFaceBlendH, AnimatorControllerParameterType.Float },
-            { VrcFaceBlendV, AnimatorControllerParameterType.Float },
-            { ScaleModified, AnimatorControllerParameterType.Bool },
-            { AvatarVersion, AnimatorControllerParameterType.Int },
-            { TrackingType, AnimatorControllerParameterType.Int },
-            { GestureRight, AnimatorControllerParameterType.Int },
-            { ScaleFactor, AnimatorControllerParameterType.Float },
-            { GestureLeft, AnimatorControllerParameterType.Int },
-            { PreviewMode, AnimatorControllerParameterType.Int },
-            { VelocityX, AnimatorControllerParameterType.Float },
-            { VelocityY, AnimatorControllerParameterType.Float },
-            { VelocityZ, AnimatorControllerParameterType.Float },
-            { InStation, AnimatorControllerParameterType.Bool },
-            { AngularY, AnimatorControllerParameterType.Float },
-            { Earmuffs, AnimatorControllerParameterType.Bool },
-            { Grounded, AnimatorControllerParameterType.Bool },
-            { MuteSelf, AnimatorControllerParameterType.Bool },
-            { VrcEmote, AnimatorControllerParameterType.Int },
-            { Upright, AnimatorControllerParameterType.Float },
-            { IsLocal, AnimatorControllerParameterType.Bool },
-            { Seated, AnimatorControllerParameterType.Bool },
-            { VRMode, AnimatorControllerParameterType.Int },
-            { Voice, AnimatorControllerParameterType.Float },
-            { Vise, AnimatorControllerParameterType.Int },
-            { Afk, AnimatorControllerParameterType.Bool }
+            { GestureRightWeight, new VRCExpressionParameters.Parameter { name = GestureRightWeight, valueType = VRCExpressionParameters.ValueType.Float } },
+            { ScaleFactorInverse, new VRCExpressionParameters.Parameter { name = ScaleFactorInverse, valueType = VRCExpressionParameters.ValueType.Float } },
+            { EyeHeightAsPercent, new VRCExpressionParameters.Parameter { name = EyeHeightAsPercent, valueType = VRCExpressionParameters.ValueType.Float } },
+            { EyeHeightAsMeters, new VRCExpressionParameters.Parameter { name = EyeHeightAsMeters, valueType = VRCExpressionParameters.ValueType.Float } },
+            { GestureLeftWeight, new VRCExpressionParameters.Parameter { name = GestureLeftWeight, valueType = VRCExpressionParameters.ValueType.Float } },
+            { VelocityMagnitude, new VRCExpressionParameters.Parameter { name = VelocityMagnitude, valueType = VRCExpressionParameters.ValueType.Float } },
+            { IsAnimatorEnabled, new VRCExpressionParameters.Parameter { name = IsAnimatorEnabled, valueType = VRCExpressionParameters.ValueType.Bool } },
+            { IsOnFriendsList, new VRCExpressionParameters.Parameter { name = IsOnFriendsList, valueType = VRCExpressionParameters.ValueType.Bool } },
+            { VrcFaceBlendH, new VRCExpressionParameters.Parameter { name = VrcFaceBlendH, valueType = VRCExpressionParameters.ValueType.Float } },
+            { VrcFaceBlendV, new VRCExpressionParameters.Parameter { name = VrcFaceBlendV, valueType = VRCExpressionParameters.ValueType.Float } },
+            { ScaleModified, new VRCExpressionParameters.Parameter { name = ScaleModified, valueType = VRCExpressionParameters.ValueType.Bool } },
+            { AvatarVersion, new VRCExpressionParameters.Parameter { name = AvatarVersion, valueType = VRCExpressionParameters.ValueType.Int } },
+            { TrackingType, new VRCExpressionParameters.Parameter { name = TrackingType, valueType = VRCExpressionParameters.ValueType.Int } },
+            { GestureRight, new VRCExpressionParameters.Parameter { name = GestureRight, valueType = VRCExpressionParameters.ValueType.Int } },
+            { ScaleFactor, new VRCExpressionParameters.Parameter { name = ScaleFactor, valueType = VRCExpressionParameters.ValueType.Float } },
+            { GestureLeft, new VRCExpressionParameters.Parameter { name = GestureLeft, valueType = VRCExpressionParameters.ValueType.Int } },
+            { PreviewMode, new VRCExpressionParameters.Parameter { name = PreviewMode, valueType = VRCExpressionParameters.ValueType.Int } },
+            { VelocityX, new VRCExpressionParameters.Parameter { name = VelocityX, valueType = VRCExpressionParameters.ValueType.Float } },
+            { VelocityY, new VRCExpressionParameters.Parameter { name = VelocityY, valueType = VRCExpressionParameters.ValueType.Float } },
+            { VelocityZ, new VRCExpressionParameters.Parameter { name = VelocityZ, valueType = VRCExpressionParameters.ValueType.Float } },
+            { InStation, new VRCExpressionParameters.Parameter { name = InStation, valueType = VRCExpressionParameters.ValueType.Bool } },
+            { AngularY, new VRCExpressionParameters.Parameter { name = AngularY, valueType = VRCExpressionParameters.ValueType.Float } },
+            { Earmuffs, new VRCExpressionParameters.Parameter { name = Earmuffs, valueType = VRCExpressionParameters.ValueType.Bool } },
+            { Grounded, new VRCExpressionParameters.Parameter { name = Grounded, valueType = VRCExpressionParameters.ValueType.Bool } },
+            { MuteSelf, new VRCExpressionParameters.Parameter { name = MuteSelf, valueType = VRCExpressionParameters.ValueType.Bool } },
+            { VrcEmote, new VRCExpressionParameters.Parameter { name = VrcEmote, valueType = VRCExpressionParameters.ValueType.Int } },
+            { Upright, new VRCExpressionParameters.Parameter { name = Upright, valueType = VRCExpressionParameters.ValueType.Float } },
+            { IsLocal, new VRCExpressionParameters.Parameter { name = IsLocal, valueType = VRCExpressionParameters.ValueType.Bool } },
+            { Seated, new VRCExpressionParameters.Parameter { name = Seated, valueType = VRCExpressionParameters.ValueType.Bool } },
+            { VRMode, new VRCExpressionParameters.Parameter { name = VRMode, valueType = VRCExpressionParameters.ValueType.Int } },
+            { Voice, new VRCExpressionParameters.Parameter { name = Voice, valueType = VRCExpressionParameters.ValueType.Float } },
+            { Vise, new VRCExpressionParameters.Parameter { name = Vise, valueType = VRCExpressionParameters.ValueType.Int } },
+            { Afk, new VRCExpressionParameters.Parameter { name = Afk, valueType = VRCExpressionParameters.ValueType.Bool } }
         };
     }
 }
