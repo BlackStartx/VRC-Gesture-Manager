@@ -41,6 +41,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         [PublicAPI] public new readonly VRCAvatarDescriptor AvatarDescriptor;
 
+        private const HideFlags MemoryFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
         private const string OutputName = "Gesture Manager";
         private const int OutputValue = 0;
 
@@ -92,6 +93,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private const float CullingDiamondReferenceEyeHeight = 1.70f;
         private const float CullingDiamondYOffset = 0.05f;
+        private VRCAvatarDescriptor _memoryClone;
         private GameObject _cullingDiamond;
         private int _preCullCountdown;
         private bool _isCulled;
@@ -159,6 +161,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         public override void InitForAvatar()
         {
+            MemoryClone();
             StartVrcHooks();
 
             AvatarAnimator.applyRootMotion = false;
@@ -282,6 +285,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             OscModule.Resume();
         }
 
+        private void MemoryClone()
+        {
+            if (!_memoryClone) (_memoryClone = UnityEngine.Object.Instantiate(AvatarDescriptor)).gameObject.name = $"{Avatar.name} (Memory Clone)";
+            _memoryClone.gameObject.hideFlags = MemoryFlags;
+            _memoryClone.gameObject.SetActive(false);
+        }
+
         protected override void Unlink()
         {
             CloseDebugWindows();
@@ -291,6 +301,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             if (AvatarAnimator) ForgetAvatar();
             StopVisualElements();
             StopVrcHooks();
+            if (_memoryClone) UnityEngine.Object.DestroyImmediate(_memoryClone.gameObject);
         }
 
         public override void EditorHeader()
