@@ -778,7 +778,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             Params.Clear();
             foreach (var (nameString, parameter) in Vrc3DefaultParams.Parameters)
                 if (!Params.ContainsKey(nameString))
-                    Params[nameString] = new Vrc3Param(parameter);
+                    Params[nameString] = new Vrc3Param(parameter, parameter.SyncType);
 
             if (parameters)
                 foreach (var parameter in parameters.parameters)

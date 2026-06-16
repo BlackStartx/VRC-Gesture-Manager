@@ -41,42 +41,54 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private const string VrcEmote = "VRCEmote";
         private const string AngularY = "AngularY";
 
-        public static Dictionary<string, VRCExpressionParameters.Parameter> Parameters => new()
+        public static Dictionary<string, DefaultParameter> Parameters => new()
         {
-            { GestureRightWeight, new VRCExpressionParameters.Parameter { name = GestureRightWeight, valueType = VRCExpressionParameters.ValueType.Float } },
-            { ScaleFactorInverse, new VRCExpressionParameters.Parameter { name = ScaleFactorInverse, valueType = VRCExpressionParameters.ValueType.Float } },
-            { EyeHeightAsPercent, new VRCExpressionParameters.Parameter { name = EyeHeightAsPercent, valueType = VRCExpressionParameters.ValueType.Float } },
-            { EyeHeightAsMeters, new VRCExpressionParameters.Parameter { name = EyeHeightAsMeters, valueType = VRCExpressionParameters.ValueType.Float } },
-            { GestureLeftWeight, new VRCExpressionParameters.Parameter { name = GestureLeftWeight, valueType = VRCExpressionParameters.ValueType.Float } },
-            { VelocityMagnitude, new VRCExpressionParameters.Parameter { name = VelocityMagnitude, valueType = VRCExpressionParameters.ValueType.Float } },
-            { IsAnimatorEnabled, new VRCExpressionParameters.Parameter { name = IsAnimatorEnabled, valueType = VRCExpressionParameters.ValueType.Bool } },
-            { IsOnFriendsList, new VRCExpressionParameters.Parameter { name = IsOnFriendsList, valueType = VRCExpressionParameters.ValueType.Bool } },
-            { VrcFaceBlendH, new VRCExpressionParameters.Parameter { name = VrcFaceBlendH, valueType = VRCExpressionParameters.ValueType.Float } },
-            { VrcFaceBlendV, new VRCExpressionParameters.Parameter { name = VrcFaceBlendV, valueType = VRCExpressionParameters.ValueType.Float } },
-            { ScaleModified, new VRCExpressionParameters.Parameter { name = ScaleModified, valueType = VRCExpressionParameters.ValueType.Bool } },
-            { AvatarVersion, new VRCExpressionParameters.Parameter { name = AvatarVersion, valueType = VRCExpressionParameters.ValueType.Int } },
-            { TrackingType, new VRCExpressionParameters.Parameter { name = TrackingType, valueType = VRCExpressionParameters.ValueType.Int } },
-            { GestureRight, new VRCExpressionParameters.Parameter { name = GestureRight, valueType = VRCExpressionParameters.ValueType.Int } },
-            { ScaleFactor, new VRCExpressionParameters.Parameter { name = ScaleFactor, valueType = VRCExpressionParameters.ValueType.Float } },
-            { GestureLeft, new VRCExpressionParameters.Parameter { name = GestureLeft, valueType = VRCExpressionParameters.ValueType.Int } },
-            { PreviewMode, new VRCExpressionParameters.Parameter { name = PreviewMode, valueType = VRCExpressionParameters.ValueType.Int } },
-            { VelocityX, new VRCExpressionParameters.Parameter { name = VelocityX, valueType = VRCExpressionParameters.ValueType.Float } },
-            { VelocityY, new VRCExpressionParameters.Parameter { name = VelocityY, valueType = VRCExpressionParameters.ValueType.Float } },
-            { VelocityZ, new VRCExpressionParameters.Parameter { name = VelocityZ, valueType = VRCExpressionParameters.ValueType.Float } },
-            { InStation, new VRCExpressionParameters.Parameter { name = InStation, valueType = VRCExpressionParameters.ValueType.Bool } },
-            { AngularY, new VRCExpressionParameters.Parameter { name = AngularY, valueType = VRCExpressionParameters.ValueType.Float } },
-            { Earmuffs, new VRCExpressionParameters.Parameter { name = Earmuffs, valueType = VRCExpressionParameters.ValueType.Bool } },
-            { Grounded, new VRCExpressionParameters.Parameter { name = Grounded, valueType = VRCExpressionParameters.ValueType.Bool } },
-            { MuteSelf, new VRCExpressionParameters.Parameter { name = MuteSelf, valueType = VRCExpressionParameters.ValueType.Bool } },
-            { VrcEmote, new VRCExpressionParameters.Parameter { name = VrcEmote, valueType = VRCExpressionParameters.ValueType.Int } },
-            { Upright, new VRCExpressionParameters.Parameter { name = Upright, valueType = VRCExpressionParameters.ValueType.Float } },
-            { IsLocal, new VRCExpressionParameters.Parameter { name = IsLocal, valueType = VRCExpressionParameters.ValueType.Bool } },
-            { Seated, new VRCExpressionParameters.Parameter { name = Seated, valueType = VRCExpressionParameters.ValueType.Bool } },
-            { VRMode, new VRCExpressionParameters.Parameter { name = VRMode, valueType = VRCExpressionParameters.ValueType.Int } },
-            { Voice, new VRCExpressionParameters.Parameter { name = Voice, valueType = VRCExpressionParameters.ValueType.Float } },
-            { Vise, new VRCExpressionParameters.Parameter { name = Vise, valueType = VRCExpressionParameters.ValueType.Int } },
-            { Afk, new VRCExpressionParameters.Parameter { name = Afk, valueType = VRCExpressionParameters.ValueType.Bool } }
+            { GestureRightWeight, new DefaultParameter { name = GestureRightWeight, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { ScaleFactorInverse, new DefaultParameter { name = ScaleFactorInverse, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { EyeHeightAsPercent, new DefaultParameter { name = EyeHeightAsPercent, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { EyeHeightAsMeters, new DefaultParameter { name = EyeHeightAsMeters, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { GestureLeftWeight, new DefaultParameter { name = GestureLeftWeight, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { VelocityMagnitude, new DefaultParameter { name = VelocityMagnitude, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { IsAnimatorEnabled, new DefaultParameter { name = IsAnimatorEnabled, valueType = VRCExpressionParameters.ValueType.Bool, SyncType = SyncType.Ik } },
+            { IsOnFriendsList, new DefaultParameter { name = IsOnFriendsList, valueType = VRCExpressionParameters.ValueType.Bool, SyncType = SyncType.No } },
+            { VrcFaceBlendH, new DefaultParameter { name = VrcFaceBlendH, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { VrcFaceBlendV, new DefaultParameter { name = VrcFaceBlendV, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { ScaleModified, new DefaultParameter { name = ScaleModified, valueType = VRCExpressionParameters.ValueType.Bool, SyncType = SyncType.Ik } },
+            { AvatarVersion, new DefaultParameter { name = AvatarVersion, valueType = VRCExpressionParameters.ValueType.Int, SyncType = SyncType.Ik } },
+            { TrackingType, new DefaultParameter { name = TrackingType, valueType = VRCExpressionParameters.ValueType.Int, SyncType = SyncType.Ik } },
+            { GestureRight, new DefaultParameter { name = GestureRight, valueType = VRCExpressionParameters.ValueType.Int, SyncType = SyncType.Ik } },
+            { ScaleFactor, new DefaultParameter { name = ScaleFactor, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { GestureLeft, new DefaultParameter { name = GestureLeft, valueType = VRCExpressionParameters.ValueType.Int, SyncType = SyncType.Ik } },
+            { PreviewMode, new DefaultParameter { name = PreviewMode, valueType = VRCExpressionParameters.ValueType.Int, SyncType = SyncType.Ik } },
+            { VelocityX, new DefaultParameter { name = VelocityX, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { VelocityY, new DefaultParameter { name = VelocityY, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { VelocityZ, new DefaultParameter { name = VelocityZ, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { InStation, new DefaultParameter { name = InStation, valueType = VRCExpressionParameters.ValueType.Bool, SyncType = SyncType.Ik } },
+            { AngularY, new DefaultParameter { name = AngularY, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { Earmuffs, new DefaultParameter { name = Earmuffs, valueType = VRCExpressionParameters.ValueType.Bool, SyncType = SyncType.Ik } },
+            { Grounded, new DefaultParameter { name = Grounded, valueType = VRCExpressionParameters.ValueType.Bool, SyncType = SyncType.Ik } },
+            { MuteSelf, new DefaultParameter { name = MuteSelf, valueType = VRCExpressionParameters.ValueType.Bool, SyncType = SyncType.Ik } },
+            { VrcEmote, new DefaultParameter { name = VrcEmote, valueType = VRCExpressionParameters.ValueType.Int, SyncType = SyncType.Ik } },
+            { Upright, new DefaultParameter { name = Upright, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { IsLocal, new DefaultParameter { name = IsLocal, valueType = VRCExpressionParameters.ValueType.Bool, SyncType = SyncType.No } },
+            { Seated, new DefaultParameter { name = Seated, valueType = VRCExpressionParameters.ValueType.Bool, SyncType = SyncType.Ik } },
+            { VRMode, new DefaultParameter { name = VRMode, valueType = VRCExpressionParameters.ValueType.Int, SyncType = SyncType.Ik } },
+            { Voice, new DefaultParameter { name = Voice, valueType = VRCExpressionParameters.ValueType.Float, SyncType = SyncType.Ik } },
+            { Vise, new DefaultParameter { name = Vise, valueType = VRCExpressionParameters.ValueType.Int, SyncType = SyncType.Ik } },
+            { Afk, new DefaultParameter { name = Afk, valueType = VRCExpressionParameters.ValueType.Bool, SyncType = SyncType.Ik } }
         };
+
+        public class DefaultParameter : VRCExpressionParameters.Parameter
+        {
+            public SyncType SyncType;
+        }
+
+        public enum SyncType
+        {
+            No,
+            Ik,
+            Playable
+        }
     }
 }
 #endif
