@@ -72,6 +72,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         [PublicAPI] public readonly Dictionary<string, Vrc3Param> Params = new();
         internal Dictionary<string, Vrc3Param> UserFilteredParams = new();
         internal Dictionary<string, Vrc3Param> VrcFilteredParams = new();
+        private readonly List<Vrc3Param> _syncParams = new();
 
         internal readonly Dictionary<string, VRC_AnimatorTrackingControl.TrackingType> TrackingControls = ModuleVrc3Styles.Data.DefaultTrackingState;
         internal bool LocomotionDisabled;
@@ -787,6 +788,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void InitParams(VRCExpressionParameters parameters)
         {
             Params.Clear();
+            _syncParams.Clear();
             foreach (var (nameString, parameter) in Vrc3DefaultParams.Parameters)
                 if (!Params.ContainsKey(nameString))
                     Params[nameString] = new Vrc3Param(parameter, parameter.SyncType);
@@ -807,6 +809,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             if (Settings.loadStored) TryAddWarning(InitStored(Pipeline?.blueprintId));
 
+            foreach (var param in Params.Values.Where(param => param.Sync != Vrc3DefaultParams.SyncType.No)) _syncParams.Add(param);
             FilterParam();
         }
 
