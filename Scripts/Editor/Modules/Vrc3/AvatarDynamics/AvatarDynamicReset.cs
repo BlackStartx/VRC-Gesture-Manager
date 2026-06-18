@@ -1,6 +1,7 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System.Collections.Generic;
 using System.Linq;
+using BlackStartX.GestureManager.Library;
 using UnityEngine;
 using VRC.Dynamics;
 using VRC.SDK3.Avatars.Components;
@@ -42,22 +43,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.AvatarDynamics
 
         private static bool IsNotPersistent(Object uObject) => !UnityEditor.EditorUtility.IsPersistent(uObject);
 
-        private static void RecreateComponent<T>(T original) where T : Component
-        {
-            var type = original.GetType();
-            var component = original.gameObject.AddComponent(type);
-            foreach (var field in type.GetFields()) field.SetValue(component, field.GetValue(original));
-            component.hideFlags = original.hideFlags;
-            Object.DestroyImmediate(original);
-        }
-
         private static void RestartContactManager()
         {
             Object.DestroyImmediate(GameObject.Find($"/{TriggerManagerName}"));
             var obj = new GameObject(TriggerManagerName);
             Object.DontDestroyOnLoad(obj);
             obj.AddComponent<ContactManager>();
-            foreach (var contact in Resources.FindObjectsOfTypeAll<ContactBase>().Where(IsNotPersistent)) RecreateComponent(contact);
+            foreach (var contact in Resources.FindObjectsOfTypeAll<ContactBase>().Where(IsNotPersistent)) GmgComponentUtility.RecreateComponent(contact);
         }
 
         private static void RestartPhysBoneManager()
@@ -69,7 +61,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.AvatarDynamics
             PhysBoneManager.Inst.IsSDK = true;
             PhysBoneManager.Inst.Init();
             obj.AddComponent<PhysBoneGrabHelper>();
-            foreach (var physBone in Resources.FindObjectsOfTypeAll<VRCPhysBoneBase>().Where(IsNotPersistent)) RecreateComponent(physBone);
+            foreach (var physBone in Resources.FindObjectsOfTypeAll<VRCPhysBoneBase>().Where(IsNotPersistent)) GmgComponentUtility.RecreateComponent(physBone);
         }
 
         public static void ReinstallAvatarColliders(ModuleVrc3 module)
