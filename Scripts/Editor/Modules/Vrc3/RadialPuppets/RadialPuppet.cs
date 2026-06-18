@@ -29,7 +29,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
             Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
             Add(RadialMenuUtility.Prefabs.NewRadialText(out _text, 0, UIEPosition.Absolute));
             SetupCheckpoint(control.Settings.Checkpoint);
-            _arrow = this.MyAdd(ArrowElement());
+            this.MyAdd((_arrow = ArrowElement()).parent);
 
             ShowValue(Get);
         }
@@ -37,9 +37,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
         private void SetupCheckpoint(float? checkpoint, float scale = 0.6f)
         {
             if (!checkpoint.HasValue) return;
-            var checkElement = this.MyAdd(ArrowElement(scale));
+            var checkElement = ArrowElement(scale);
             _checkpoint = Control.Settings.RangeFrom(checkpoint.Value);
-            checkElement.transform.rotation = _checkpoint.Rotation;
+            checkElement.parent.transform.rotation = _checkpoint.Rotation;
+            this.MyAdd(checkElement.parent);
         }
 
         private void ShowValue(float value)
@@ -47,7 +48,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
             var range = Control.Settings.RangeFrom(value);
             _progress.Progress = range.Value;
             _text.text = Control.Settings.Display(value);
-            _arrow.transform.rotation = range.Rotation;
+            _arrow.parent.transform.rotation = range.Rotation;
         }
 
         public override void UpdateValue(string pName, float value)
@@ -96,7 +97,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
                 }
             }).MyBorder(2f * scale, 0f, RadialMenuUtility.Colors.ProgressBorder);
             element.transform.rotation = Quaternion.Euler(0, 0, 45);
-            return container;
+            return element;
         }
     }
 }
