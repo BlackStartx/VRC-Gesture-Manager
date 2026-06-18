@@ -27,6 +27,11 @@ namespace BlackStartX.GestureManager.Library
             visualElement.style.borderRightWidth = width;
             visualElement.style.borderLeftWidth = width;
             visualElement.style.borderTopWidth = width;
+            return visualElement.MyBorder(color);
+        }
+
+        public static T MyBorder<T>(this T visualElement, Color color) where T : VisualElement
+        {
             visualElement.style.borderBottomColor = color;
             visualElement.style.borderRightColor = color;
             visualElement.style.borderLeftColor = color;

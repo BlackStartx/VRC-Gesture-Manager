@@ -675,7 +675,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             private void Save(ModuleVrc3 module)
             {
                 RadialMenuUtility.Colors.SaveColors(_customMain, _customBorder, _customSelected);
-                module.ReloadRadials();
+                module.ReloadColors();
             }
 
             protected internal override void Toggle(ModuleVrc3 module)

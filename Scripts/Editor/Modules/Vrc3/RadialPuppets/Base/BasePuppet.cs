@@ -15,6 +15,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets.Base
             RadialMenuUtility.Prefabs.SetCircle(this, size, RadialMenuUtility.Colors.CustomMain, RadialMenuUtility.Colors.CustomBorder);
         }
 
+        public virtual void ReloadColors()
+        {
+            VertexColor = RadialMenuUtility.Colors.CustomMain;
+            CenterColor = RadialMenuUtility.Colors.CustomMain;
+            BorderColor = RadialMenuUtility.Colors.CustomBorder;
+        }
+
         public void OnOpen() => Control.SetControlValue();
 
         public void OnClose() => Control.SetValue(0);

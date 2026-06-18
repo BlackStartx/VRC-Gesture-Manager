@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 using BlackStartX.GestureManager.Library;
+using BlackStartX.GestureManager.Library.VisualElements;
 using UIEPosition = UnityEngine.UIElements.Position;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
@@ -13,10 +14,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private readonly Vrc3WeightController _controller;
         private readonly string _target;
 
+        private GmgCircleElement _dot;
         private VisualElement _slider;
         private VisualElement _right;
         private VisualElement _left;
-        private VisualElement _dot;
 
         private VisualElement _textHolder;
         private TextElement _textWeight;
@@ -129,6 +130,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             _slider.style.opacity = Mathf.Clamp(_slider.style.opacity.value + FadeSpeed, 0f, 1f);
             _textHolder.style.opacity = Mathf.Clamp(_textHolder.style.opacity.value - FadeSpeed, 0f, 1f);
+        }
+
+        public void ReloadColors()
+        {
+            _left.style.backgroundColor = RadialMenuUtility.Colors.CustomSelected;
+            _textWeight.style.color = RadialMenuUtility.Colors.CustomSelected;
+            _dot.BorderColor = RadialMenuUtility.Colors.CustomBorder;
+            _dot.VertexColor = RadialMenuUtility.Colors.CustomMain;
         }
 
         private void SetWeight(float weight)

@@ -8,6 +8,7 @@ using BlackStartX.GestureManager.Editor.Modules.Vrc3.Params;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets.Base;
 using BlackStartX.GestureManager.Library;
+using BlackStartX.GestureManager.Library.VisualElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VRC.SDK3.Avatars.ScriptableObjects;
@@ -53,10 +54,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private VisualElement _puppetHolder;
         private VisualElement _sliceHolder;
         private VisualElement _textHolder;
+        private GmgCircleElement _border;
         private VisualElement _radial;
 
         internal RadialSliceBase PressingButton;
         private RadialSliceBase[] _buttons;
+        private VisualElement[] _lines;
 
         private readonly bool _official;
 
@@ -340,7 +343,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             slice.Progress = progress;
 
             _sliceHolder.MyAdd(new VisualElement().With(slice)).transform.rotation = Quaternion.Euler(0, 0, dCurrent);
-            _sliceHolder.MyAdd(RadialMenuUtility.Prefabs.NewBorder(MaxSize)).transform.rotation = Quaternion.Euler(0, 0, dCurrent - 90);
+            _sliceHolder.MyAdd(_lines[index] = RadialMenuUtility.Prefabs.NewBorder(MaxSize)).transform.rotation = Quaternion.Euler(0, 0, dCurrent - 90);
             _textHolder.MyAdd(slice.DataHolder).transform.position = new Vector3(Mathf.Sin(pCurrent) * Size / 3, Mathf.Cos(pCurrent) * Size / 3, 0);
         }
 
@@ -371,7 +374,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             Add(_radial = new VisualElement { pickingMode = PickingMode.Ignore, style = { justifyContent = Justify.Center, position = UIEPosition.Absolute, alignItems = Align.Center } });
             _radial.Add(_sliceHolder = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } });
-            _radial.Add(RadialMenuUtility.Prefabs.NewCircle(InnerSize, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
+            _radial.Add(_border = RadialMenuUtility.Prefabs.NewCircle(InnerSize, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
             _radial.Add(_textHolder = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } });
             _radial.Add(_puppetHolder = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } });
             _radial.Add(_cursor);
@@ -385,6 +388,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             _cursor.UpdateSelection(_buttons, deSel);
             _buttons = buttons;
+            _lines = new VisualElement[buttons.Length];
             SetButtons(buttons.Length, ButtonCreationDefault);
             _cursor.Selection = _cursor.GetChoice(buttons.Length, Puppet);
             if (_cursor.Selection != deSel) RadialCursor.Sel(_buttons[_cursor.Selection]);
@@ -434,6 +438,16 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             for (var iInt = list.Count; iInt < _menuPath.Count; iInt++) RemoveMenu(list.Count);
             _menuPath[^1].Open();
             return true;
+        }
+
+        public void ReloadColors()
+        {
+            _cursor.ReloadColors();
+            _puppet?.ReloadColors();
+            foreach (var page in _menuPath) page.ReloadColors();
+            foreach (var slice in _buttons) slice.ReloadColors();
+            _border.BorderColor = RadialMenuUtility.Colors.CustomBorder;
+            foreach (var visual in _lines) visual.style.backgroundColor = RadialMenuUtility.Colors.CustomBorder;
         }
 
         internal void UpdateRunning()

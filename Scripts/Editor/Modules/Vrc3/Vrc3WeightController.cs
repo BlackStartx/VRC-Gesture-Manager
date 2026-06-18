@@ -49,6 +49,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _rWeight.StopRendering();
         }
 
+        public void ReloadColors()
+        {
+            _lWeight.ReloadColors();
+            _rWeight.ReloadColors();
+        }
+
         public void DisableDrag()
         {
             _lWeight.Drag = false;

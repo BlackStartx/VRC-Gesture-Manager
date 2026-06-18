@@ -28,6 +28,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _controls = controls;
         }
 
+        internal void ReloadColors()
+        {
+            if (_controls == null) return;
+            foreach (var slice in _controls) slice.ReloadColors();
+        }
+
         public void Open()
         {
             if (_menu) _radialMenu.SetMenu(_menu);

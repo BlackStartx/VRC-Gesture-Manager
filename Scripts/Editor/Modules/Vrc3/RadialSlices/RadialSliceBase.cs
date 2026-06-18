@@ -85,6 +85,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices
             return this;
         }
 
+        public void ReloadColors()
+        {
+            BorderColor = RadialMenuUtility.Colors.CustomBorder;
+            IdleBorderColor = RadialMenuUtility.Colors.CustomMain;
+            SelectedBorderColor = RadialMenuUtility.Colors.CustomSelected;
+        }
+
         protected internal abstract void CheckRunningUpdate();
 
         protected abstract void CreateExtra();

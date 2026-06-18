@@ -17,7 +17,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
 
         private readonly TextElement _text;
         private readonly VisualElement _arrow;
+        private readonly GmgCircleElement _gray;
         private readonly GmgCircleElement _progress;
+        private readonly VisualElement _checkpointElement;
 
         private Range _checkpoint = Range.M1;
 
@@ -26,21 +28,22 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
         public RadialPuppet(RadialSliceControl control) : base(100, control)
         {
             _progress = this.MyAdd(RadialMenuUtility.Prefabs.NewCircle(96, RadialMenuUtility.Colors.CustomSelected, RadialMenuUtility.Colors.CustomSelected, UIEPosition.Absolute));
-            Add(RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
+            Add(_gray = RadialMenuUtility.Prefabs.NewCircle(65, RadialMenuUtility.Colors.RadialInner, RadialMenuUtility.Colors.CustomBorder, UIEPosition.Absolute));
             Add(RadialMenuUtility.Prefabs.NewRadialText(out _text, 0, UIEPosition.Absolute));
-            SetupCheckpoint(control.Settings.Checkpoint);
+            _checkpointElement = SetupCheckpoint(control.Settings.Checkpoint);
             this.MyAdd((_arrow = ArrowElement()).parent);
 
             ShowValue(Get);
         }
 
-        private void SetupCheckpoint(float? checkpoint, float scale = 0.6f)
+        private VisualElement SetupCheckpoint(float? checkpoint, float scale = 0.6f)
         {
-            if (!checkpoint.HasValue) return;
+            if (!checkpoint.HasValue) return null;
             var checkElement = ArrowElement(scale);
             _checkpoint = Control.Settings.RangeFrom(checkpoint.Value);
             checkElement.parent.transform.rotation = _checkpoint.Rotation;
             this.MyAdd(checkElement.parent);
+            return checkElement;
         }
 
         private void ShowValue(float value)
@@ -75,6 +78,19 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets
         }
 
         public override void AfterCursor() => _text.parent.BringToFront();
+
+        public override void ReloadColors()
+        {
+            base.ReloadColors();
+            _arrow.MyBorder(RadialMenuUtility.Colors.ProgressBorder);
+            _gray.BorderColor = RadialMenuUtility.Colors.CustomBorder;
+            _progress.VertexColor = RadialMenuUtility.Colors.CustomSelected;
+            _progress.BorderColor = RadialMenuUtility.Colors.CustomSelected;
+            _progress.CenterColor = RadialMenuUtility.Colors.CustomSelected;
+            _checkpointElement?.MyBorder(RadialMenuUtility.Colors.ProgressBorder);
+            _arrow.style.backgroundColor = RadialMenuUtility.Colors.CustomSelected;
+            if (_checkpointElement != null) _checkpointElement.style.backgroundColor = RadialMenuUtility.Colors.CustomSelected;
+        }
 
         /* ╭────────────────────────────╮ *
          * │           Static           │ *

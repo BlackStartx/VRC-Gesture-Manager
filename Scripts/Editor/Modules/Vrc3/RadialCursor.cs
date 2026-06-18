@@ -17,6 +17,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private const float MiddleSize = CursorSize / 1.5f;
         private const float SmallSize = CursorSize / 4f;
 
+        private readonly VisualElement _middle;
+        private readonly VisualElement _small;
+
         private float _clampReset;
         private float _clamp;
         private float _min;
@@ -28,8 +31,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         public RadialCursor()
         {
             RadialMenuUtility.Prefabs.SetCircle(this, CursorSize, RadialMenuUtility.Colors.Cursor, RadialMenuUtility.Colors.CursorBorder)
-                .MyAdd(RadialMenuUtility.Prefabs.NewCircleBorder(MiddleSize, RadialMenuUtility.Colors.CursorBorder))
-                .Add(RadialMenuUtility.Prefabs.NewCircleBorder(SmallSize, RadialMenuUtility.Colors.CursorBorder));
+                .MyAdd(_middle = RadialMenuUtility.Prefabs.NewCircleBorder(MiddleSize, RadialMenuUtility.Colors.CursorBorder))
+                .Add(_small = RadialMenuUtility.Prefabs.NewCircleBorder(SmallSize, RadialMenuUtility.Colors.CursorBorder));
         }
 
         /* ╭────────────────────────────╮ *
@@ -81,6 +84,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             newElement.DataHolder.experimental.animation.Scale(1f + scale, 100);
             newElement.CenterColor = newElement.SelectedCenterColor;
             newElement.VertexColor = newElement.SelectedBorderColor;
+        }
+
+        public void ReloadColors()
+        {
+            VertexColor = CenterColor = RadialMenuUtility.Colors.Cursor;
+            _middle.MyBorder(RadialMenuUtility.Colors.CursorBorder);
+            _small.MyBorder(RadialMenuUtility.Colors.CursorBorder);
+            BorderColor = RadialMenuUtility.Colors.CursorBorder;
         }
 
         /* ╭────────────────────────────╮ *

@@ -486,12 +486,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             foreach (var menu in Radials) menu.StopRendering();
         }
 
-        internal void ReloadRadials()
+        internal void ReloadColors()
         {
-            foreach (var weight in _weightControllers.Values) weight.StopRendering();
-            foreach (var menu in Radials) menu.StopRendering();
-            _weightControllers.Clear();
-            _radialMenus.Clear();
+            foreach (var weight in _weightControllers.Values) weight.ReloadColors();
+            foreach (var menu in Radials) menu.ReloadColors();
         }
 
         private void SwitchDebugAvatarView() => _debugAvatarWindow = !_debugAvatarWindow ? Vrc3AvatarDebugWindow.Create(this) : Vrc3AvatarDebugWindow.Close(_debugAvatarWindow);
