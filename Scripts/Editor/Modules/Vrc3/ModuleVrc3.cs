@@ -262,6 +262,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             Right = GetParam(Vrc3DefaultParams.GestureRight).IntValue();
 
             GetParam(Vrc3DefaultParams.Vise).SetOnChange(OnViseChange);
+            GetParam(Vrc3DefaultParams.VRMode).SetOnChange(OnVrModeChange);
             GetParam(Vrc3DefaultParams.Seated).SetOnChange(OnSeatedChange);
             GetParam(Vrc3DefaultParams.IsLocal).SetOnChange(OnIsLocalChange);
             GetParam(Vrc3DefaultParams.VelocityX).SetOnChange(OnVelocityChange);
@@ -269,6 +270,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             GetParam(Vrc3DefaultParams.VelocityZ).SetOnChange(OnVelocityChange);
             GetParam(Vrc3DefaultParams.GestureLeft).SetOnChange(OnGestureLeftChange);
             GetParam(Vrc3DefaultParams.GestureRight).SetOnChange(OnGestureRightChange);
+            GetParam(Vrc3DefaultParams.IsOnFriendsList).SetOnChange(OnIsOnFriendsListChange);
             GetParam(Vrc3DefaultParams.IsAnimatorEnabled).SetOnChange(OnAnimatorEnabledChange);
             GetParam(Vrc3DefaultParams.EyeHeightAsMeters).SetOnChange(OnEyeHeightAsMetersChange);
 
@@ -703,7 +705,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void OnIKPoseChange(Vrc3Param param, float state) => _layers[VRCAvatarDescriptor.AnimLayerType.IKPose].Weight.Set(state);
 
+        private void OnIsOnFriendsListChange(Vrc3Param param, float isFriend) => Settings.isOnFriendsList = isFriend > 0.5f;
+
         private void OnIsLocalChange(Vrc3Param param, float local) => ResetContactsFlags(Settings.isRemote = local < 0.5f);
+
+        private void OnVrModeChange(Vrc3Param param, float vrMode) => Settings.vrMode = vrMode > 0.5f;
 
         private void OnVelocityChange(Vrc3Param param, float velocity) => SetVelocityMag();
 
