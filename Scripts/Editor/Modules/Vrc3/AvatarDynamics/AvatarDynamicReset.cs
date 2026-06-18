@@ -12,7 +12,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.AvatarDynamics
 {
     public static class AvatarDynamicReset
     {
-        private const string TriggerManagerName = "TriggerManager";
+        private const string ContactManagerName = "ContactManager";
         private const string PhysBoneManagerName = "PhysBoneManager";
 
         private const VRCAvatarDescriptor.ColliderConfig.State Disabled = VRCAvatarDescriptor.ColliderConfig.State.Disabled;
@@ -45,8 +45,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.AvatarDynamics
 
         private static void RestartContactManager()
         {
-            Object.DestroyImmediate(GameObject.Find($"/{TriggerManagerName}"));
-            var obj = new GameObject(TriggerManagerName);
+            Object.DestroyImmediate(GameObject.Find($"/{ContactManagerName}"));
+            var obj = new GameObject(ContactManagerName);
             Object.DontDestroyOnLoad(obj);
             obj.AddComponent<ContactManager>();
             foreach (var contact in Resources.FindObjectsOfTypeAll<ContactBase>().Where(IsNotPersistent)) GmgComponentUtility.RecreateComponent(contact);
