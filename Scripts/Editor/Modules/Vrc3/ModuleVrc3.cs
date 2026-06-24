@@ -536,7 +536,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 GUILayout.Label(warning.Title, GestureManagerStyles.TextWarningHeader);
                 var rect = GUILayoutUtility.GetLastRect();
                 rect.x += rect.width - (rect.width = 30) / 2 - rect.y + (rect.y -= rect.height - (rect.height = 30) / 3) + 7;
-                if (warning.Closable && GUI.Button(rect, GestureManagerStyles.CloseTexture, GUI.skin.label)) TryRemoveWarning(warning);
+                using (new GmgLayoutHelper.GuiContent(GestureManagerStyles.IconContentColor))
+                    if (warning.Closable && GUI.Button(rect, GestureManagerStyles.CloseTexture, GUI.skin.label))
+                        TryRemoveWarning(warning);
 
                 GUILayout.Space(5);
                 using (new GUILayout.HorizontalScope())

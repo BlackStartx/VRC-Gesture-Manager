@@ -12,6 +12,7 @@ namespace BlackStartX.GestureManager.Library.VisualElements
 {
     public class GmgTmpRichTextElement : VisualElement
     {
+        private static readonly StyleColor DefaultColor = new(new Color(r: 0.824f, g: 0.824f, b: 0.824f));
         private static readonly Regex RegexStringPattern = new("(.*?<[^<>]+>|.+)", RegexOptions.Compiled);
         private static readonly Regex RegexTokenPattern = new("<[^<>]+>", RegexOptions.Compiled);
         private static readonly Regex RegexDigitPattern = new(@"\D+", RegexOptions.Compiled);
@@ -55,6 +56,7 @@ namespace BlackStartX.GestureManager.Library.VisualElements
         {
             Add(new TextElement { pickingMode = PickingMode.Ignore, text = "" });
             Add(_textHolder = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } });
+            style.color = DefaultColor;
             style.alignItems = Align.Center;
             style.fontSize = DefaultFontSize * DefaultScale;
             _textHolder.style.alignItems = Align.Center;

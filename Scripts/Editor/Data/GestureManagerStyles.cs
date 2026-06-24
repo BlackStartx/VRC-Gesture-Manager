@@ -7,6 +7,7 @@ namespace BlackStartX.GestureManager.Editor.Data
     {
         private const string BsxName = "BlackStartx";
 
+        private static GUIStyle _whiteLabel;
         private static GUIStyle _bottomStyle;
         private static GUIStyle _emoteError;
         private static GUIStyle _guiHandTitle;
@@ -31,6 +32,9 @@ namespace BlackStartX.GestureManager.Editor.Data
         private static Texture _closeTexture;
         private static Texture _plusTextureLgt;
         private static Texture _plusTexturePro;
+
+        private static Color? _iconContentLgt;
+        private static Color? _iconContentPro;
 
         internal static GUIStyle TitleStyle => _titleStyle ??= new GUIStyle(GUI.skin.label)
         {
@@ -134,6 +138,14 @@ namespace BlackStartX.GestureManager.Editor.Data
             margin = new RectOffset(0, 10, 12, 0)
         };
 
+        public static GUIStyle WhiteLabel => _whiteLabel ??= new GUIStyle(GUI.skin.label)
+        {
+            hover = { textColor = new Color(0.824f, 0.824f, 0.824f, 1.000f) },
+            normal = { textColor = new Color(0.824f, 0.824f, 0.824f, 1.000f) },
+            active = { textColor = new Color(0.824f, 0.824f, 0.824f, 1.000f) },
+            focused = { textColor = new Color(0.824f, 0.824f, 0.824f, 1.000f) }
+        };
+
         private static GUIStyle BottomStyle => _bottomStyle ??= new GUIStyle(GUI.skin.label)
         {
             fontSize = 11,
@@ -151,6 +163,10 @@ namespace BlackStartX.GestureManager.Editor.Data
         internal static Texture PlusTexture => EditorGUIUtility.isProSkin ? PlusTexturePro : PlusTextureLgt;
         private static Texture PlusTextureLgt => !_plusTextureLgt ? _plusTextureLgt = Resources.Load<Texture>("Gm/BSX_GM_PlusSign") : _plusTextureLgt;
         private static Texture PlusTexturePro => !_plusTexturePro ? _plusTexturePro = Resources.Load<Texture>("Gm/BSX_GM_PlusSign[Pro]") : _plusTexturePro;
+
+        internal static Color IconContentColor => EditorGUIUtility.isProSkin ? IconContentPro : IconContentLgt;
+        private static Color IconContentLgt => _iconContentLgt ??= Color.gray;
+        private static Color IconContentPro => _iconContentPro ??= Color.white;
 
         public static class Data
         {

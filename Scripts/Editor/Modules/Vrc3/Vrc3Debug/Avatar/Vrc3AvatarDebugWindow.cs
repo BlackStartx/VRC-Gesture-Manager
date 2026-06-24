@@ -303,7 +303,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar
 
             private static (Color? color, string text) LocomotionTuple(bool locomotion) => locomotion ? (Color.green, "Enabled") : (Color.red, "Disabled");
 
-            private static (Color? color, string text) PoseSpaceTuple(bool poseSpace) => poseSpace ? (Color.green, "Pose") : (Color.white, "Default");
+            private static (Color? color, string text) PoseSpaceTuple(bool poseSpace) => poseSpace ? (Color.green, "Pose") : (null, "Default");
         }
 
         internal static class Text

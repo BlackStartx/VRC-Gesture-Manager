@@ -36,7 +36,7 @@ namespace BlackStartX.GestureManager.Editor.Library
         {
             if (color != null)
                 using (new GuiContent(color.Value))
-                    GUILayout.Label(text, style ?? GUI.skin.label, options);
+                    GUILayout.Label(text, style ?? GestureManagerStyles.WhiteLabel, options);
             else GUILayout.Label(text, style ?? GUI.skin.label, options);
         }
 
@@ -67,6 +67,7 @@ namespace BlackStartX.GestureManager.Editor.Library
                 GUILayout.Label(text, GestureManagerStyles.TitleStyle);
                 using (new GUILayout.VerticalScope(option))
                 using (new FlexibleScope())
+                using (new GuiContent(GestureManagerStyles.IconContentColor))
                     return GUILayout.Button(active ? GestureManagerStyles.BackTexture : GestureManagerStyles.GearTexture, GUIStyle.none);
             }
         }
