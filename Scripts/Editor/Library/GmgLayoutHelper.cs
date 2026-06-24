@@ -34,15 +34,10 @@ namespace BlackStartX.GestureManager.Editor.Library
 
         private static void GuiLabel(Color? color, string text, GUIStyle style = null, params GUILayoutOption[] options)
         {
-            style ??= GUI.skin.label;
             if (color != null)
-            {
-                var textColor = GUI.contentColor;
-                GUI.contentColor = color.Value;
-                GUILayout.Label(text, style, options);
-                GUI.contentColor = textColor;
-            }
-            else GUILayout.Label(text, style, options);
+                using (new GuiContent(color.Value))
+                    GUILayout.Label(text, style ?? GUI.skin.label, options);
+            else GUILayout.Label(text, style ?? GUI.skin.label, options);
         }
 
         public static bool Button(string text, Color color, params GUILayoutOption[] options)
@@ -138,10 +133,10 @@ namespace BlackStartX.GestureManager.Editor.Library
             return GUI.Button(rectR, text.ToString());
         }
 
-        public static Color ResetColorField(string label, Color current, Color reset)
+        public static Color ResetColorField(string label, Color color, Color reset)
         {
             var rectL = SubtractWidthRight(GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label), 20, out var rectR);
-            return GUI.Button(rectR, "X") ? reset : EditorGUI.ColorField(rectL, label, current);
+            return GUI.Button(rectR, "X") ? reset : EditorGUI.ColorField(rectL, label, color);
         }
 
         public static void Divisor(int height)
@@ -263,6 +258,12 @@ namespace BlackStartX.GestureManager.Editor.Library
 
         private const string EventName = "GestureManager's settings.";
 
+        private static void RecordObjects(UnityEngine.Object[] objects, string name)
+        {
+            Undo.RecordObjects(objects, name);
+            foreach (var uObject in objects) EditorUtility.SetDirty(uObject);
+        }
+
         public static bool FoldoutSection(string name, ref bool foldout, string content = null)
         {
             if (GUILayout.Button(name, GestureManagerStyles.ToolHeader)) foldout = !foldout;
@@ -270,45 +271,44 @@ namespace BlackStartX.GestureManager.Editor.Library
             return foldout = EditorGUI.Foldout(positionRect, foldout, content);
         }
 
-        public static T ComponentField<T>(string label, T descriptor, UnityEngine.Object o) where T : Component
+        public static T ComponentField<T>(string label, T descriptor, params UnityEngine.Object[] o) where T : Component
         {
             if (descriptor == (descriptor = ObjectField(label, descriptor))) return descriptor;
-            Undo.RecordObject(o, EventName);
-            EditorUtility.SetDirty(o);
+            RecordObjects(o, EventName);
             return descriptor;
         }
 
-        public static T EnumPopup<T>(string label, T flag, UnityEngine.Object o) where T : Enum
+        public static T EnumPopup<T>(string label, T flag, params UnityEngine.Object[] o) where T : Enum
         {
             var newFlag = (T)EditorGUILayout.EnumPopup(label, flag);
             if (Equals(flag, newFlag)) return flag;
-            Undo.RecordObject(o, EventName);
-            EditorUtility.SetDirty(o);
+            RecordObjects(o, EventName);
             return newFlag;
         }
 
-        public static int Popup(string label, int index, string[] choose, UnityEngine.Object o)
+        public static int Popup(string label, int index, string[] choose, params UnityEngine.Object[] o)
         {
             if (index == (index = EditorGUILayout.Popup(label, index, choose))) return index;
-            Undo.RecordObject(o, EventName);
-            EditorUtility.SetDirty(o);
+            RecordObjects(o, EventName);
             return index;
         }
 
-        public static bool Toggle(string label, bool index, UnityEngine.Object o)
+        public static bool Toggle(string label, bool index, params UnityEngine.Object[] o)
         {
             if (index == (index = EditorGUILayout.Toggle(label, index))) return index;
-            Undo.RecordObject(o, EventName);
-            EditorUtility.SetDirty(o);
+            RecordObjects(o, EventName);
             return index;
         }
 
-        public static float Slider(float value, float leftValue, float rightValue, UnityEngine.Object o)
+        public static float Slider(string label, float value, float leftValue, float rightValue, params UnityEngine.Object[] o)
         {
-            if (Mathf.Approximately(value, value = EditorGUILayout.Slider(value, leftValue, rightValue))) return value;
-            Undo.RecordObject(o, EventName);
-            EditorUtility.SetDirty(o);
-            return value;
+            using (new GUILayout.HorizontalScope())
+            {
+                if (label != null) GUILayout.Label(label, options: GUILayout.Width(EditorGUIUtility.labelWidth));
+                if (Mathf.Approximately(value, value = EditorGUILayout.Slider(value, leftValue, rightValue))) return value;
+                RecordObjects(o, EventName);
+                return value;
+            }
         }
     }
 }

@@ -66,10 +66,10 @@ namespace BlackStartX.GestureManager.Editor.Data
             using (new GUILayout.HorizontalScope()) AvatarCullingSettings(manager);
         }
 
-        private static void AvatarCullingSettings(GestureManager manager, float leftValue = 1f, float rightValue = 10f)
+        private static void AvatarCullingSettings(GestureManager manager, string label = null, float leftValue = 1f, float rightValue = 10f)
         {
             manager.settings.simulateCulling = GmgLayoutHelper.Toggle("Simulate Culling: ", manager.settings.simulateCulling, manager);
-            using (new GmgLayoutHelper.GuiEnabled(manager.settings.simulateCulling)) manager.settings.cullingDistance = GmgLayoutHelper.Slider(manager.settings.cullingDistance, leftValue, rightValue, manager);
+            using (new GmgLayoutHelper.GuiEnabled(manager.settings.simulateCulling)) manager.settings.cullingDistance = GmgLayoutHelper.Slider(label, manager.settings.cullingDistance, leftValue, rightValue, manager);
         }
 
         private static void BlendShapeSettings(string label = "Blend-Shapes Clamping: ")
