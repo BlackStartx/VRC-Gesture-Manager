@@ -147,7 +147,7 @@ namespace BlackStartX.GestureManager.Editor.Data
 
         internal static Texture GearTexture => !_gearTexture ? _gearTexture = EditorGUIUtility.IconContent("d_Settings").image : _gearTexture;
         internal static Texture BackTexture => !_backTexture ? _backTexture = EditorGUIUtility.IconContent("d_tab_prev").image : _backTexture;
-        internal static Texture CloseTexture => !_closeTexture ? _closeTexture = EditorGUIUtility.IconContent("d_winBtn_win_close").image : _closeTexture;
+        internal static Texture CloseTexture => !_closeTexture ? _closeTexture = EditorGUIUtility.IconContent("d_clear").image : _closeTexture;
         internal static Texture PlusTexture => EditorGUIUtility.isProSkin ? PlusTexturePro : PlusTextureLgt;
         private static Texture PlusTextureLgt => !_plusTextureLgt ? _plusTextureLgt = Resources.Load<Texture>("Gm/BSX_GM_PlusSign") : _plusTextureLgt;
         private static Texture PlusTexturePro => !_plusTexturePro ? _plusTexturePro = Resources.Load<Texture>("Gm/BSX_GM_PlusSign[Pro]") : _plusTexturePro;
