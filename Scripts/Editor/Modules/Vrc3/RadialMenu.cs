@@ -143,15 +143,25 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal void MainMenuPrefab()
         {
             _menuPath.Clear();
-            var buttons = new RadialSliceBase[4];
+            var buttons = new RadialSliceBase[6];
             if (Module.DummyMode == null) buttons[0] = new RadialSliceButton(OptionMainMenuPrefab, "Options", ModuleVrc3Styles.Option);
             else buttons[0] = new RadialSliceButton(Module.DummyMode.StopExecution, Module.DummyMode.ExitDummyText, running: true);
             var isDisabled = Module.DummyMode != null || !_menu;
             buttons[1] = new RadialSliceButton(ExpressionsMenu, "Expressions", ModuleVrc3Styles.Expressions, enabled: !isDisabled);
-            buttons[2] = new RadialSliceButton(SupporterMenuPrefab, "Thanks to...", ModuleVrc3Styles.Emojis);
-            buttons[3] = new RadialSliceButton(ToolMenuPrefab, "Tools", ModuleVrc3Styles.Tools);
+            buttons[2] = new RadialSliceButton(LooksMenuPrefab, "Looks", ModuleVrc3Styles.Looks, enabled: false);
+            buttons[3] = new RadialSliceButton(SupporterMenuPrefab, "Thanks to...", ModuleVrc3Styles.Emojis);
+            buttons[4] = new RadialSliceButton(ClonesMenuPrefab, "Clones", ModuleVrc3Styles.Clones, enabled: false);
+            buttons[5] = new RadialSliceButton(ToolMenuPrefab, "Tools", ModuleVrc3Styles.Tools);
             SetButtons(buttons);
             _radialDescription = Module.DummyMode?.DummyDescription();
+        }
+
+        private void ClonesMenuPrefab()
+        {
+        }
+
+        private void LooksMenuPrefab()
+        {
         }
 
         private void OptionMainMenuPrefab()

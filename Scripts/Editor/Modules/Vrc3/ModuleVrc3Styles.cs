@@ -68,6 +68,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static Texture2D _uninitialized;
         private static Texture2D _isLocal;
         private static Texture2D _extras;
+        private static Texture2D _clones;
+        private static Texture2D _looks;
         private static Texture2D _isOnFriendsList;
         private static Texture2D _isAnimatorEnabled;
 
@@ -125,6 +127,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal static Texture2D Uninitialized => !_uninitialized ? _uninitialized = Resources.Load<Texture2D>("Vrc3/BSX_GM_Uninitialized") : _uninitialized;
         internal static Texture2D IsLocal => !_isLocal ? _isLocal = Resources.Load<Texture2D>("Vrc3/BSX_GM_IsLocal") : _isLocal;
         internal static Texture2D Extras => !_extras ? _extras = Resources.Load<Texture2D>("Vrc3/BSX_GM_Extras") : _extras;
+        internal static Texture2D Clones => !_clones ? _clones = Resources.Load<Texture2D>("Vrc3/BSX_GM_Clones") : _clones;
+        internal static Texture2D Looks => !_looks ? _looks = Resources.Load<Texture2D>("Vrc3/BSX_GM_Looks") : _looks;
         internal static Texture2D IsOnFriendsList => !_isOnFriendsList ? _isOnFriendsList = Resources.Load<Texture2D>("Vrc3/BSX_GM_IsOnFriendsList") : _isOnFriendsList;
         internal static Texture2D IsAnimatorEnabled => !_isAnimatorEnabled ? _isAnimatorEnabled = Resources.Load<Texture2D>("Vrc3/BSX_GM_IsAnimatorEnabled") : _isAnimatorEnabled;
 
