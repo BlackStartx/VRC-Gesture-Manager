@@ -592,6 +592,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             if (_radialMenus.TryGetValue(editor, out var radial)) return radial;
 
+            if (TryGetFirst(_radialMenus, valuePair => !valuePair.Key, out var pair))
+            {
+                _radialMenus[editor] = pair.Value;
+                _radialMenus.Remove(pair.Key);
+                return _radialMenus[editor];
+            }
+
             _radialMenus[editor] = new RadialMenu(this, official);
             _radialMenus[editor].Set(Menu);
             return _radialMenus[editor];
@@ -601,6 +608,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             if (_weightControllers.TryGetValue(editor, out var controller)) return controller;
 
+            if (TryGetFirst(_weightControllers, valuePair => !valuePair.Key, out var pair))
+            {
+                _weightControllers[editor] = pair.Value;
+                _weightControllers.Remove(pair.Key);
+                return _weightControllers[editor];
+            }
+
             _weightControllers[editor] = new Vrc3WeightController(this);
             return _weightControllers[editor];
         }
@@ -608,6 +622,13 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private VisualEpContainer GetOrCreateOscContainer(ScriptableObject editor)
         {
             if (_oscContainers.TryGetValue(editor, out var container)) return container;
+
+            if (TryGetFirst(_oscContainers, valuePair => !valuePair.Key, out var pair))
+            {
+                _oscContainers[editor] = pair.Value;
+                _oscContainers.Remove(pair.Key);
+                return _oscContainers[editor];
+            }
 
             _oscContainers[editor] = new VisualEpContainer();
             return _oscContainers[editor];
@@ -941,6 +962,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             UserFilteredParams = Params.Where(ParamMatch).Where(IsUserParam).ToDictionary(pair => pair.Key, pair => pair.Value);
             VrcFilteredParams = Params.Where(ParamMatch).Where(IsVrcParam).ToDictionary(pair => pair.Key, pair => pair.Value);
         }
+
+        private static bool TryGetFirst<T>(IEnumerable<T> enumerable, Func<T, bool> predicate, out T first) => !(first = enumerable.FirstOrDefault(predicate))?.Equals(default(T)) ?? true;
 
         private bool ParamMatch(KeyValuePair<string, Vrc3Param> pair) => string.IsNullOrEmpty(_paramFilter) || pair.Key.IndexOf(_paramFilter, StringComparison.OrdinalIgnoreCase) >= 0;
 
