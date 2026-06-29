@@ -24,11 +24,18 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
     {
         public static class Colors
         {
-            public static class Default
+            private static class Default
             {
                 public static readonly Color Main = new(0.14f, 0.18f, 0.2f);
                 public static readonly Color Border = new(0.1f, 0.35f, 0.38f);
                 public static readonly Color Selected = new(0.07f, 0.55f, 0.58f);
+            }
+
+            public static class Custom
+            {
+                public static readonly CustomColor Main = new(MainKeyName, Default.Main);
+                public static readonly CustomColor Border = new(BorderKeyName, Default.Border);
+                public static readonly CustomColor Selected = new(SelectedKeyName, Default.Selected);
             }
 
             public static readonly Color CenterSelected = new(0.06f, 0.2f, 0.22f);
@@ -39,8 +46,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             private const string BorderKeyName = "GM3 Border Color";
             private const string SelectedKeyName = "GM3 Selected Color";
 
-            private static Color PrefColor(string name, Color defaultColor) => ColorUtility.TryParseHtmlString(EditorPrefs.GetString(name), out var color) ? color : defaultColor;
-
             internal static readonly Color RadialTextBackground = new(0.11f, 0.11f, 0.11f, 0.49f);
             internal static readonly Color RestartButton = new(1f, 0.72f, 0.41f);
             internal static readonly Color SubIcon = new(0.22f, 0.24f, 0.27f);
@@ -49,18 +54,63 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             internal static Color CursorBorder => new(CustomBorder.r, CustomBorder.g, CustomBorder.b, CustomBorder.a - 0.5f);
             internal static Color ProgressBorder => CustomSelected * 1.5f;
 
-            public static Color CustomMain = PrefColor(MainKeyName, Default.Main);
-            public static Color CustomBorder = PrefColor(BorderKeyName, Default.Border);
-            public static Color CustomSelected = PrefColor(SelectedKeyName, Default.Selected);
+            public static Color CustomMain => Custom.Main.Color;
+            public static Color CustomBorder => Custom.Border.Color;
+            public static Color CustomSelected => Custom.Selected.Color;
 
-            public static void SaveColors(Color main, Color border, Color selected)
+            public class CustomColor
             {
-                CustomMain = main;
-                CustomBorder = border;
-                CustomSelected = selected;
-                EditorPrefs.SetString(MainKeyName, $"#{ColorUtility.ToHtmlStringRGBA(main)}");
-                EditorPrefs.SetString(BorderKeyName, $"#{ColorUtility.ToHtmlStringRGBA(border)}");
-                EditorPrefs.SetString(SelectedKeyName, $"#{ColorUtility.ToHtmlStringRGBA(selected)}");
+                private Color GetPref() => ColorUtility.TryParseHtmlString(EditorPrefs.GetString(_key), out var color) ? color : Reset;
+
+                private void SetPref(Color color) => EditorPrefs.SetString(_key, $"#{ColorUtility.ToHtmlStringRGBA(color)}");
+
+                public Color Reset { get; }
+
+                private Color _color;
+
+                public Color Color
+                {
+                    get => _color;
+                    set => Reload(_color = value, hsv: true);
+                }
+
+                private void Reload(Color value, bool hsv = false)
+                {
+                    if (hsv) Color.RGBToHSV(value, out _hSAtV[0], out _hSAtV[1], out _hSAtV[2]);
+                    Hue.InternalSet(_hSAtV[0]);
+                    Sat.InternalSet(_hSAtV[1]);
+                    Val.InternalSet(_hSAtV[2]);
+                    Colors.Reload();
+                    SetPref(value);
+                }
+
+                private readonly float[] _hSAtV = new float[3];
+                private readonly string _key;
+
+                public readonly Vrc3Param Hue;
+                public readonly Vrc3Param Sat;
+                public readonly Vrc3Param Val;
+
+                public CustomColor(string editorPrefKey, Color defaultColor)
+                {
+                    _key = editorPrefKey;
+                    Reset = defaultColor;
+                    Hue = new Vrc3Param(null, AnimatorControllerParameterType.Float, OnHueChange);
+                    Sat = new Vrc3Param(null, AnimatorControllerParameterType.Float, OnSatChange);
+                    Val = new Vrc3Param(null, AnimatorControllerParameterType.Float, OnValChange);
+                    Color = GetPref();
+                }
+
+                private void OnHueChange(Vrc3Param param, float value) => Reload(_color = Color.HSVToRGB(_hSAtV[0] = value, _hSAtV[1], _hSAtV[2]));
+                private void OnSatChange(Vrc3Param param, float value) => Reload(_color = Color.HSVToRGB(_hSAtV[0], _hSAtV[1] = value, _hSAtV[2]));
+                private void OnValChange(Vrc3Param param, float value) => Reload(_color = Color.HSVToRGB(_hSAtV[0], _hSAtV[1], _hSAtV[2] = value));
+            }
+
+            private static void Reload()
+            {
+                foreach (var pair in GestureManager.ControlledAvatars)
+                    if (pair.Value is ModuleVrc3 module)
+                        module.ReloadColors();
             }
         }
 

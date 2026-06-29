@@ -150,7 +150,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             else buttons[0] = new RadialSliceButton(Module.DummyMode.StopExecution, Module.DummyMode.ExitDummyText, running: true);
             var isDisabled = Module.DummyMode != null || !_menu;
             buttons[1] = new RadialSliceButton(ExpressionsMenu, "Expressions", ModuleVrc3Styles.Expressions, enabled: !isDisabled);
-            buttons[2] = new RadialSliceButton(LooksMenuPrefab, "Looks", ModuleVrc3Styles.Looks, enabled: false);
+            buttons[2] = new RadialSliceButton(LooksMenuPrefab, "Looks", ModuleVrc3Styles.Looks);
             buttons[3] = new RadialSliceButton(SupporterMenuPrefab, "Thanks to...", ModuleVrc3Styles.Emojis);
             buttons[4] = new RadialSliceButton(ClonesMenuPrefab, "Clones", ModuleVrc3Styles.Clones, enabled: Module.DummyMode == null);
             buttons[5] = new RadialSliceButton(ToolMenuPrefab, "Tools", ModuleVrc3Styles.Tools);
@@ -175,6 +175,29 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void LooksMenuPrefab()
         {
+            OpenCustom(new RadialSliceBase[]
+            {
+                new RadialSliceButton(MainColorMenu, "Main", ModuleVrc3Styles.CustomColorMain),
+                new RadialSliceButton(BorderColorMenu, "Border", ModuleVrc3Styles.CustomColorBorder),
+                new RadialSliceButton(SelectedColorMenu, "Selected", ModuleVrc3Styles.CustomColorSelected)
+            });
+        }
+
+        private void MainColorMenu() => CustomColorMenu(RadialMenuUtility.Colors.Custom.Main);
+
+        private void BorderColorMenu() => CustomColorMenu(RadialMenuUtility.Colors.Custom.Border);
+
+        private void SelectedColorMenu() => CustomColorMenu(RadialMenuUtility.Colors.Custom.Selected);
+
+        private void CustomColorMenu(RadialMenuUtility.Colors.CustomColor color)
+        {
+            OpenCustom(new[]
+            {
+                RadialMenuUtility.Buttons.RadialFromParam(this, "Hue", color.Hue, ModuleVrc3Styles.HuePicker),
+                RadialMenuUtility.Buttons.RadialFromParam(this, "Saturation", color.Sat, ModuleVrc3Styles.SaturationPicker),
+                RadialMenuUtility.Buttons.RadialFromParam(this, "Value", color.Val, ModuleVrc3Styles.ValuePicker)
+            });
+            _radialDescription = new RadialDescription("Don't like the new color? ", "Reset it to default", "!", _ => color.Color = color.Reset);
         }
 
         private void OptionMainMenuPrefab()
@@ -467,6 +490,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         public void ReloadColors()
         {
+            UpdateRunning();
             _cursor.ReloadColors();
             _puppet?.ReloadColors();
             foreach (var page in _menuPath) page.ReloadColors();

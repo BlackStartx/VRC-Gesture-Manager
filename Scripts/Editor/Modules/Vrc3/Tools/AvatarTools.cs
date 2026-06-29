@@ -657,26 +657,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             protected override string Description => "Customize the colors of the radial menu!";
             protected internal override bool Active => false;
 
-            private Color _customMain = RadialMenuUtility.Colors.CustomMain;
-            private Color _customBorder = RadialMenuUtility.Colors.CustomBorder;
-            private Color _customSelected = RadialMenuUtility.Colors.CustomSelected;
-
             protected override void Gui(ModuleVrc3 module)
             {
-                _customMain = GmgLayoutHelper.ResetColorField("Main Color: ", _customMain, RadialMenuUtility.Colors.Default.Main);
-                _customBorder = GmgLayoutHelper.ResetColorField("Border Color: ", _customBorder, RadialMenuUtility.Colors.Default.Border);
-                _customSelected = GmgLayoutHelper.ResetColorField("Selected Color:", _customSelected, RadialMenuUtility.Colors.Default.Selected);
-
-                GUILayout.Space(10);
-
-                if (GUILayout.Button("Save")) Save(module);
+                ColorGui("Main Color: ", RadialMenuUtility.Colors.Custom.Main);
+                ColorGui("Border Color: ", RadialMenuUtility.Colors.Custom.Border);
+                ColorGui("Selected Color: ", RadialMenuUtility.Colors.Custom.Selected);
             }
 
-            private void Save(ModuleVrc3 module)
-            {
-                RadialMenuUtility.Colors.SaveColors(_customMain, _customBorder, _customSelected);
-                module.ReloadColors();
-            }
+            private static void ColorGui(string label, RadialMenuUtility.Colors.CustomColor color) => color.Color = GmgLayoutHelper.ResetColorField(label, color.Color, color.Reset);
 
             protected internal override void Toggle(ModuleVrc3 module)
             {
