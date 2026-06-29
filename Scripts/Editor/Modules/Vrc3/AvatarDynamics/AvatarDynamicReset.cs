@@ -45,22 +45,24 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.AvatarDynamics
 
         private static void RestartContactManager()
         {
-            Object.DestroyImmediate(GameObject.Find($"/{ContactManagerName}"));
-            var obj = new GameObject(ContactManagerName);
-            Object.DontDestroyOnLoad(obj);
-            obj.AddComponent<ContactManager>();
+            var contactObject = GameObject.Find($"/{ContactManagerName}");
+            if (contactObject) Object.DestroyImmediate(contactObject);
+            contactObject = new GameObject(ContactManagerName);
+            Object.DontDestroyOnLoad(contactObject);
+            contactObject.AddComponent<ContactManager>();
             foreach (var contact in Resources.FindObjectsOfTypeAll<ContactBase>().Where(IsNotPersistent)) GmgComponentUtility.RecreateComponent(contact);
         }
 
         private static void RestartPhysBoneManager()
         {
-            Object.DestroyImmediate(GameObject.Find($"/{PhysBoneManagerName}"));
-            var obj = new GameObject(PhysBoneManagerName);
-            Object.DontDestroyOnLoad(obj);
-            obj.AddComponent<PhysBoneManager>();
+            var physBoneObject = GameObject.Find($"/{PhysBoneManagerName}");
+            if (physBoneObject) Object.DestroyImmediate(physBoneObject);
+            physBoneObject = new GameObject(PhysBoneManagerName);
+            Object.DontDestroyOnLoad(physBoneObject);
+            physBoneObject.AddComponent<PhysBoneManager>();
             PhysBoneManager.Inst.IsSDK = true;
             PhysBoneManager.Inst.Init();
-            obj.AddComponent<PhysBoneGrabHelper>();
+            physBoneObject.AddComponent<PhysBoneGrabHelper>();
             foreach (var physBone in Resources.FindObjectsOfTypeAll<VRCPhysBoneBase>().Where(IsNotPersistent)) GmgComponentUtility.RecreateComponent(physBone);
         }
 
