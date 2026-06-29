@@ -1,5 +1,6 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,6 +17,8 @@ using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Osc;
+using BlackStartX.GestureManager.Library;
+using BlackStartX.GestureManager.Modules;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -52,6 +55,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private Vrc3AvatarDebugWindow _debugAvatarWindow;
         internal Vrc3OscDebugWindow DebugOscWindow;
 
+        private Vector3 _cloneOffset = new(-1, 0, 0);
+        private float _cloneSyncDelay = 0.1f;
+        private float _lastCloneSync;
+        private float _cloneDelay;
+
         private PlayableGraph _playableGraph;
         private string _paramFilter;
         private Vector3 _baseScale;
@@ -67,6 +75,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private readonly List<VRCAvatarDescriptor.AnimLayerType> _brokenLayers = new();
         private readonly List<Vrc3Warning> _warnings = new();
+        private readonly List<ModuleVrc3> _clones = new();
+        private readonly ModuleVrc3 _source;
         private readonly int _playerId;
 
         [PublicAPI] public readonly Dictionary<string, Vrc3Param> Params = new();
@@ -115,10 +125,10 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal float ViseAmount => AvatarDescriptor.lipSync == VRC_AvatarDescriptor.LipSyncStyle.VisemeBlendShape ? 14 : 100;
         protected override List<HumanBodyBones> PoseBones => Enum.GetValues(typeof(HumanBodyBones)).Cast<HumanBodyBones>().Where(bones => bones != HumanBodyBones.LastBone).ToList();
 
-        public ModuleVrc3(VRCAvatarDescriptor avatarDescriptor) : base(avatarDescriptor)
+        public ModuleVrc3(VRCAvatarDescriptor avatarDescriptor, ModuleVrc3 source = null) : base(avatarDescriptor)
         {
-            _playerId = avatarDescriptor.GetInstanceID();
-            AvatarDescriptor = avatarDescriptor;
+            AvatarDescriptor = (_source = source) == null ? avatarDescriptor : LinkToSource(avatarDescriptor);
+            _playerId = AvatarAnimator.GetInstanceID();
             AvatarTools = new AvatarTools();
             OscModule = new OscModule(this);
 
@@ -130,6 +140,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             if (!EditorApplication.isPlaying || EditorApplication.isPlayingOrWillChangePlaymode)
             {
+                CloneUpdate();
                 if (Broken) return;
                 OscModule.Update();
                 AvatarTools.OnUpdate(this);
@@ -304,6 +315,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             if (AvatarAnimator) ForgetAvatar();
             StopVisualElements();
             StopVrcHooks();
+            RemoveClones();
             if (_memoryClone) UnityEngine.Object.DestroyImmediate(_memoryClone.gameObject);
         }
 
@@ -435,6 +447,120 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                     SwitchDebugAvatarView();
 
             GUILayout.Space(6);
+        }
+
+        /* ╭────────────────────────────╮ *
+         * │           Clones           │ *
+         * ╰────────────────────────────╯ */
+
+        public void CloneGui()
+        {
+            GUILayout.Label(_clones.Count == 0 ? "Use the buttons above to create clones!" : "Clones", GestureManagerStyles.GuiHandTitle);
+            foreach (var module in _clones)
+                using (new GmgLayoutHelper.GuiBackground(module.GetParam(Vrc3DefaultParams.IsOnFriendsList).BoolValue() ? Color.yellow : Color.cyan))
+                using (new GUILayout.HorizontalScope(GestureManagerStyles.EmoteError))
+                    CloneGui(module);
+            CloneSettingsGui();
+        }
+
+        private void CloneSettingsGui(float leftValue = 0, float rightValue = 10)
+        {
+            if (_clones.Count != 0) GUILayout.Label("Settings", GestureManagerStyles.GuiHandTitle);
+            if (GmgLayoutHelper.Vector3Field("Clone Distance:", ref _cloneOffset)) ReorderClones();
+            _cloneSyncDelay = GmgLayoutHelper.Slider("Network Delay:", _cloneSyncDelay, leftValue, rightValue);
+        }
+
+        private void CloneGui(ModuleVrc3 module, string label = null, float leftValue = 0, float rightValue = 10)
+        {
+            using (new GUILayout.VerticalScope())
+            {
+                GUILayout.Label(module.Avatar.name);
+                using (new GUILayout.HorizontalScope())
+                {
+                    GUILayout.Label("Delay: ");
+                    module._cloneDelay = GmgLayoutHelper.Slider(label, module._cloneDelay, leftValue, rightValue);
+                }
+            }
+
+            var isOnFriendParam = module.GetParam(Vrc3DefaultParams.IsOnFriendsList);
+            if (GmgLayoutHelper.IconButton(ModuleVrc3Styles.IsOnFriendsList))
+            {
+                isOnFriendParam.Set(module, !isOnFriendParam.BoolValue());
+                module.Avatar.name = Clone(isOnFriendParam.BoolValue());
+            }
+
+            using (new GmgLayoutHelper.GuiBackground(Color.red))
+                if (GmgLayoutHelper.IconButton(ModuleVrc3Styles.Back))
+                    UnityEngine.Object.DestroyImmediate(module.AvatarDescriptor);
+        }
+
+        private VRCAvatarDescriptor LinkToSource(VRCAvatarDescriptor copy)
+        {
+            var data = new GameObject { hideFlags = MemoryFlags, name = Avatar.name };
+            var aPipeline = copy.GetComponent<PipelineManager>();
+            copy = GmgComponentUtility.MoveComponent(copy, data);
+            GmgComponentUtility.MoveComponent(aPipeline, data);
+            copy.gameObject.hideFlags = MemoryFlags;
+            _memoryClone = _source._memoryClone;
+            return copy;
+        }
+
+        internal void SpawnClone(ModuleSettings settings)
+        {
+            var cloneDescriptor = UnityEngine.Object.Instantiate(_memoryClone);
+            cloneDescriptor.gameObject.name = Clone(settings.isOnFriendsList);
+            cloneDescriptor.transform.position = NextClonePosition();
+            var module = new ModuleVrc3(cloneDescriptor, this);
+            module.Avatar.SetActive(true);
+            module.Connect(settings);
+            _clones.Add(module);
+        }
+
+        private string Clone(bool isOnFriendsList) => $"{Avatar.name} ({(isOnFriendsList ? "Friend" : "Remote")})";
+
+        private Vector3 NextClonePosition() => Avatar.transform.position + _cloneOffset * (_clones.Count + 1);
+
+        private void CloneUpdate()
+        {
+            var isSync = Time.time - _lastCloneSync > _cloneSyncDelay;
+            for (var index = 0; index < _clones.Count; index++)
+                if (_clones[index].IsCloneInvalid()) RemoveClone(index--);
+                else if (isSync) _clones[index].Sync();
+            if (isSync) _lastCloneSync = Time.time;
+        }
+
+        private void Sync() => AvatarDescriptor.StartCoroutine(SyncCoRoutine(_source._syncParams.Select(param => param.SyncValue()).ToArray(), Time.time));
+
+        private IEnumerator SyncCoRoutine(float[] valueArray, float startTime)
+        {
+            while (Time.time - startTime < _cloneDelay) yield return null;
+            for (var index = 0; index < valueArray.Length; index++) _syncParams[index].Set(this, valueArray[index]);
+        }
+
+        private bool IsCloneInvalid() => !Avatar || !AvatarAnimator || !AvatarDescriptor || _layers.Any(IsBroken);
+
+        private void RemoveClones()
+        {
+            foreach (var cloneModule in _clones) cloneModule.DestroyCloneObjects();
+            _clones.Clear();
+        }
+
+        private void RemoveClone(int index)
+        {
+            _clones[index].DestroyCloneObjects();
+            _clones.RemoveAt(index);
+            ReorderClones();
+        }
+
+        private void ReorderClones()
+        {
+            for (var index = 0; index < _clones.Count; index++) _clones[index].Avatar.transform.position = Avatar.transform.position + _cloneOffset * (index + 1);
+        }
+
+        private void DestroyCloneObjects()
+        {
+            if (AvatarDescriptor) UnityEngine.Object.Destroy(AvatarDescriptor.gameObject);
+            if (Avatar) UnityEngine.Object.Destroy(Avatar);
         }
 
         /* ╭────────────────────────────╮ *
@@ -673,6 +799,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             RemoveVise();
             ResetHeight();
+            RemoveClones();
             ResetContactsFlags();
             SetAvatarCulled(false);
             if (OscModule.Enabled) OscModule.Forget();

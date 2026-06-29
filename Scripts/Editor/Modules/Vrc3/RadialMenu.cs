@@ -9,6 +9,7 @@ using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialSlices;
 using BlackStartX.GestureManager.Editor.Modules.Vrc3.RadialPuppets.Base;
 using BlackStartX.GestureManager.Library;
 using BlackStartX.GestureManager.Library.VisualElements;
+using BlackStartX.GestureManager.Modules;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VRC.SDK3.Avatars.ScriptableObjects;
@@ -49,6 +50,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private bool Puppet => _puppet != null;
         private BasePuppet _puppet;
+        private Action _radialMenuGui;
         private RadialDescription _radialDescription;
 
         private VisualElement _puppetHolder;
@@ -150,7 +152,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             buttons[1] = new RadialSliceButton(ExpressionsMenu, "Expressions", ModuleVrc3Styles.Expressions, enabled: !isDisabled);
             buttons[2] = new RadialSliceButton(LooksMenuPrefab, "Looks", ModuleVrc3Styles.Looks, enabled: false);
             buttons[3] = new RadialSliceButton(SupporterMenuPrefab, "Thanks to...", ModuleVrc3Styles.Emojis);
-            buttons[4] = new RadialSliceButton(ClonesMenuPrefab, "Clones", ModuleVrc3Styles.Clones, enabled: false);
+            buttons[4] = new RadialSliceButton(ClonesMenuPrefab, "Clones", ModuleVrc3Styles.Clones, enabled: Module.DummyMode == null);
             buttons[5] = new RadialSliceButton(ToolMenuPrefab, "Tools", ModuleVrc3Styles.Tools);
             SetButtons(buttons);
             _radialDescription = Module.DummyMode?.DummyDescription();
@@ -158,7 +160,18 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
         private void ClonesMenuPrefab()
         {
+            if (Module.DummyMode != null) return;
+            OpenCustom(new RadialSliceBase[]
+            {
+                new RadialSliceButton(AddNewRemote, "New Remote", ModuleVrc3Styles.SpawnRemoteUser),
+                new RadialSliceButton(AddNewFriend, "New Friend", ModuleVrc3Styles.SpawnRemoteFriend)
+            });
+            _radialMenuGui = Module.CloneGui;
         }
+
+        private void AddNewRemote() => Module.SpawnClone(new ModuleSettings { isRemote = true });
+
+        private void AddNewFriend() => Module.SpawnClone(new ModuleSettings { isRemote = true, isOnFriendsList = true });
 
         private void LooksMenuPrefab()
         {
@@ -367,6 +380,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             GUILayout.Space(10);
             _radialDescription?.Show();
+            _radialMenuGui?.Invoke();
         }
 
         public void Set(VRCExpressionsMenu menu)
@@ -409,6 +423,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void SetButtons(int len, float radCurrent, float piCurrent, Action<int, float, float, float> create)
         {
             _radialDescription = null;
+            _radialMenuGui = null;
             _sliceHolder.Clear();
             _textHolder.Clear();
             AddButtons(len, radCurrent, piCurrent, create);

@@ -72,6 +72,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private static Texture2D _looks;
         private static Texture2D _isOnFriendsList;
         private static Texture2D _isAnimatorEnabled;
+        private static Texture2D _spawnRemoteFriend;
+        private static Texture2D _spawnRemoteUser;
 
         internal static GUIStyle Url => _url ??= new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.blue } };
         internal static GUIStyle UrlPro => _urlPro ??= new GUIStyle(GUI.skin.label) { padding = new RectOffset(-6, -6, 1, 0), normal = { textColor = Color.cyan } };
@@ -130,7 +132,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         internal static Texture2D Clones => !_clones ? _clones = Resources.Load<Texture2D>("Vrc3/BSX_GM_Clones") : _clones;
         internal static Texture2D Looks => !_looks ? _looks = Resources.Load<Texture2D>("Vrc3/BSX_GM_Looks") : _looks;
         internal static Texture2D IsOnFriendsList => !_isOnFriendsList ? _isOnFriendsList = Resources.Load<Texture2D>("Vrc3/BSX_GM_IsOnFriendsList") : _isOnFriendsList;
+        internal static Texture2D SpawnRemoteUser => !_spawnRemoteUser ? _spawnRemoteUser = Resources.Load<Texture2D>("Vrc3/BSX_GM_SpawnRemoteUser") : _spawnRemoteUser;
         internal static Texture2D IsAnimatorEnabled => !_isAnimatorEnabled ? _isAnimatorEnabled = Resources.Load<Texture2D>("Vrc3/BSX_GM_IsAnimatorEnabled") : _isAnimatorEnabled;
+        internal static Texture2D SpawnRemoteFriend => !_spawnRemoteFriend ? _spawnRemoteFriend = Resources.Load<Texture2D>("Vrc3/BSX_GM_SpawnRemoteFriend") : _spawnRemoteFriend;
 
         public static class Data
         {

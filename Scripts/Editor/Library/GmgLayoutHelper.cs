@@ -58,6 +58,8 @@ namespace BlackStartX.GestureManager.Editor.Library
             }
         }
 
+        public static bool IconButton(Texture2D texture) => GUILayout.Button(texture, options: new[] { GUILayout.Width(37), GUILayout.Height(37) });
+
         public static bool SettingsGearLabel(string text, bool active, int pixels = 25)
         {
             using (new GUILayout.HorizontalScope())
@@ -309,6 +311,17 @@ namespace BlackStartX.GestureManager.Editor.Library
                 if (Mathf.Approximately(value, value = EditorGUILayout.Slider(value, leftValue, rightValue))) return value;
                 RecordObjects(o, EventName);
                 return value;
+            }
+        }
+
+        public static bool Vector3Field(string label, ref Vector3 value, params UnityEngine.Object[] o)
+        {
+            using (new GUILayout.HorizontalScope())
+            {
+                if (label != null) GUILayout.Label(label, options: GUILayout.Width(EditorGUIUtility.labelWidth));
+                if (value == (value = EditorGUILayout.Vector3Field(label: "", value))) return false;
+                RecordObjects(o, EventName);
+                return true;
             }
         }
     }
