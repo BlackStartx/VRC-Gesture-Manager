@@ -218,6 +218,7 @@ Thanks to every friend and person who helped or supported me during the developm
 - Stack_
 - Ahri~
 - Nayu
+- [FairyVans](https://fairyvans.carrd.co/)
 - ♡ GaNyan ♡
 - [BluWizard](https://github.com/BluWizard10)
 - TheIceDragonz
