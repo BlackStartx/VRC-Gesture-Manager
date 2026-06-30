@@ -3,7 +3,7 @@ using GmgAvatarDescriptor =
 #if VRC_SDK_VRCSDK2 || VRC_SDK_VRCSDK3
     VRC.SDKBase.VRC_AvatarDescriptor;
 #else
-    UnityEngine.Component;
+    UnityEngine.UI.GraphicRaycaster;
 #endif
 using UnityEngine;
 
