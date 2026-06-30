@@ -30,14 +30,16 @@ namespace BlackStartX.GestureManager.Editor.Library
 
         public static IEnumerable<EditorWindow> GetInspectorWindows() => Resources.FindObjectsOfTypeAll<EditorWindow>().Where(window => window.titleContent.text == "Inspector");
 
-        public static void GuiLabel((Color? color, string text) tuple, params GUILayoutOption[] options) => GuiLabel(tuple.color, tuple.text, null, options);
+        public static void GuiLabel((Color? color, string text) tuple, params GUILayoutOption[] options) => GuiLabel(LabelRect(options), tuple);
 
-        private static void GuiLabel(Color? color, string text, GUIStyle style = null, params GUILayoutOption[] options)
+        public static void GuiLabel(Rect rect, (Color? color, string text) tuple) => GuiLabel(rect, tuple.color, tuple.text);
+
+        private static void GuiLabel(Rect rect, Color? color, string text, GUIStyle style = null)
         {
             if (color != null)
                 using (new GuiContent(color.Value))
-                    GUILayout.Label(text, style ?? GestureManagerStyles.WhiteLabel, options);
-            else GUILayout.Label(text, style ?? GUI.skin.label, options);
+                    GUI.Label(rect, text, style ?? GestureManagerStyles.WhiteLabel);
+            else GUI.Label(rect, text, style ?? GUI.skin.label);
         }
 
         public static bool Button(string text, Color color, params GUILayoutOption[] options)
@@ -97,6 +99,8 @@ namespace BlackStartX.GestureManager.Editor.Library
         /* ╭────────────────────────────╮ *
          * │         Rect Utils         │ *
          * ╰────────────────────────────╯ */
+
+        public static Rect LabelRect(params GUILayoutOption[] options) => GUILayoutUtility.GetRect(new GUIContent(), GUI.skin.label, options);
 
         private static Rect SubtractWidthRight(Rect rect, int width, out Rect rectR)
         {
