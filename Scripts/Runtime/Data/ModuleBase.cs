@@ -89,6 +89,7 @@ namespace BlackStartX.GestureManager.Data
 
         public void SavePose(Animator animator)
         {
+            if (!animator.isHuman) return;
             foreach (var bodyBone in Bones)
             {
                 var boneTransform = animator.GetBoneTransform(bodyBone);
