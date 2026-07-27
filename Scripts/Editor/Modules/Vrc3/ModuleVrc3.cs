@@ -1115,6 +1115,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             ContactBase.OnInitialize += ContactBaseInit;
             VRCPhysBoneBase.OnInitialize += PhysBoneBaseInit;
+            VRCRaycast.OnInitializeParameters += RaycastInit;
 
             VRC_AnimatorPlayAudio.Initialize += AnimatorPlayAudioInit;
             VRC_AnimatorLayerControl.Initialize += AnimatorLayerControlInit;
@@ -1136,6 +1137,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             ContactBase.OnInitialize -= ContactBaseInit;
             VRCPhysBoneBase.OnInitialize -= PhysBoneBaseInit;
+            VRCRaycast.OnInitializeParameters -= RaycastInit;
 
             VRC_AnimatorPlayAudio.Initialize -= AnimatorPlayAudioInit;
             VRC_AnimatorLayerControl.Initialize -= AnimatorLayerControlInit;
@@ -1354,6 +1356,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             if (!_hooked || !animator || !_animators.Contains(animator)) return;
 
             PhysBoneBaseSetup(vrcPhysBoneBase);
+        }
+
+        private void RaycastInit(VRCRaycast vrcRaycast)
+        {
+            var animator = vrcRaycast.GetComponentInParent<Animator>(includeInactive: true);
+            if (!_hooked || !animator || !_animators.Contains(animator)) return;
+
+            RaycastBaseSetup(vrcRaycast);
         }
 
         private void PhysBoneBaseSetup(VRCPhysBoneBase vrcPhysBoneBase)
