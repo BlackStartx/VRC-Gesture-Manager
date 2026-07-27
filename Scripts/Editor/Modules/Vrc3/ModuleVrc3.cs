@@ -1,4 +1,4 @@
-﻿#if VRC_SDK_VRCSDK3
+#if VRC_SDK_VRCSDK3
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -94,6 +94,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private readonly Dictionary<ContactBase, DynamicsUsageFlags> _default = new();
         internal readonly HashSet<ContactReceiver> Receivers = new();
         private readonly HashSet<VRCPhysBoneBase> _physBones = new();
+        private readonly HashSet<VRCRaycast> _raycasts = new();
         private readonly HashSet<ContactSender> _senders = new();
         private readonly HashSet<Animator> _animators = new();
         private readonly HashSet<Renderer> _renderers = new();
@@ -203,6 +204,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _default.Clear();
             _renderers.Clear();
             _physBones.Clear();
+            _raycasts.Clear();
             _animators.Clear();
             _brokenLayers.Clear();
 
@@ -288,6 +290,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             PoseOf(Settings.initialPose)?.Set(this, true);
 
             foreach (var physBone in AvatarComponents<VRCPhysBoneBase>()) PhysBoneBaseSetup(physBone);
+            foreach (var vrcRaycast in AvatarComponents<VRCRaycast>()) RaycastSetup(vrcRaycast);
             foreach (var receiver in AvatarComponents<ContactReceiver>()) ReceiverBaseSetup(receiver);
             foreach (var coSender in AvatarComponents<ContactSender>()) SenderBaseSetup(coSender);
             foreach (var vRaycast in AvatarComponents<VRCRaycast>()) RaycastBaseSetup(vRaycast);
@@ -1115,6 +1118,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             ContactBase.OnInitialize += ContactBaseInit;
             VRCPhysBoneBase.OnInitialize += PhysBoneBaseInit;
+            VRCRaycast.OnInitializeParameters += RaycastInit;
 
             VRC_AnimatorPlayAudio.Initialize += AnimatorPlayAudioInit;
             VRC_AnimatorLayerControl.Initialize += AnimatorLayerControlInit;
@@ -1136,6 +1140,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
 
             ContactBase.OnInitialize -= ContactBaseInit;
             VRCPhysBoneBase.OnInitialize -= PhysBoneBaseInit;
+            VRCRaycast.OnInitializeParameters -= RaycastInit;
 
             VRC_AnimatorPlayAudio.Initialize -= AnimatorPlayAudioInit;
             VRC_AnimatorLayerControl.Initialize -= AnimatorLayerControlInit;
@@ -1365,6 +1370,22 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             vrcPhysBoneBase.param_Angle = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_ANGLE);
             vrcPhysBoneBase.playerId = _playerId;
             _physBones.Add(vrcPhysBoneBase);
+        }
+
+        private void RaycastInit(VRCRaycast vrcRaycast)
+        {
+            var animator = vrcRaycast.GetComponentInParent<Animator>(includeInactive: true);
+            if (!_hooked || !animator || !_animators.Contains(animator)) return;
+
+            RaycastSetup(vrcRaycast);
+        }
+
+        private void RaycastSetup(VRCRaycast vrcRaycast)
+        {
+            vrcRaycast.param_Distance = new AnimParameterAccessAvatarGmg(this, vrcRaycast.Parameter + VRCRaycast.PARAM_DISTANCE);
+            vrcRaycast.param_Ratio = new AnimParameterAccessAvatarGmg(this, vrcRaycast.Parameter + VRCRaycast.PARAM_RATIO);
+            vrcRaycast.param_Hit = new AnimParameterAccessAvatarGmg(this, vrcRaycast.Parameter + VRCRaycast.PARAM_HIT);
+            _raycasts.Add(vrcRaycast);
         }
 
         internal struct LayerData
