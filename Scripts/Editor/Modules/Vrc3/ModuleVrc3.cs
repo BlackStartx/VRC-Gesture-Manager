@@ -166,6 +166,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         {
             if (PoseMode) SetPose(AvatarAnimator);
             if (DummyMode == null) Avatar.transform.localScale = _baseScale * _scale;
+            foreach (var module in _clones) module.NetPose(module.AvatarAnimator, _cloneSyncDelay);
             AvatarTools.OnLateUpdate(this);
         }
 
@@ -529,7 +530,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             if (isSync) _lastCloneSync = Time.time;
         }
 
-        private void Sync() => AvatarDescriptor.StartCoroutine(SyncCoRoutine(_source._syncParams.Select(param => param.SyncValue()).ToArray(), Time.time));
+        private void Sync()
+        {
+            SavePose(_source.AvatarAnimator);
+            AvatarDescriptor.StartCoroutine(SyncCoRoutine(_source._syncParams.Select(param => param.SyncValue()).ToArray(), Time.time));
+        }
 
         private IEnumerator SyncCoRoutine(float[] valueArray, float startTime)
         {

@@ -18,6 +18,7 @@ namespace BlackStartX.GestureManager.Data
         public string Name => !Avatar ? null : Avatar.name;
 
         private readonly Dictionary<HumanBodyBones, (Vector3, Quaternion)> _poseBones = new();
+        private readonly Dictionary<HumanBodyBones, (Vector3, Quaternion)> _syncBones = new();
 
         private List<string> _errorList = new();
         private List<string> _warningList = new();
@@ -106,6 +107,19 @@ namespace BlackStartX.GestureManager.Data
                 var (boneVector, boneQuaternion) = _poseBones[bodyBone];
                 boneTransform.localRotation = boneQuaternion;
                 boneTransform.localPosition = boneVector;
+            }
+        }
+
+        protected void NetPose(Animator animator, float duration = 0.2f)
+        {
+            duration = duration <= 0f ? 1f : Time.deltaTime / Mathf.Min(0.2f, duration);
+            foreach (var bodyBone in _poseBones.Keys)
+            {
+                var boneTransform = animator.GetBoneTransform(bodyBone);
+                if (!boneTransform) continue;
+                var (boneVector, boneQuaternion) = _poseBones[bodyBone];
+                var (syncVector, syncQuaternion) = _syncBones.TryGetValue(bodyBone, out var tuple) ? tuple : (boneTransform.localPosition, boneTransform.localRotation);
+                _syncBones[bodyBone] = (boneTransform.localPosition = Vector3.Lerp(syncVector, boneVector, duration), boneTransform.localRotation = Quaternion.Slerp(syncQuaternion, boneQuaternion, duration));
             }
         }
 
