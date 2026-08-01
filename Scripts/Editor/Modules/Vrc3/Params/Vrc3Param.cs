@@ -126,7 +126,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
                 case AnimatorControllerParameterType.Trigger:
                     Set(module, floatValue != 0f);
                     break;
-                default: throw new ArgumentOutOfRangeException();
+                default: return;
             }
         }
 
@@ -148,7 +148,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
                 case AnimatorControllerParameterType.Trigger:
                     Set(module, UnityEngine.Random.Range(0.0f, 1.0f) < chance);
                     break;
-                default: throw new ArgumentOutOfRangeException();
+                default: return;
             }
         }
 
@@ -201,7 +201,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
                     case AnimatorControllerParameterType.Bool:
                         _playable.SetBool(_hashId, value != 0f);
                         break;
-                    default: throw new ArgumentOutOfRangeException();
+                    default: return;
                 }
             }
         }

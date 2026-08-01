@@ -300,7 +300,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Vrc3Debug.Avatar
                         isValue = GmgLayoutHelper.UnclampedBool(rect, param.Name, isValue);
                         if (EditorGUI.EndChangeCheck()) param.Set(module, isValue);
                         break;
-                    default: throw new ArgumentOutOfRangeException();
+                    default: return;
                 }
             }
 

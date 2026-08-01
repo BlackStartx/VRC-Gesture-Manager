@@ -840,8 +840,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                     return;
                 case VRC_AvatarDescriptor.LipSyncStyle.Default:
                 case VRC_AvatarDescriptor.LipSyncStyle.VisemeParameterOnly:
-                    return;
-                default: throw new ArgumentOutOfRangeException();
+                default: return;
             }
         }
 
@@ -1240,7 +1239,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                     case VRC_AvatarParameterDriver.ChangeType.Random:
                         param.Random(this, parameter.valueMin, parameter.valueMax, parameter.chance);
                         break;
-                    default: throw new ArgumentOutOfRangeException();
+                    default: continue;
                 }
             }
         }

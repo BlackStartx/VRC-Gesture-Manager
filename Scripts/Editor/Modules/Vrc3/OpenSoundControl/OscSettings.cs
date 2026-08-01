@@ -191,7 +191,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.OpenSoundControl
                 case AnimatorControllerParameterType.Trigger:
                     param.Set(_module, EndpointControl.BoolValue(value));
                     break;
-                default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
+                default: return;
             }
         }
 
