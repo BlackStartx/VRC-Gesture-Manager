@@ -244,6 +244,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             OpenCustom(new[]
             {
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "T Pose", Module.PoseT, ModuleVrc3Styles.PoseT),
+                RadialMenuUtility.Buttons.ToggleFromParam(this, "Head Chops", Module.HeadChop, ModuleVrc3Styles.HeadChops),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "AFK", GetParam(Vrc3DefaultParams.Afk), ModuleVrc3Styles.Afk),
                 RadialMenuUtility.Buttons.RadialFromParam(this, Vrc3DefaultParams.Vise, GetParam(Vrc3DefaultParams.Vise), ModuleVrc3Styles.Visemes, amplify: Module.ViseAmount),
                 RadialMenuUtility.Buttons.ToggleFromParam(this, "Seated", GetParam(Vrc3DefaultParams.Seated), ModuleVrc3Styles.Seated),

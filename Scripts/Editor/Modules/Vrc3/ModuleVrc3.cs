@@ -91,14 +91,17 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private readonly Dictionary<(Motion, VRCAvatarDescriptor.AnimLayerType), MotionItem> _motions = new();
         internal readonly Dictionary<int, VRCAvatarDescriptor.DebugHash> AnimationHashSet = new();
         private readonly Dictionary<VRCAvatarDescriptor.AnimLayerType, LayerData> _layers = new();
+        private readonly Dictionary<Transform, VRCHeadChop.HeadChopData> _scaleFactors = new();
         private readonly Dictionary<ContactBase, DynamicsUsageFlags> _default = new();
         internal readonly HashSet<ContactReceiver> Receivers = new();
         private readonly HashSet<VRCPhysBoneBase> _physBones = new();
         private readonly HashSet<ContactSender> _senders = new();
+        private readonly HashSet<VRCHeadChop> _headChops = new();
         private readonly HashSet<Animator> _animators = new();
         private readonly HashSet<Renderer> _renderers = new();
         private readonly HashSet<Cloth> _cloths = new();
 
+        internal readonly Vrc3Param HeadChop;
         internal readonly Vrc3Param PoseIK;
         internal readonly Vrc3Param PoseT;
 
@@ -132,6 +135,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             AvatarTools = new AvatarTools();
             OscModule = new OscModule(this);
 
+            HeadChop = new Vrc3Param(null, AnimatorControllerParameterType.Bool, OnHeadChopChange);
             PoseIK = new Vrc3Param(null, AnimatorControllerParameterType.Bool, OnIKPoseChange);
             PoseT = new Vrc3Param(null, AnimatorControllerParameterType.Bool, OnTPoseChange);
         }
@@ -165,7 +169,9 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         public override void LateUpdate()
         {
             if (PoseMode) SetPose(AvatarAnimator);
+            if (_scaleFactors.Count != 0) ResetHeadChops();
             if (DummyMode == null) Avatar.transform.localScale = _baseScale * _scale;
+            if (HeadChop.BoolValue()) ApplyHeadChop(GetParam(Vrc3DefaultParams.VRMode));
             foreach (var module in _clones) module.NetPose(module.AvatarAnimator, _cloneSyncDelay);
             AvatarTools.OnLateUpdate(this);
         }
@@ -202,10 +208,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _motions.Clear();
             _senders.Clear();
             _default.Clear();
+            _headChops.Clear();
             _renderers.Clear();
             _physBones.Clear();
             _animators.Clear();
             _brokenLayers.Clear();
+            _scaleFactors.Clear();
 
             Receivers.Clear();
             AnimationHashSet.Clear();
@@ -291,10 +299,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             foreach (var physBone in AvatarComponents<VRCPhysBoneBase>()) PhysBoneBaseSetup(physBone);
             foreach (var receiver in AvatarComponents<ContactReceiver>()) ReceiverBaseSetup(receiver);
             foreach (var coSender in AvatarComponents<ContactSender>()) SenderBaseSetup(coSender);
+            foreach (var headChop in AvatarComponents<VRCHeadChop>()) HeadChopBaseSetup(headChop);
             foreach (var vRaycast in AvatarComponents<VRCRaycast>()) RaycastBaseSetup(vRaycast);
             foreach (var animator in AvatarComponents<Animator>()) AnimatorBaseSetup(animator);
             foreach (var renderer in AvatarComponents<Renderer>()) RendererBaseSetup(renderer);
             foreach (var cloth in AvatarComponents<Cloth>()) ClothBaseSetup(cloth);
+            HeadChopIfNotChopped(HumanBodyBones.Head);
             _animators.Add(AvatarAnimator);
 
             OscModule.Resume();
@@ -780,6 +790,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         public void ResetAvatar()
         {
             ResetHeight();
+            ResetHeadChops();
             ResetContactsFlags();
             AvatarAnimator.Rebind();
             InitForAvatar();
@@ -805,6 +816,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             RemoveVise();
             ResetHeight();
             RemoveClones();
+            ResetHeadChops();
             ResetContactsFlags();
             SetAvatarCulled(false);
             if (OscModule.Enabled) OscModule.Forget();
@@ -851,6 +863,50 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _ => null
         };
 
+        private void HeadChopIfNotChopped(HumanBodyBones bodyBone)
+        {
+            if (!AvatarAnimator.isHuman) return;
+            var boneTransform = AvatarAnimator.GetBoneTransform(bodyBone);
+            if (!boneTransform || _headChops.Any(chop => chop.targetBones.Any(bone => bone.transform == boneTransform))) return;
+            var headChop = boneTransform.gameObject.AddComponent<VRCHeadChop>();
+            headChop.targetBones = new[] { new VRCHeadChop.HeadChopBone { transform = boneTransform, scaleFactor = 0.0001f } };
+            headChop.hideFlags = HideFlags.HideAndDontSave;
+            _headChops.Add(headChop);
+        }
+
+        private void ApplyHeadChop(Vrc3Param vrParam)
+        {
+            _scaleFactors.Clear();
+            foreach (var chop in _headChops.Where(chopComp => (bool)chopComp)) chop.AppendDesiredTransformScaleFactors(_scaleFactors, vrParam.BoolValue(), Avatar.transform);
+            if (_scaleFactors.Count != 0) EvaluateHierarchyRecursive(Avatar.transform);
+        }
+
+        private void EvaluateHierarchyRecursive(Transform currentTransform, float accumulatedParentFactor = 1.0f)
+        {
+            if (_scaleFactors.TryGetValue(currentTransform, out var data))
+            {
+                currentTransform.localScale = data.OriginalLocalScale * (Mathf.Max(data.DesiredAppliedScaleFactor, 1e-6f) / Mathf.Max(accumulatedParentFactor, 1e-6f));
+                currentTransform.position = Avatar.transform.TransformPoint(data.OriginalRootSpacePosition);
+                accumulatedParentFactor = Mathf.Max(data.DesiredAppliedScaleFactor, 1e-6f);
+            }
+
+            for (var i = 0; i < currentTransform.childCount; i++) EvaluateHierarchyRecursive(currentTransform.GetChild(i), accumulatedParentFactor);
+        }
+
+        private void ResetHeadChops()
+        {
+            if (_scaleFactors.Count == 0) return;
+
+            foreach (var (dTransform, data) in _scaleFactors)
+            {
+                if (!dTransform) continue;
+                dTransform.localPosition = data.OriginalLocalPosition;
+                dTransform.localScale = data.OriginalLocalScale;
+            }
+
+            _scaleFactors.Clear();
+        }
+
         internal void EnableEditMode() => DummyMode = new Vrc3EditMode(this, _motions.Values);
 
         private void OnEditorPauseChange(PauseState obj) => OnEditorPauseChange(obj == PauseState.Paused, Vrc3Warning.PausedEditor);
@@ -866,6 +922,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void OnVrModeChange(Vrc3Param param, float vrMode) => Settings.vrMode = vrMode > 0.5f;
 
         private void OnVelocityChange(Vrc3Param param, float velocity) => SetVelocityMag();
+
+        private void OnHeadChopChange(Vrc3Param param, float chops) => ResetHeadChops();
 
         private void OnGestureLeftChange(Vrc3Param param, float left)
         {
@@ -1312,6 +1370,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _default[sender] = sender.contentTypes;
             sender.contentTypes = ContactFlagsFor(Settings.isRemote, sender);
         }
+
+        private void HeadChopBaseSetup(VRCHeadChop headChop) => _headChops.Add(headChop);
 
         private void RaycastBaseSetup(VRCRaycast raycast)
         {
