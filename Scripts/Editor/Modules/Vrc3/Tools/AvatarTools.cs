@@ -289,7 +289,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
             private void CheckRay(ModuleVrc3 module, Vector3 origin, Vector3 direction, float lenght = 1000f)
             {
                 var endVector = origin + direction * lenght;
-                foreach (var receiver in module.Receivers.Where(IsValid)) OnContactValue(receiver, ValueFor(DistanceFrom(receiver, origin, endVector, out lenght), lenght, receiver.receiverType is ContactReceiver.ReceiverType.Proximity));
+                foreach (var receiver in module.Receivers) OnContactValue(receiver, IsValid(receiver) ? ValueFor(DistanceFrom(receiver, origin, endVector, out lenght), lenght, receiver.receiverType is ContactReceiver.ReceiverType.Proximity) : 0);
             }
 
             private static float DistanceFrom(ContactBase receiver, Vector3 origin, Vector3 end, out float lenght)
@@ -344,7 +344,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Tools
 
             private static Vector3 CapsuleVector(CollisionScene.Shape shape, float uniform, float lenght) => shape.axis * Mathf.Max(0.0f, Mathf.Min(shape.height * uniform, shape.maxSize) * 0.5f - lenght);
 
-            private bool IsValid(ContactReceiver receiver) => receiver.isActiveAndEnabled && string.IsNullOrEmpty(_tag.Property) || receiver.collisionTags.Contains(_tag.Property);
+            private bool IsValid(ContactReceiver receiver) => receiver.isActiveAndEnabled && (string.IsNullOrEmpty(_tag.Property) || receiver.collisionTags.Contains(_tag.Property));
 
             private static float ValueFor(float distance, float lenght, bool isProximity) => isProximity ? Mathf.Clamp01((lenght - distance) / lenght) : distance < 0 ? 1f : 0f;
 
