@@ -77,7 +77,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private readonly List<Vrc3Warning> _warnings = new();
         private readonly List<ModuleVrc3> _clones = new();
         private readonly ModuleVrc3 _source;
-        private readonly int _playerId;
 
         [PublicAPI] public readonly Dictionary<string, Vrc3Param> Params = new();
         internal Dictionary<string, Vrc3Param> UserFilteredParams = new();
@@ -131,7 +130,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         public ModuleVrc3(VRCAvatarDescriptor avatarDescriptor, ModuleVrc3 source = null) : base(avatarDescriptor)
         {
             AvatarDescriptor = (_source = source) == null ? avatarDescriptor : LinkToSource(avatarDescriptor);
-            _playerId = AvatarAnimator.GetInstanceID();
             AvatarTools = new AvatarTools();
             OscModule = new OscModule(this);
 
@@ -1356,7 +1354,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void ReceiverBaseSetup(ContactReceiver receiver)
         {
             Receivers.Add(receiver);
-            receiver.playerId = _playerId;
             _default[receiver] = receiver.contentTypes;
             receiver.contentTypes = ContactFlagsFor(Settings.isRemote, receiver);
             receiver.paramAccess = new AnimParameterAccessAvatarGmg(this, receiver.parameter);
@@ -1365,7 +1362,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void SenderBaseSetup(ContactSender sender)
         {
             _senders.Add(sender);
-            sender.playerId = _playerId;
             _default[sender] = sender.contentTypes;
             sender.contentTypes = ContactFlagsFor(Settings.isRemote, sender);
         }
@@ -1436,7 +1432,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             vrcPhysBoneBase.param_Stretch = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_STRETCH);
             vrcPhysBoneBase.param_Squish = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_SQUISH);
             vrcPhysBoneBase.param_Angle = new AnimParameterAccessAvatarGmg(this, vrcPhysBoneBase.parameter + VRCPhysBoneBase.PARAM_ANGLE);
-            vrcPhysBoneBase.playerId = _playerId;
             _physBones.Add(vrcPhysBoneBase);
         }
 
