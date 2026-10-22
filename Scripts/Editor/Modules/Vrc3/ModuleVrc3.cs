@@ -1169,7 +1169,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
         private void StartVrcHooks()
         {
             if (_hooked) return;
-            AvatarDynamicReset.CheckOrRestartManagers();
             AvatarDynamicReset.ReinstallAvatarColliders(this);
 
             EditorApplication.pauseStateChanged += OnEditorPauseChange;

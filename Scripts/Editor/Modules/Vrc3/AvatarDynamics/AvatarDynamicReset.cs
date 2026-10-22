@@ -1,20 +1,15 @@
 ﻿#if VRC_SDK_VRCSDK3
 using System.Collections.Generic;
 using System.Linq;
-using BlackStartX.GestureManager.Library;
 using UnityEngine;
 using VRC.Dynamics;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Dynamics.Contact.Components;
-using VRC.SDK3.Dynamics.PhysBone;
 
 namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.AvatarDynamics
 {
     public static class AvatarDynamicReset
     {
-        private const string ContactManagerName = "ContactManager";
-        private const string PhysBoneManagerName = "PhysBoneManager";
-
         private const VRCAvatarDescriptor.ColliderConfig.State Disabled = VRCAvatarDescriptor.ColliderConfig.State.Disabled;
 
         private static readonly Dictionary<HumanBodyBones, (System.Func<VRCAvatarDescriptor, VRCAvatarDescriptor.ColliderConfig>, string[])> Bones = new()
@@ -34,40 +29,6 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.AvatarDynamics
             { HumanBodyBones.LeftMiddleProximal, (vrc => vrc.collider_fingerMiddleL, new[] { "Finger", "FingerL", "FingerMiddle", "FingerMiddleL" }) },
             { HumanBodyBones.RightMiddleProximal, (vrc => vrc.collider_fingerMiddleR, new[] { "Finger", "FingerR", "FingerMiddle", "FingerMiddleR" }) }
         };
-
-        public static void CheckOrRestartManagers()
-        {
-            if (!ContactManager.Inst) RestartContactManager();
-            if (!PhysBoneManager.Inst) RestartPhysBoneManager();
-        }
-
-        private static bool IsNotPersistent(Object uObject) => !UnityEditor.EditorUtility.IsPersistent(uObject);
-
-        private static void RestartContactManager()
-        {
-            var contactObject = GameObject.Find($"/{ContactManagerName}");
-            contactObject?.GetComponent<ContactManager>()?.Awake();
-            if (contactObject) Object.DestroyImmediate(contactObject);
-            contactObject = new GameObject(ContactManagerName);
-            Object.DontDestroyOnLoad(contactObject);
-            contactObject.AddComponent<ContactManager>();
-            contactObject.hideFlags = HideFlags.HideInHierarchy;
-            foreach (var contact in Resources.FindObjectsOfTypeAll<ContactBase>().Where(IsNotPersistent)) GmgComponentUtility.RecreateComponent(contact);
-        }
-
-        private static void RestartPhysBoneManager()
-        {
-            var physBoneObject = GameObject.Find($"/{PhysBoneManagerName}");
-            if (physBoneObject) Object.DestroyImmediate(physBoneObject);
-            physBoneObject = new GameObject(PhysBoneManagerName);
-            Object.DontDestroyOnLoad(physBoneObject);
-            physBoneObject.AddComponent<PhysBoneManager>();
-            PhysBoneManager.Inst.IsSDK = true;
-            PhysBoneManager.Inst.Init();
-            physBoneObject.AddComponent<PhysBoneGrabHelper>();
-            physBoneObject.hideFlags = HideFlags.HideInHierarchy;
-            foreach (var physBone in Resources.FindObjectsOfTypeAll<VRCPhysBoneBase>().Where(IsNotPersistent)) GmgComponentUtility.RecreateComponent(physBone);
-        }
 
         public static void ReinstallAvatarColliders(ModuleVrc3 module)
         {
