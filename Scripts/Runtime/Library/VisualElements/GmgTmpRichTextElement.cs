@@ -54,7 +54,7 @@ namespace BlackStartX.GestureManager.Library.VisualElements
 
         public GmgTmpRichTextElement()
         {
-            Add(new TextElement { pickingMode = PickingMode.Ignore, text = "" });
+            Add(new TextElement { pickingMode = PickingMode.Ignore, text = "|", style = { visibility = Visibility.Hidden } });
             Add(_textHolder = new VisualElement { pickingMode = PickingMode.Ignore, style = { position = UIEPosition.Absolute } });
             style.color = DefaultColor;
             style.alignItems = Align.Center;
