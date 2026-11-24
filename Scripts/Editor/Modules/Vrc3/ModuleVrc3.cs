@@ -1283,7 +1283,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
                 switch (parameter.type)
                 {
                     case VRC_AvatarParameterDriver.ChangeType.Set:
-                        param.Set(this, parameter.value, driver);
+                        param.SetFromDriver(this, parameter.value, driver);
                         break;
                     case VRC_AvatarParameterDriver.ChangeType.Add:
                         param.Add(this, parameter.value);
