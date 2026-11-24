@@ -1357,6 +1357,58 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3
             _default[receiver] = receiver.contentTypes;
             receiver.contentTypes = ContactFlagsFor(Settings.isRemote, receiver);
             receiver.paramAccess = new AnimParameterAccessAvatarGmg(this, receiver.parameter);
+            BindAdvancedContactParameters(receiver);
+        }
+
+        private void BindAdvancedContactParameters(ContactReceiver receiver)
+        {
+            if (string.IsNullOrWhiteSpace(receiver.parameter)) return;
+
+            AnimParameterAccessAvatarGmg Access(string suffix) =>
+                new AnimParameterAccessAvatarGmg(this, receiver.parameter + suffix);
+
+            if (receiver.HasAdvancedParameter(ContactReceiver.AdvancedParameter.SenderType))
+                receiver.param_SenderType = Access(ContactReceiver.PARAM_SENDER_TYPE);
+
+            if (receiver.HasAdvancedParameter(ContactReceiver.AdvancedParameter.SenderLocalPosition))
+            {
+                receiver.param_SenderLocalPositionX = Access(ContactReceiver.PARAM_SENDER_LOCAL_POSITION_X);
+                receiver.param_SenderLocalPositionY = Access(ContactReceiver.PARAM_SENDER_LOCAL_POSITION_Y);
+                receiver.param_SenderLocalPositionZ = Access(ContactReceiver.PARAM_SENDER_LOCAL_POSITION_Z);
+            }
+
+            if (receiver.HasAdvancedParameter(ContactReceiver.AdvancedParameter.SenderLossyScale))
+            {
+                receiver.param_SenderLossyScaleX = Access(ContactReceiver.PARAM_SENDER_LOSSY_SCALE_X);
+                receiver.param_SenderLossyScaleY = Access(ContactReceiver.PARAM_SENDER_LOSSY_SCALE_Y);
+                receiver.param_SenderLossyScaleZ = Access(ContactReceiver.PARAM_SENDER_LOSSY_SCALE_Z);
+            }
+
+            if (receiver.HasAdvancedParameter(ContactReceiver.AdvancedParameter.SenderVelocity))
+            {
+                receiver.param_SenderVelocityX = Access(ContactReceiver.PARAM_SENDER_VELOCITY_X);
+                receiver.param_SenderVelocityY = Access(ContactReceiver.PARAM_SENDER_VELOCITY_Y);
+                receiver.param_SenderVelocityZ = Access(ContactReceiver.PARAM_SENDER_VELOCITY_Z);
+                receiver.param_SenderVelocityMagnitude = Access(ContactReceiver.PARAM_SENDER_VELOCITY_MAGNITUDE);
+            }
+
+            if (receiver.HasAdvancedParameter(ContactReceiver.AdvancedParameter.PointSeparation))
+                receiver.param_PointSeparation = Access(ContactReceiver.PARAM_POINT_SEPARATION);
+
+            if (receiver.HasAdvancedParameter(ContactReceiver.AdvancedParameter.ProximitySpeed)
+                && receiver.receiverType == ContactReceiver.ReceiverType.Proximity)
+                receiver.param_ProximitySpeed = Access(ContactReceiver.PARAM_PROXIMITY_SPEED);
+
+            if (!receiver.HasAdvancedParameter(ContactReceiver.AdvancedParameter.CollisionTags)
+                || receiver.collisionTags == null) return;
+
+            receiver.param_CollisionTags = new Dictionary<string, IAnimParameterAccess>();
+            receiver.param_CollisionTagsEnabledSet = new HashSet<string>();
+            foreach (var tag in receiver.collisionTags)
+            {
+                if (!string.IsNullOrWhiteSpace(tag))
+                    receiver.param_CollisionTags[tag] = Access(ContactReceiver.PARAM_COLLISION_TAG_PREFIX + tag);
+            }
         }
 
         private void SenderBaseSetup(ContactSender sender)
