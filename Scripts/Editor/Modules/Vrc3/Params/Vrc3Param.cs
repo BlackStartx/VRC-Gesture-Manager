@@ -14,6 +14,8 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
     {
         private readonly Dictionary<AnimatorControllerPlayable, PlayableParam> _controllers = new();
         private readonly VRCExpressionParameters.ValueType? _vrcType;
+        private readonly int _bitWidth;
+        private readonly bool _signed;
         private readonly int _hashId;
 
         public readonly AnimatorControllerParameterType Type;
@@ -37,7 +39,12 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 
         public Vrc3Param(string name, AnimatorControllerParameterType type, AnimatorControllerPlayable playable, int index) : this(name, type) => Subscribe(playable, index);
 
-        public Vrc3Param(VRCExpressionParameters.Parameter vrcParam, Vrc3DefaultParams.SyncType? sync = null) : this(vrcParam.name, ModuleVrc3Styles.Data.TypeOf[vrcParam.valueType], sync: sync ?? SyncFor(vrcParam)) => _vrcType = vrcParam.valueType;
+        public Vrc3Param(VRCExpressionParameters.Parameter vrcParam, Vrc3DefaultParams.SyncType? sync = null) : this(vrcParam.name, ModuleVrc3Styles.Data.TypeOf[vrcParam.valueType], sync: sync ?? SyncFor(vrcParam))
+        {
+            _vrcType = vrcParam.valueType;
+            _bitWidth = vrcParam.GetBitWidthByType();
+            _signed = vrcParam.GetRepresentationByType() == VRCExpressionParameters.Parameter.ValueRepresentation.Signed;
+        }
 
         public void Set(ModuleVrc3 module, float value, object source = null)
         {
@@ -99,7 +106,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
         {
             VRCExpressionParameters.ValueType.Int => ClampI(IntValue()),
             VRCExpressionParameters.ValueType.Bool => BoolValue() ? 1f : 0f,
-            VRCExpressionParameters.ValueType.Float => (sbyte)Mathf.Round(ClampF(FloatValue()) * 127f) / 127f,
+            VRCExpressionParameters.ValueType.Float => QuantizeFloat(FloatValue()),
             _ => 0
         };
 
@@ -109,7 +116,14 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
             foreach (var pair in _controllers.Where(pair => ModuleVrc3.IsValid(pair.Key))) pair.Value.SetValue(value, source);
         }
 
-        public void Add(ModuleVrc3 module, float value) => Set(module, FloatValue() + value);
+        internal void SetFromDriver(ModuleVrc3 module, float value, VRC_AvatarParameterDriver source = null)
+        {
+            // VRChat suppresses approximately equal float writes from parameter drivers.
+            if (Type == AnimatorControllerParameterType.Float && Mathf.Approximately(FloatValue(), value)) return;
+            Set(module, value, source);
+        }
+
+        public void Add(ModuleVrc3 module, float value) => SetFromDriver(module, FloatValue() + value);
 
         public void Copy(ModuleVrc3 module, float floatValue, bool range, float sourceMin, float sourceMax, float destMin, float destMax)
         {
@@ -117,7 +131,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
             switch (Type)
             {
                 case AnimatorControllerParameterType.Float:
-                    Set(module, floatValue);
+                    SetFromDriver(module, floatValue);
                     break;
                 case AnimatorControllerParameterType.Int:
                     Set(module, (int)floatValue);
@@ -139,7 +153,7 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
             switch (Type)
             {
                 case AnimatorControllerParameterType.Float:
-                    Set(module, UnityEngine.Random.Range(min, max));
+                    SetFromDriver(module, UnityEngine.Random.Range(min, max));
                     break;
                 case AnimatorControllerParameterType.Int:
                     Set(module, UnityEngine.Random.Range((int)min, (int)max + 1));
@@ -154,7 +168,11 @@ namespace BlackStartX.GestureManager.Editor.Modules.Vrc3.Params
 
         private static int ClampI(int value, int min = 0, int max = 255) => Mathf.Clamp(value, min, max);
 
-        private static float ClampF(float value, float min = -1, float max = 1) => Mathf.Clamp(value, min, max);
+        private float QuantizeFloat(float value)
+        {
+            var stepsPerUnit = ((1 << (_bitWidth - 1)) - 1) * (_signed ? 1 : 2);
+            return Mathf.Round(Mathf.Clamp(value, _signed ? -1f : 0f, 1f) * stepsPerUnit) / stepsPerUnit;
+        }
 
         private static Vrc3DefaultParams.SyncType SyncFor(VRCExpressionParameters.Parameter param) => param.networkSynced ? Vrc3DefaultParams.SyncType.Playable : Vrc3DefaultParams.SyncType.No;
 
